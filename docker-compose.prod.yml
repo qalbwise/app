@@ -1,0 +1,20 @@
+services:
+  api:
+    image: ghcr.io/qalbwise/api:${IMAGE_TAG:-latest}
+    build: !reset null
+
+  worker:
+    image: ghcr.io/qalbwise/api:${IMAGE_TAG:-latest}
+    build: !reset null
+
+  web:
+    image: ghcr.io/qalbwise/web:${IMAGE_TAG:-latest}
+    build: !reset null
+
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # for SSL certs via Certbot
