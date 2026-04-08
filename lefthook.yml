@@ -1,0 +1,33 @@
+pre-commit:
+  parallel: true
+  commands:
+    # Frontend — only triggers when apps/web files are staged
+    web-format:
+      root: apps/web/
+      glob: '*.{ts,tsx,js,jsx,css,json}'
+      run: pnpm --filter web exec biome format --write {staged_files}
+      stage_fixed: true
+
+    web-lint:
+      root: apps/web/
+      glob: '*.{ts,tsx}'
+      run: pnpm --filter web exec biome lint --write {staged_files}
+      stage_fixed: true
+
+    # Backend — only triggers when apps/api files are staged
+    api-format:
+      root: apps/api/
+      glob: '*.py'
+      run: uv run --project apps/api ruff format {staged_files}
+      stage_fixed: true
+
+    api-lint:
+      root: apps/api/
+      glob: '*.py'
+      run: uv run --project apps/api ruff check --fix {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  commands:
+    lint-commit-message:
+      run: pnpm commitlint --edit {1}

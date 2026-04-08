@@ -1,0 +1,19 @@
+{
+	"repository": {
+		"type": "git",
+		"url": "git+git@github.com:qalbwise/app.git"
+	},
+	"author": {
+		"email": "up2dul@gmail.com",
+		"name": "Qalbwise"
+	},
+	"scripts": {
+		"prepare": "lefthook install"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^20.5.0",
+		"@commitlint/config-conventional": "^20.5.0",
+		"@commitlint/types": "^20.5.0",
+		"lefthook": "^2.1.5"
+	}
+}

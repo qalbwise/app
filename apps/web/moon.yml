@@ -1,0 +1,35 @@
+language: 'typescript'
+
+tasks:
+  dev:
+    command: 'pnpm dev'
+    options:
+      persistent: true
+
+  build:
+    command: 'pnpm build'
+    outputs:
+      - 'dist'
+
+  lint:
+    command: 'pnpm lint'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+  
+  format:
+    command: 'pnpm format'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+      - 'tsconfig.json'
+  
+  check:
+    command: 'pnpm check'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+      - 'tsconfig.json'
+
+  typecheck:
+    command: 'pnpm tsc --noEmit'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+      - 'tsconfig.json'

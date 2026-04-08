@@ -1,0 +1,16 @@
+# JavaScript toolchain
+javascript:
+  packageManager: 'pnpm'
+
+node:
+  version: '22.22.0'
+
+pnpm:
+  version: '10.27.0'
+
+# Python toolchain (unstable_ prefix required in v2)
+unstable_python:
+  version: '3.14.0'
+
+unstable_uv:
+  version: '0.6.0'

@@ -1,0 +1,14 @@
+# moon
+.moon/cache
+.moon/docker
+
+# other
+node_modules/
+.pnpm-store/
+dist/
+.moon/cache/
+__pycache__/
+.venv/
+*.pyc
+logs/
+.env

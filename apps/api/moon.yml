@@ -1,0 +1,30 @@
+language: 'python'
+
+tasks:
+  dev:
+    command: 'uv run uvicorn app.main:app --reload --port 8000'
+    options:
+      persistent: true
+
+  lint:
+    command: 'uv run ruff check app --fix'
+    inputs:
+      - 'app/**/*.py'
+
+  format:
+    command: 'uv run ruff format app'
+    inputs:
+      - 'app/**/*.py'
+
+  typecheck:
+    command: 'uv run pyright app'
+    inputs:
+      - 'app/**/*.py'
+
+  migrate:
+    command: 'uv run alembic upgrade head'
+
+  worker:
+    command: 'uv run celery -A app.tasks worker --loglevel=info'
+    options:
+      persistent: true

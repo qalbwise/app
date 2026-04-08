@@ -1,0 +1,10 @@
+tasks:
+  lint:
+    command: 'noop'
+    deps:
+      - '~:lint'
+
+  format:
+    command: 'noop'
+    deps:
+      - '~:format'
