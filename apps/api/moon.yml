@@ -25,6 +25,6 @@ tasks:
     command: 'uv run alembic upgrade head'
 
   worker:
-    command: 'uv run celery -A app.tasks worker --loglevel=info'
+    command: 'uv run celery -A app.core.celery worker --loglevel=info'
     options:
       persistent: true
