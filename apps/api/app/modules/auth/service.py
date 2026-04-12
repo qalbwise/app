@@ -13,8 +13,8 @@ from app.models.user import User
 async def register(
     db: AsyncSession, email: str, full_name: str, password: str
 ) -> User | None:
-    result = await db.exec(select(User).where(User.email == email))
-    if result.one_or_none():
+    result = await db.execute(select(User).where(User.email == email))
+    if result.scalar_one_or_none():
         return None
 
     hashed = hash_password(password)
@@ -26,8 +26,8 @@ async def register(
 
 
 async def login(db: AsyncSession, email: str, password: str) -> tuple[str, str] | None:
-    result = await db.exec(select(User).where(User.email == email))
-    user = result.one_or_none()
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
 
     if not user or not verify_password(password, user.hashed_password):
         return None
@@ -42,8 +42,8 @@ async def refresh(db: AsyncSession, token: str) -> tuple[str, str] | None:
     if not user_id:
         return None
 
-    result = await db.exec(select(User).where(User.id == user_id))
-    user = result.one_or_none()
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
 
     if not user:
         return None

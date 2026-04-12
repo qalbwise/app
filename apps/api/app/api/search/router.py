@@ -1,0 +1,161 @@
+import asyncio
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.search.serializer import (
+    SearchCreate,
+    SearchListResponse,
+    SearchResponse,
+    VerseResult,
+)
+from app.core.database import get_db
+from app.models.search import Search
+from app.models.user import User
+from app.modules.search import service
+
+router = APIRouter(prefix="/search", tags=["search"])
+
+
+async def get_current_user_optional(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    from app.core.security.jwt import verify_token
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header.split(" ")[1]
+    user_id = verify_token(token)
+    if not user_id:
+        return None
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    return result.scalar_one_or_none()
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+async def create_search(
+    body: SearchCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    request: Request = None,
+):
+    session_id = None
+    if request:
+        session_id = request.cookies.get("session_id")
+
+    search = await service.create_search(
+        db, body.topic, str(current_user.id) if current_user else None, session_id
+    )
+
+    return {"slug": search.slug}
+
+
+@router.get("/{slug}")
+async def get_search(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    search = await service.get_search_by_slug(db, slug)
+    if not search:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+        )
+
+    results = None
+    if search.results:
+        results = [VerseResult(**r) for r in search.results]
+
+    return SearchResponse(
+        id=search.id,
+        slug=search.slug,
+        topic=search.topic,
+        status=search.status,
+        step=search.step,
+        results=results,
+        created_at=search.created_at,
+    )
+
+
+@router.get("/{slug}/stream")
+async def stream_search(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    search = await service.get_search_by_slug(db, slug)
+    if not search:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+        )
+
+    async def event_generator():
+        last_status = None
+        while True:
+            result = await db.execute(select(Search).where(Search.slug == slug))
+            search = result.scalar_one_or_none()
+
+            if not search:
+                break
+
+            if search.status != last_status:
+                last_status = search.status
+                event_data = {
+                    "status": search.status,
+                    "step": search.step,
+                }
+                if search.results:
+                    event_data["results"] = search.results
+
+                yield f"data: {json.dumps(event_data)}\n\n"
+
+            if search.status in ("complete", "failed"):
+                break
+
+            await asyncio.sleep(1)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get("", response_model=SearchListResponse)
+async def list_searches(
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+    request: Request = None,
+):
+    session_id = None
+    if request:
+        session_id = request.cookies.get("session_id")
+
+    searches = await service.list_searches(
+        db, str(current_user.id) if current_user else None, session_id
+    )
+
+    return SearchListResponse(
+        searches=[
+            SearchResponse(
+                id=s.id,
+                slug=s.slug,
+                topic=s.topic,
+                status=s.status,
+                step=s.step,
+                results=None,
+                created_at=s.created_at,
+            )
+            for s in searches
+        ]
+    )

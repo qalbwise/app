@@ -3,6 +3,7 @@ from loguru import logger
 from scalar_fastapi import get_scalar_api_reference
 
 from app.api.auth.router import router as auth_router
+from app.api.search.router import router as search_router
 
 app = FastAPI()
 
@@ -18,6 +19,7 @@ async def health():
 
 
 app.include_router(auth_router)
+app.include_router(search_router)
 
 
 @app.get("/scalar", include_in_schema=False)

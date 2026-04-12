@@ -31,8 +31,8 @@ async def get_current_user(
             detail="Invalid or expired token",
         )
 
-    result = await db.exec(select(User).where(User.id == user_id))
-    user = result.one_or_none()
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(
