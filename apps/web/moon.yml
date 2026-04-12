@@ -12,21 +12,26 @@ tasks:
       - 'dist'
 
   lint:
-    command: 'pnpm lint'
+    command: 'biome lint apps/web/src'
     inputs:
       - 'src/**/*.{ts,tsx}'
-  
+    options:
+      runFromWorkspaceRoot: true
+
   format:
-    command: 'pnpm format'
+    command: 'biome format --write apps/web/src'
     inputs:
       - 'src/**/*.{ts,tsx}'
-      - 'tsconfig.json'
-  
+    options:
+      runFromWorkspaceRoot: true
+
   check:
-    command: 'pnpm check'
+    command: 'biome check --write apps/web/src'
     inputs:
       - 'src/**/*.{ts,tsx}'
       - 'tsconfig.json'
+    options:
+      runFromWorkspaceRoot: true
 
   typecheck:
     command: 'pnpm tsc --noEmit'

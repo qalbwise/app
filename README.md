@@ -5,6 +5,7 @@
 ## Tech Stack
 
 **Frontend** (`apps/web`)
+
 - [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org)
 - [Vite](https://vitejs.dev) — build tool
 - [Tailwind CSS v4](https://tailwindcss.com) — styling
@@ -12,39 +13,60 @@
 - [TanStack](https://tanstack.com) — Router, Query, Table
 
 **Backend** (`apps/api`)
+
 - [FastAPI](https://fastapi.tiangolo.com) — API framework
 - [Alembic](https://alembic.sqlalchemy.org) — database migrations
 - [Celery](https://docs.celeryq.dev) + Redis — background task queue
 - [Ruff](https://docs.astral.sh/ruff) — linter & formatter
 - [Loguru](https://loguru.readthedocs.io) — logging
+- [Scalar](https://scalar.com) — API docs
+
+**Shared** (`packages/core`)
+
+- [openapi-typescript](https://openapi-ts.dev) — generates TypeScript types from FastAPI's OpenAPI schema
+- [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) — fully typed API client
 
 **Monorepo & Tooling**
+
 - [Moon](https://moonrepo.dev) — task runner & monorepo orchestration
 - [Proto](https://moonrepo.dev/proto) — toolchain version management
 - [pnpm](https://pnpm.io) — JavaScript package manager
 - [uv](https://docs.astral.sh/uv) — Python package manager
-- [Biome](https://biomejs.dev) — JavaScript/TypeScript linter & formatter
+- [Biome](https://biomejs.dev) — JavaScript/TypeScript linter & formatter (root-level, shared across all JS/TS projects)
 - [Lefthook](https://lefthook.dev) — Git hooks
 - [commitlint](https://commitlint.js.org) — commit message linting
 
 ## Prerequisites
 
-- [Proto](https://moonrepo.dev/docs/proto/install) — installs all other tool versions automatically
+Install [Proto](https://moonrepo.dev/docs/proto/install) — it manages all other tool versions automatically:
 
 ```bash
 curl -fsSL https://moonrepo.dev/install/proto.sh | bash
 ```
 
-Once Proto is installed, it will handle Node.js, pnpm, Python, and Moon automatically based on `.prototools`.
+Proto will handle Node.js, pnpm, Python, and Moon based on `.prototools`.
 
 ## Getting Started
 
-```bash
-# Clone the repo
-git clone https://github.com/qalbwise/app.git
-cd my-project
+### Clone the repo
 
-# Install JS dependencies and set up Git hooks
+```bash
+git clone https://github.com/qalbwise/app.git qalbwise
+
+# Or if you have SSH access
+git clone git@github.com:qalbwise/app.git qalbwise
+```
+
+### Move into the project directory
+
+```bash
+cd qalbwise
+```
+
+### Install dependencies and set up Git hooks
+
+```bash
+# Install JS dependencies
 pnpm install
 
 # Install Python dependencies
@@ -68,32 +90,115 @@ moon run api:worker
 ```
 
 The frontend runs at `http://localhost:3000` and the backend at `http://localhost:8000`.  
-API docs are available at `http://localhost:8000/docs`.
+
+API docs are available at `http://localhost:8000/scalar`.
+
+## Project Structure
+
+```
+my-project/
+├── .moon/
+│   ├── workspace.yml         # Project locations & Moon config
+│   └── toolchains.yml        # Language & tool versions
+├── apps/
+│   ├── web/                  # React frontend
+│   │   ├── src/
+│   │   │   ├── modules/      # Feature modules (components + hooks)
+│   │   │   ├── routes/       # TanStack file-based routes
+│   │   │   └── lib/
+│   │   │       └── api.ts    # Singleton API client (from @repo/core)
+│   │   └── moon.yml
+│   └── api/                  # FastAPI backend
+│       ├── app/
+│       │   ├── api/          # Routes & serializers (Pydantic schemas)
+│       │   ├── modules/      # Business logic (services)
+│       │   ├── models/       # SQLAlchemy models
+│       │   └── core/         # Settings, logging, celery
+│       ├── alembic/          # Database migrations
+│       └── moon.yml
+├── packages/
+│   └── core/                 # Shared typed API client
+│       └── src/
+│           ├── api/          # Feature API methods
+│           ├── client.ts     # createApi() factory
+│           ├── schema.d.ts   # Auto-generated from /openapi.json (gitignored)
+│           └── index.ts
+├── .prototools               # Pinned tool versions
+├── biome.json                # Shared Biome config (root-level)
+├── commitlint.config.ts      # Commit message rules
+├── docker-compose.yml        # Local/staging services
+├── docker-compose.prod.yml   # Production overrides
+├── lefthook.yml              # Git hook definitions
+├── package.json
+└── pnpm-workspace.yaml
+```
 
 ## Common Tasks
 
 ### Frontend
 
 ```bash
-moon run web:build      # Production build
-moon run web:lint       # Lint with Biome
-moon run web:format     # Format with Biome
-moon run web:typecheck  # TypeScript type checking
+moon run web:dev          # Dev server
+moon run web:build        # Production build
+moon run web:lint         # Lint with Biome
+moon run web:format       # Format with Biome
+moon run web:check        # Lint + format + fix with Biome
+moon run web:typecheck    # TypeScript type checking
 ```
 
 ### Backend
 
 ```bash
-moon run api:lint       # Lint with Ruff
-moon run api:format     # Format with Ruff
-moon run api:migrate    # Run Alembic migrations
+moon run api:dev          # Dev server
+moon run api:lint         # Lint with Ruff
+moon run api:format       # Format with Ruff
+moon run api:migrate      # Run Alembic migrations
+moon run api:worker       # Start Celery worker
 ```
 
-### Run across the whole monorepo
+### Shared package
 
 ```bash
-moon run :lint    # Lint all projects
-moon run :format  # Format all projects
+moon run core:generate    # Regenerate TypeScript types from OpenAPI schema
+moon run core:typecheck   # Type check packages/core
+```
+
+### Whole monorepo
+
+```bash
+moon run :lint            # Lint all projects
+moon run :format          # Format all projects
+moon run :check           # Check all JS/TS projects
+```
+
+## Type-Safe API
+
+TypeScript types in `packages/core` are auto-generated from FastAPI's OpenAPI schema. Run this whenever you change a Pydantic schema:
+
+```bash
+# API must be running
+moon run core:generate
+```
+
+The frontend never calls `fetch` directly — it uses the typed API client:
+
+```ts
+// apps/web/src/lib/api.ts — instantiated once
+import { createApiWithModules } from "@repo/core";
+
+export const api = createApiWithModules({
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  onTokenRefreshFailed: () => {
+    window.location.href = "/login";
+  },
+});
+
+// Usage in a hook
+const { data } = useQuery({
+  queryKey: ["users", "me"],
+  queryFn: () => api.users.me(),
+});
+// data is fully typed as UserResponse — no 'any'
 ```
 
 ## Database Migrations
@@ -102,64 +207,59 @@ moon run :format  # Format all projects
 # Apply all pending migrations
 moon run api:migrate
 
-# Create a new migration (run from apps/api)
+# Create a new migration (from apps/api)
 cd apps/api
-uv run alembic revision --autogenerate -m "your migration description"
+uv run alembic revision --autogenerate -m "add users table"
 ```
+
+Always import new models in `alembic/env.py` for autogenerate to detect them.
 
 ## Environment Variables
 
-Copy the example env file and fill in your values:
+| Variable            | Location        | Description                      |
+| ------------------- | --------------- | -------------------------------- |
+| `VITE_API_URL`      | `apps/web/.env` | Backend API base URL             |
+| `DATABASE_URL`      | `apps/api/.env` | PostgreSQL connection string     |
+| `REDIS_URL`         | `apps/api/.env` | Redis connection string          |
+| `SECRET_KEY`        | `apps/api/.env` | Application secret key           |
+| `POSTGRES_USER`     | `apps/api/.env` | DB user (used by Docker Compose) |
+| `POSTGRES_PASSWORD` | `apps/api/.env` | DB password                      |
+| `POSTGRES_DB`       | `apps/api/.env` | DB name                          |
 
-```bash
-cp apps/api/.env.example apps/api/.env
+## Deployment
+
+The project deploys via Docker Compose to a VPS. Traffic is routed through Nginx:
+
+```
+Browser → Nginx (port 80/443)
+            ├── api.domain.com  →  FastAPI (port 8000)
+            └── domain.com      →  React/Nginx (port 80)
 ```
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection string (used by Celery) |
-| `SECRET_KEY` | Application secret key |
+```bash
+# Build and run all services
+docker compose -f docker-compose.yml up -d
+```
 
 ## Git Workflow
 
-This project enforces [Conventional Commits](https://www.conventionalcommits.org). Every commit message must follow this format:
+This project enforces [Conventional Commits](https://www.conventionalcommits.org):
 
 ```
 <type>(<optional scope>): <description>
 ```
 
-**Valid types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`, `ci`
+Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `chore` `revert` `ci`
 
-**Examples:**
 ```bash
-git commit -m "feat(api/auth): add JWT refresh token"
-git commit -m "fix(api): resolve null pointer in user endpoint"
+git commit -m "feat(web/auth): add JWT refresh token"
+git commit -m "fix(api/users): resolve null pointer in user endpoint"
 git commit -m "chore: bump dependencies"
 ```
 
-The `pre-commit` hook automatically runs Biome (frontend) and Ruff (backend) on staged files before each commit. The `commit-msg` hook validates the commit message format.
+The `pre-commit` hook automatically runs Biome (JS/TS) and Ruff (Python) on staged files. The `commit-msg` hook validates the commit message format.
 
-## Project Structure
+## Boilerplate Inspirations
 
-```
-my-project/
-├── .moon/
-│   ├── workspace.yml       # Project locations & Moon config
-│   └── toolchains.yml      # Language & tool versions
-├── apps/
-│   ├── web/                # React frontend
-│   │   ├── src/
-│   │   ├── moon.yml
-│   │   └── package.json
-│   └── api/                # FastAPI backend
-│       ├── app/
-│       ├── alembic/
-│       ├── moon.yml
-│       └── pyproject.toml
-├── .prototools             # Pinned tool versions
-├── commitlint.config.ts    # Commit message rules
-├── lefthook.yml            # Git hook definitions
-├── package.json
-└── pnpm-workspace.yaml
-```
+- [indrazm/moonrepo-kickstart](https://github.com/indrazm/moonrepo-kickstart)
+- [zero-one-group/monorepo](https://github.com/zero-one-group/monorepo)

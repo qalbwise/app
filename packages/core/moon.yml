@@ -1,0 +1,38 @@
+language: 'typescript'
+
+tasks:
+  generate:
+      # API must be running before run this
+      command: 'pnpm generate'
+      outputs:
+        - 'src/schema.d.ts'
+
+  typecheck:
+    command: 'pnpm tsc --noEmit'
+    inputs:
+      - 'src/**/*.ts'
+      - 'tsconfig.json'
+    deps:
+      - 'generate'
+  
+  lint:
+    command: 'biome lint packages/core/src'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+    options:
+      runFromWorkspaceRoot: true
+
+  format:
+    command: 'biome format --write packages/core/src'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+    options:
+      runFromWorkspaceRoot: true
+
+  check:
+    command: 'biome check --write packages/core/src'
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+      - 'tsconfig.json'
+    options:
+      runFromWorkspaceRoot: true
