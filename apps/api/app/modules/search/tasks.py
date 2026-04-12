@@ -143,6 +143,43 @@ Respond in JSON format only, with no extra text:
     return ranked[:5]
 
 
+async def get_verse_explanation_async(topic: str, verse: dict) -> str:
+    if not verse:
+        return ""
+
+    ayah_key = verse.get("ayah_key", "")
+    arabic_text = verse.get("arabic_text", "")
+    translation = verse.get("translation", "")
+    verses_text = f"Verse ({ayah_key}): {arabic_text}\nTranslation: {translation}"
+
+    prompt = f"""Given the user's topic: "{topic}"
+    Here is a verse from the Quran:
+    {verses_text}
+
+    Provide a one-sentence explanation of why this verse relates to the user's topic.
+    Respond in one sentence only, no extra text.
+    """
+
+    from app.core.settings import get_settings
+
+    settings = get_settings()
+
+    from openai import AsyncOpenAI
+
+    client = AsyncOpenAI(
+        base_url="https://openrouter.ai/api/v1", api_key=settings.OPENAI_API_KEY
+    )
+
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=200,
+    )
+
+    content = response.choices[0].message.content or ""
+    return content.strip()
+
+
 @celery_app.task(bind=True, base=CallbackTask)
 def run_search(self, search_id: str):
     from app.core.database import async_session_maker

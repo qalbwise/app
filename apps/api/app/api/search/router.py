@@ -10,6 +10,7 @@ from app.api.search.serializer import (
     SearchCreate,
     SearchListResponse,
     SearchResponse,
+    VerseExplainResponse,
     VerseResult,
 )
 from app.core.database import get_db
@@ -131,7 +132,48 @@ async def stream_search(
     )
 
 
-@router.get("", response_model=SearchListResponse)
+@router.get("/{slug}/explain/{ayah_key}", response_model=VerseExplainResponse)
+async def explain_verse(
+    slug: str,
+    ayah_key: str,
+    db: AsyncSession = Depends(get_db),
+):
+    from app.modules.search import tasks
+
+    search = await service.get_search_by_slug(db, slug)
+    if not search:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+        )
+
+    if not search.results:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No results found",
+        )
+
+    verse_data = None
+    for v in search.results:
+        if v.get("ayah_key") == ayah_key:
+            verse_data = v
+            break
+
+    if not verse_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Verse not found in results",
+        )
+
+    topic = search.topic
+    why_this_verse = await tasks.get_verse_explanation_async(topic, verse_data)
+
+    return VerseExplainResponse(
+        ayah_key=ayah_key,
+        why_this_verse=why_this_verse,
+    )
+
+
 async def list_searches(
     db: AsyncSession = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),

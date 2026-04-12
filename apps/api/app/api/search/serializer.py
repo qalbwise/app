@@ -40,3 +40,14 @@ class SearchStreamEvent(BaseModel):
 
 class SearchListResponse(BaseModel):
     searches: list[SearchResponse]
+
+
+class VerseExplainResponse(BaseModel):
+    ayah_key: str
+    why_this_verse: str
+
+
+class TafsirResponse(BaseModel):
+    ayah_key: str
+    tafsir: str
+    source: str | None = None
