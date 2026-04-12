@@ -8,12 +8,17 @@
 		"name": "Qalbwise"
 	},
 	"scripts": {
+		"lint": "biome lint",
+		"format": "biome format --write .",
+		"check": "biome check --write .",
 		"prepare": "lefthook install"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.4.10",
 		"@commitlint/cli": "^20.5.0",
 		"@commitlint/config-conventional": "^20.5.0",
 		"@commitlint/types": "^20.5.0",
 		"lefthook": "^2.1.5"
-	}
+	},
+	"packageManager": "pnpm@10.27.0"
 }
