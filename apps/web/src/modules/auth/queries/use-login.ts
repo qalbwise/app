@@ -2,7 +2,7 @@ import type { TokenResponse } from "@repo/core";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
-export const useLogin = () => {
+export function useLogin() {
   return useMutation({
     mutationFn: (data: { email: string; password: string }) =>
       api.auth.login(data),
@@ -12,4 +12,4 @@ export const useLogin = () => {
       localStorage.setItem("refresh_token", tokens.refresh_token);
     },
   });
-};
+}
