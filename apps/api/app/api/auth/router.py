@@ -83,3 +83,8 @@ async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/logout")
 async def logout():
     return {"message": "Logged out successfully"}
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
