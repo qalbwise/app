@@ -58,7 +58,7 @@ async def create_search(
     return {"slug": search.slug}
 
 
-@router.get("/{slug}")
+@router.get("/{slug}", response_model=SearchResponse)
 async def get_search(
     slug: str,
     db: AsyncSession = Depends(get_db),
