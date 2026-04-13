@@ -11,7 +11,6 @@ from app.api.bookmarks.serializer import (
     NoteCreate,
     NoteListResponse,
     NoteResponse,
-    StreakResponse,
 )
 from app.core.database import get_db
 from app.models.user import User
@@ -36,7 +35,6 @@ async def create_bookmark(
         note=body.note,
         extra_data=body.extra_data,
     )
-    await service.record_activity(db, current_user.id)
     return bookmark
 
 
@@ -91,7 +89,6 @@ async def create_note(
         content=body.content,
         verses=body.verses,
     )
-    await service.record_activity(db, current_user.id)
     return note
 
 
@@ -147,29 +144,3 @@ async def delete_note(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Note not found",
         )
-
-
-@router.post("/activity", status_code=status.HTTP_200_OK)
-async def record_activity(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    streak = await service.record_activity(db, current_user.id)
-    return {"message": "Activity recorded", "current_streak": streak.current_streak}
-
-
-@router.get("/streak", response_model=StreakResponse)
-async def get_streak(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    streak = await service.get_or_create_streak(db, current_user.id)
-    last_date = (
-        streak.last_activity_date.isoformat() if streak.last_activity_date else None
-    )
-    return StreakResponse(
-        current_streak=streak.current_streak,
-        longest_streak=streak.longest_streak,
-        status="active" if streak.current_streak > 0 else "inactive",
-        last_activity_date=last_date,
-    )

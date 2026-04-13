@@ -1,4 +1,5 @@
 import json
+import re as _re
 
 from celery import Task
 from loguru import logger
@@ -43,6 +44,18 @@ async def get_qf_mcp_results_async(query: str) -> dict:
                 return {"results": []}
 
 
+def _strip_html(text: str) -> str:
+    """Remove HTML tags and decode common entities from translation strings."""
+    text = _re.sub(r"<[^>]+>", "", text)
+    text = (
+        text.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&nbsp;", " ")
+    )
+    return text.strip()
+
+
 def parse_mcp_results(raw: dict) -> list[dict]:
     results = raw.get("results", [])
     parsed = []
@@ -56,12 +69,14 @@ def parse_mcp_results(raw: dict) -> list[dict]:
             surah_num = ayah_key.split(":")[0]
             surah_name = f"Surah {surah_num}"
 
+        raw_translation = translations[0].get("text", "") if translations else ""
+
         parsed.append(
             {
                 "ayah_key": ayah_key,
                 "surah_name": surah_name,
                 "arabic_text": item.get("text", ""),
-                "translation": translations[0].get("text", "") if translations else "",
+                "translation": _strip_html(raw_translation),
                 "translator": (
                     translations[0].get("edition", {}).get("author", "")
                     if translations
@@ -103,7 +118,7 @@ Respond in JSON format only, with no extra text:
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1", api_key=settings.OPENAI_API_KEY
+        base_url="https://ai.sumopod.com", api_key=settings.OPENAI_API_KEY
     )
 
     response = await client.chat.completions.create(
@@ -167,7 +182,7 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1", api_key=settings.OPENAI_API_KEY
+        base_url="https://ai.sumopod.com", api_key=settings.OPENAI_API_KEY
     )
 
     response = await client.chat.completions.create(
@@ -182,12 +197,25 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
 
 @celery_app.task(bind=True, base=CallbackTask)
 def run_search(self, search_id: str):
-    from app.core.database import async_session_maker
-
     async def process():
         from sqlalchemy import select
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
-        async with async_session_maker() as db:
+        from app.core.settings import get_settings as _get_settings
+
+        # Create a fresh engine + session per task to avoid asyncio loop conflicts
+        # in Celery's prefork workers (each fork gets its own event loop).
+        _settings = _get_settings()
+        _engine = create_async_engine(_settings.DATABASE_URL, echo=False)
+        _session_maker = async_sessionmaker(
+            _engine, class_=AsyncSession, expire_on_commit=False
+        )
+
+        async with _session_maker() as db:
             result = await db.execute(select(Search).where(Search.id == search_id))
             search = result.scalar_one_or_none()
 
@@ -217,9 +245,12 @@ def run_search(self, search_id: str):
                 await db.commit()
 
             except Exception as e:
+                logger.exception(f"Search task failed: {e}")
                 search.status = "failed"
                 search.step = f"error: {str(e)}"
                 await db.commit()
+
+        await _engine.dispose()
 
     import asyncio
 

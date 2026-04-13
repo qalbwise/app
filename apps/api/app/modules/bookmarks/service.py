@@ -1,11 +1,11 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.bookmark import Bookmark, Note, Streak
+from app.models.bookmark import Bookmark, Note
 
 
 async def create_bookmark(
@@ -111,38 +111,3 @@ async def delete_note(db: AsyncSession, note_id: UUID, user_id: UUID) -> bool:
     await db.delete(note)
     await db.commit()
     return True
-
-
-async def get_or_create_streak(db: AsyncSession, user_id: UUID) -> Streak:
-    result = await db.execute(select(Streak).where(Streak.user_id == user_id))
-    streak = result.scalar_one_or_none()
-    if not streak:
-        streak = Streak(user_id=user_id)
-        db.add(streak)
-        await db.commit()
-        await db.refresh(streak)
-    return streak
-
-
-async def record_activity(db: AsyncSession, user_id: UUID) -> Streak:
-    streak = await get_or_create_streak(db, user_id)
-    today = date.today()
-
-    if streak.last_activity_date == today:
-        return streak
-
-    yesterday = today - timedelta(days=1)
-
-    if streak.last_activity_date == yesterday:
-        streak.current_streak += 1
-    else:
-        streak.current_streak = 1
-
-    if streak.current_streak > streak.longest_streak:
-        streak.longest_streak = streak.current_streak
-
-    streak.last_activity_date = today
-    streak.updated_at = datetime.utcnow()
-    await db.commit()
-    await db.refresh(streak)
-    return streak

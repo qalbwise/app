@@ -38,7 +38,4 @@ export const createBookmarksApi = (client: Client) => ({
       params: { path: { note_id: id } },
     }),
 
-  recordActivity: () => client.POST("/bookmarks/activity"),
-
-  getStreak: () => client.GET("/bookmarks/streak"),
 });
