@@ -76,6 +76,7 @@ packages/core/src/
 - **Validation**: handled entirely by the backend — frontend only surfaces errors via toast notifications
 - **Imports**: use `@/` for internal app imports, `@repo/core` for the shared package
 - **Naming**: always use `kebab-case` for filenames, `PascalCase` for components, and `camelCase` for functions
+- **Hooks**: prioritize use existing hook function from `react-use` instead of creating a new one
 
 #### Formatting
 
