@@ -17,6 +17,7 @@ const config = defineConfig({
   resolve: {
     alias: {
       "@repo/core": resolve(__dirname, "../../packages/core/src/index.ts"),
+      "@/client": resolve(__dirname, "../../packages/core/src/client.ts"),
     },
   },
 });
