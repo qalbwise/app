@@ -8,7 +8,7 @@ System prompt for LLM agents (Cursor, Copilot, Claude, etc.) helping with this c
 
 **Backend**: FastAPI, SQLAlchemy, Alembic, Celery, PostgreSQL, Redis
 
-**Frontend**: React 19, TanStack Router/Query/Table, Tailwind CSS v4, shadcn/ui
+**Frontend**: React 19, TanStack Router/Query, Tailwind CSS v4, Zustand, shadcn/ui
 
 **Shared**: Type-safe API client (`@repo/core`) — auto-generated from OpenAPI schema
 
@@ -30,12 +30,17 @@ apps/api/app/
     └── celery.py             # Celery app instance
 
 apps/web/src/
+├── components/ui/            # Reusable UI components from shadcn/ui or made by us
+├── components/layout/        # Reusable layout components
 ├── modules/{feature}/
 │   ├── components/           # Feature UI components
-│   └── hooks/                # Feature-specific TanStack Query hooks
+│   ├── hooks/                # Feature-specific hooks
+│   ├── stores/               # Feature-specific stores using Zustand
+│   └── queries/              # Feature-specific TanStack Query hooks
 ├── routes/                   # TanStack file-based routes
 └── lib/
-    └── api.ts                # Singleton api instance (from @repo/core)
+    ├── utils.ts              # Shared utility functions
+    └── api.ts                # Singleton api instance (from @repo/core) and its keys for the @TanStack/Query cache
 
 packages/core/src/
 ├── api/{feature}.ts          # Feature API methods (wraps openapi-fetch client)
@@ -64,10 +69,28 @@ packages/core/src/
 - **API calls**: ONLY use `api` from `@/lib/api` — never use raw `fetch` or any other HTTP client
 - **Data fetching**: always wrap in TanStack Query (`useQuery` / `useMutation`)
 - **Routing**: `export const Route = createFileRoute('/path')({ component })`
-- **State management**: server state → TanStack Query, client state → local `useState` or component composition
+- **State management**:
+  - Server state → TanStack Query
+  - Client state → Zustand store in `modules/{feature}/stores/`
+  - **Avoid prop drilling**: Use Zustand store for shared state across components
 - **Validation**: handled entirely by the backend — frontend only surfaces errors via toast notifications
 - **Imports**: use `@/` for internal app imports, `@repo/core` for the shared package
 - **Naming**: always use `kebab-case` for filenames, `PascalCase` for components, and `camelCase` for functions
+
+#### Formatting
+
+- Prefer `Boolean(value)` over `!!value` for boolean checks
+- For TanStack Query hooks usage, prefer `const anyData = useAnyData()` then `anyData.data`, `anyData.isLoading`, `anyData.error` over `const { data, isLoading, error } = useAnyData()`
+
+#### Component Patterns
+
+- Prioritize use shadcn/ui components over custom components
+- Use functional components with hooks
+- Implement proper TypeScript typing for all props and state
+- Follow the established pattern of separating concerns for non-feature-specific components:
+  - UI components in `components/ui/`
+  - Layout components in `components/layout/`
+- Use `function fn()` syntax for normal functions and `const Component = () => {}` syntax for React components
 
 ### Shared (`packages/core`)
 
@@ -113,7 +136,7 @@ packages/core/src/
 **Frontend**:
 
 11. Create `apps/web/src/modules/{feature}/hooks/use-{feature}.ts` — TanStack Query hooks
-12. Create `apps/web/src/modules/{feature}/components/` — UI components
+12. Create `apps/web/src/modules/{feature}/components/` — feature-specific components
 13. Create `apps/web/src/routes/{feature}.tsx` — route file
 
 ### Backend async DB pattern
@@ -160,11 +183,11 @@ class UserResponse(BaseModel):
 ```ts
 // apps/web/src/modules/users/hooks/useMe.ts
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, queryKeys } from "@/lib/api";
 
 export const useMe = () =>
   useQuery({
-    queryKey: ["users", "me"],
+    queryKey: [queryKeys.me],
     queryFn: () => api.users.me(),
   });
 
