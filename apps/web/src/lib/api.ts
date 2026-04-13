@@ -14,4 +14,25 @@ export const api = createApiWithModules({
   },
 });
 
-export const queryKeys = {} as const;
+export const queryKeys = {
+  search: {
+    all: ["search"] as const,
+    bySlug: (slug: string) => ["search", slug] as const,
+    explain: (slug: string, ayahKey: string) =>
+      ["search", slug, "explain", ayahKey] as const,
+  },
+  tafsir: {
+    all: ["tafsir"] as const,
+    byAyahKey: (ayahKey: string) => ["tafsir", ayahKey] as const,
+  },
+  bookmarks: {
+    all: ["bookmarks"] as const,
+  },
+  notes: {
+    all: ["notes"] as const,
+  },
+  streak: {
+    all: ["streak"] as const,
+  },
+  me: ["me"] as const,
+} as const;
