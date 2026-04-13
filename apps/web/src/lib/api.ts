@@ -13,3 +13,5 @@ export const api = createApiWithModules({
     }
   },
 });
+
+export const queryKeys = {} as const;
