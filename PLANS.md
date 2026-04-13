@@ -8,18 +8,18 @@
 
 **Goals:**
 
-- [x] Setup PostgreSQL database connection
-- [x] Create User SQLAlchemy model
-- [x] Create Profile SQLAlchemy model
-- [x] Setup Alembic migration
-- [x] Implement password hashing (bcrypt)
-- [x] Create auth serializer (Pydantic schemas)
-- [x] Create auth router (FastAPI routes)
-- [x] Implement auth service (login, register, logout)
-- [x] JWT access token generation
-- [x] JWT refresh token generation
-- [x] Token refresh endpoint
-- [x] Protected route dependency (get_current_user)
+- [x] **BE**: Setup PostgreSQL database connection
+- [x] **BE**: Create User SQLAlchemy model
+- [x] **BE**: Create Profile SQLAlchemy model
+- [x] **BE**: Setup Alembic migration
+- [x] **BE**: Implement password hashing (bcrypt)
+- [x] **BE**: Create auth serializer (Pydantic schemas)
+- [x] **BE**: Create auth router (FastAPI routes)
+- [x] **BE**: Implement auth service (login, register, logout)
+- [x] **BE**: JWT access token generation
+- [x] **BE**: JWT refresh token generation
+- [x] **BE**: Token refresh endpoint
+- [x] **BE**: Protected route dependency (get_current_user)
 
 ---
 
@@ -29,17 +29,17 @@
 
 **Goals:**
 
-- [x] Create Search SQLAlchemy model (slug, topic, status, step, raw_results, results, session_id, user_id)
-- [x] Setup Alembic migration for Search model
-- [x] Create search serializer (Pydantic schemas)
-- [x] Create search router (FastAPI routes)
-- [x] Implement search service (create, get, streaming)
-- [x] Implement search Celery task (QF MCP + OpenAI ranking)
-- [x] Add QF MCP client for content retrieval
-- [x] Add OpenAI SDK client for semantic ranking
-- [x] Create GET /api/searches endpoint (history)
-- [x] Integrate search router in main.py
-- [x] Import Search model in alembic/env.py
+- [x] **BE**: Create Search SQLAlchemy model (slug, topic, status, step, raw_results, results, session_id, user_id)
+- [x] **BE**: Setup Alembic migration for Search model
+- [x] **BE**: Create search serializer (Pydantic schemas)
+- [x] **BE**: Create search router (FastAPI routes)
+- [x] **BE**: Implement search service (create, get, streaming)
+- [x] **BE**: Implement search Celery task (QF MCP + OpenAI ranking)
+- [x] **BE**: Add QF MCP client for content retrieval
+- [x] **BE**: Add OpenAI SDK client for semantic ranking
+- [x] **BE**: Create GET /api/searches endpoint (history)
+- [x] **BE**: Integrate search router in main.py
+- [x] **BE**: Import Search model in alembic/env.py
 
 **API Endpoints:**
 
@@ -58,28 +58,28 @@
 
 **Goals:**
 
-- [ ] Create search route page (`/search/:slug`)
-- [ ] Implement SSE hook for real-time progress
-- [ ] Create verse card component
-- [ ] Implement "Why this verse" expansion
-- [ ] Add tafsir fetch and display
-- [ ] Add TanStack Query polling fallback
-- [ ] Create topic chips on home page
+- [ ] **FE**: Create search route page (`/search/:slug`)
+- [ ] **FE**: Implement SSE hook for real-time progress
+- [ ] **FE**: Create verse card component
+- [ ] **FE**: Implement "Why this verse" expansion
+- [ ] **FE**: Add tafsir fetch and display
+- [ ] **FE**: Add TanStack Query polling fallback
+- [ ] **FE**: Create topic chips on home page
 
 ---
 
 ## Phase 4: Bookmarks & User Features
 
-**Description:** Implement QF User APIs for bookmarks, notes, and streak tracking.
+**Description:** Implement local bookmarks, notes, and streak tracking (replaced QF User APIs with local implementation).
 
 **Goals:**
 
-- [ ] Create bookmark serializer and router
-- [ ] Implement QF Bookmarks API integration
-- [ ] Create notes/journal endpoints
-- [ ] Implement streak tracking endpoints
-- [ ] Add login sheet UI component
-- [ ] Create post-login home with streak widget
+- [x] **BE**: Create bookmark serializer and router
+- [x] **BE**: Implement local Bookmarks API (stored in our DB)
+- [x] **BE**: Create notes/journal endpoints
+- [x] **BE**: Implement streak tracking endpoints (local, not QF)
+- [ ] **FE**: Add login sheet UI component
+- [ ] **FE**: Create post-login home with streak widget
 
 ---
 

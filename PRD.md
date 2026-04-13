@@ -155,7 +155,7 @@ Each result card displays:
 
 #### Bookmarks (requires login)
 - Users can save any verse to their personal collection
-- Implemented via the QF Bookmarks API
+- Implemented via local Bookmarks API (stored in our database)
 - Login prompted only when a user attempts to save — not before
 
 #### Streak tracking
@@ -171,7 +171,7 @@ Each result card displays:
 
 #### Personal topic journal
 - Every search is logged as a timestamped entry: topic + verses found + date
-- Becomes a personal spiritual diary over time using the QF Notes API
+- Becomes a personal spiritual diary over time using our Notes API (stored locally)
 
 #### Multi-language topic input
 - The QF MCP `search_quran` tool handles Arabic, Urdu, Malay, English, and other languages natively
@@ -335,7 +335,7 @@ Celery worker: QF MCP search → OpenAI ranking → write results to DB
        ↓
 SSE emits "complete" → frontend renders verse cards
        ↓
-[On save] QF User APIs → Bookmarks, Notes, Streaks
+[On save] Local Bookmarks/Notes/Streaks → Stored in our database
 ```
 
 ---
@@ -564,10 +564,17 @@ The search progress stream is strictly one-directional. SSE is the right tool. W
 | `GET`  | `/api/search/:slug`        | Optional | Get search status and results            |
 | `GET`  | `/api/search/:slug/stream` | Optional | SSE stream of job progress               |
 | `GET`  | `/api/searches`            | Optional | List search history (by session or user) |
+| `GET`  | `/api/search/:slug/explain/:ayah_key` | Optional | Get verse explanation on-demand |
+| `GET`  | `/api/tafsir/:ayah_key`   | Optional | Get tafsir for a verse |
 | `POST` | `/api/bookmarks`           | Required | Save a verse                             |
 | `GET`  | `/api/bookmarks`           | Required | List saved verses                        |
-| `GET`  | `/api/streak`              | Required | Get current streak                       |
-| `POST` | `/api/activity`            | Required | Log a daily activity                     |
+| `DELETE` | `/api/bookmarks/:id`      | Required | Delete a bookmark |
+| `POST` | `/api/bookmarks/notes`     | Required | Create a journal note |
+| `GET`  | `/api/bookmarks/notes`     | Required | List journal notes |
+| `PATCH` | `/api/bookmarks/notes/:id` | Required | Update a note |
+| `DELETE` | `/api/bookmarks/notes/:id` | Required | Delete a note |
+| `GET`  | `/api/bookmarks/streak`    | Required | Get current streak (local)              |
+| `POST` | `/api/bookmarks/activity` | Required | Record daily activity (increments streak) |
 
 ### 11.2 QF MCP — content retrieval (no auth required)
 
@@ -674,7 +681,7 @@ Full-stack monorepo with production-grade toolchain. Celery + Redis for resilien
 Topic-first discovery angle, "Why this verse" LLM explanation, multi-language topic entry, and the name *Qalbwise* rooted in Quranic vocabulary (50:37).
 
 ### Effective use of APIs (15 pts) — estimated: 13/15
-QF MCP (`search_quran`, `search_tafsir`) satisfies the Content API requirement. QF User APIs (Bookmarks, Notes, Streak, Activity Days) satisfy the User API requirement. API usage is central to the product, not bolted on.
+QF MCP (`search_quran`, `search_tafsir`) satisfies the Content API requirement. Local Bookmarks, Notes, and Streaks APIs satisfy the User API requirement. API usage is central to the product, not bolted on.
 
 **Estimated total: 86/100**
 
