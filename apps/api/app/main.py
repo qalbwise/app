@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from scalar_fastapi import get_scalar_api_reference
 
@@ -8,6 +9,20 @@ from app.api.search.router import router as search_router
 from app.api.tafsir.router import router as tafsir_router
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://qalbwise.app",
+    "https://qalbwise.app/",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
