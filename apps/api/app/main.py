@@ -16,7 +16,7 @@ origins = [
     "http://localhost:3002",
     "http://localhost:3003",
     "https://qalbwise.app",
-    "https://qalbwise.app/",
+    "https://www.qalbwise.app",
 ]
 
 app.add_middleware(
