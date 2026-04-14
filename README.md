@@ -216,15 +216,24 @@ Always import new models in `alembic/env.py` for autogenerate to detect them.
 
 ## Environment Variables
 
-| Variable            | Location        | Description                      |
-| ------------------- | --------------- | -------------------------------- |
-| `VITE_API_URL`      | `apps/web/.env` | Backend API base URL             |
-| `DATABASE_URL`      | `apps/api/.env` | PostgreSQL connection string     |
-| `REDIS_URL`         | `apps/api/.env` | Redis connection string          |
-| `SECRET_KEY`        | `apps/api/.env` | Application secret key           |
-| `POSTGRES_USER`     | `apps/api/.env` | DB user (used by Docker Compose) |
-| `POSTGRES_PASSWORD` | `apps/api/.env` | DB password                      |
-| `POSTGRES_DB`       | `apps/api/.env` | DB name                          |
+Create a `.env` file in the project root with the following variables:
+
+| Variable            | Description                      |
+| ------------------- | -------------------------------- |
+| `VITE_API_URL`      | Backend API base URL             |
+| `DATABASE_URL`      | PostgreSQL connection string     |
+| `REDIS_URL`         | Redis connection string          |
+| `SECRET_KEY`        | Application secret key           |
+| `POSTGRES_USER`     | DB user (used by Docker Compose) |
+| `POSTGRES_PASSWORD` | DB password                      |
+| `POSTGRES_DB`       | DB name                          |
+| `OPENAI_API_KEY`    | OpenAI API key                   |
+
+For local development without Docker, copy the relevant variables to each app's `.env`:
+- `apps/api/.env` for backend
+- `apps/web/.env` for frontend
+
+For Docker deployment, the root `.env` is used automatically.
 
 ## Deployment
 
@@ -238,7 +247,7 @@ Browser → Nginx (port 80/443)
 
 ```bash
 # Build and run all services
-docker compose -f docker-compose.yml up -d
+docker compose up -d --build
 ```
 
 ## Git Workflow

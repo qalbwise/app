@@ -276,21 +276,23 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## Environment Variables
 
-Frontend (`apps/web/.env`):
+Create a `.env` file in the project root with all variables. Docker Compose reads from this file automatically.
+
+For local development without Docker, copy relevant variables to each app:
+- `apps/api/.env` - API variables
+- `apps/web/.env` - Frontend variables
+
+Root `.env` example:
 
 ```
 VITE_API_URL=http://localhost:8000
-```
-
-Backend (`apps/api/.env`):
-
-```
-DATABASE_URL=postgresql+psycopg2://user:pass@localhost/mydb
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/mydb
 REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=your-secret-key
-POSTGRES_USER=user
-POSTGRES_PASSWORD=password
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 POSTGRES_DB=mydb
+OPENAI_API_KEY=
 ```
 
 ---
