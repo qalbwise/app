@@ -118,7 +118,7 @@ Respond in JSON format only, with no extra text:
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(
-        base_url="https://ai.sumopod.com", api_key=settings.OPENAI_API_KEY
+        base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY
     )
 
     response = await client.chat.completions.create(
@@ -182,7 +182,7 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(
-        base_url="https://ai.sumopod.com", api_key=settings.OPENAI_API_KEY
+        base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY
     )
 
     response = await client.chat.completions.create(
