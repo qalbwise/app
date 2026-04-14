@@ -127,7 +127,6 @@ my-project/
 ├── biome.json                # Shared Biome config (root-level)
 ├── commitlint.config.ts      # Commit message rules
 ├── docker-compose.yml        # Local/staging services
-├── docker-compose.prod.yml   # Production overrides
 ├── lefthook.yml              # Git hook definitions
 ├── package.json
 └── pnpm-workspace.yaml
@@ -234,21 +233,6 @@ For local development without Docker, copy the relevant variables to each app's 
 - `apps/web/.env` for frontend
 
 For Docker deployment, the root `.env` is used automatically.
-
-## Deployment
-
-The project deploys via Docker Compose to a VPS. Traffic is routed through Nginx:
-
-```
-Browser → Nginx (port 80/443)
-            ├── api.domain.com  →  FastAPI (port 8000)
-            └── domain.com      →  React/Nginx (port 80)
-```
-
-```bash
-# Build and run all services
-docker compose up -d --build
-```
 
 ## Git Workflow
 

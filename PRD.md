@@ -276,8 +276,7 @@ qalbwise/
 │           ├── api/          # Feature API methods
 │           ├── client.ts     # createApi() factory
 │           └── schema.d.ts   # Auto-generated from /openapi.json
-├── docker-compose.yml
-└── docker-compose.prod.yml
+└── docker-compose.yml
 ```
 
 ### Tech stack
@@ -558,23 +557,23 @@ The search progress stream is strictly one-directional. SSE is the right tool. W
 
 ### 11.1 Internal API endpoints (FastAPI)
 
-| Method | Endpoint                   | Auth     | Description                              |
-| ------ | -------------------------- | -------- | ---------------------------------------- |
-| `POST` | `/api/search`              | Optional | Create search, returns slug              |
-| `GET`  | `/api/search/:slug`        | Optional | Get search status and results            |
-| `GET`  | `/api/search/:slug/stream` | Optional | SSE stream of job progress               |
-| `GET`  | `/api/searches`            | Optional | List search history (by session or user) |
-| `GET`  | `/api/search/:slug/explain/:ayah_key` | Optional | Get verse explanation on-demand |
-| `GET`  | `/api/tafsir/:ayah_key`   | Optional | Get tafsir for a verse |
-| `POST` | `/api/bookmarks`           | Required | Save a verse                             |
-| `GET`  | `/api/bookmarks`           | Required | List saved verses                        |
-| `DELETE` | `/api/bookmarks/:id`      | Required | Delete a bookmark |
-| `POST` | `/api/bookmarks/notes`     | Required | Create a journal note |
-| `GET`  | `/api/bookmarks/notes`     | Required | List journal notes |
-| `PATCH` | `/api/bookmarks/notes/:id` | Required | Update a note |
-| `DELETE` | `/api/bookmarks/notes/:id` | Required | Delete a note |
-| `GET`  | `/api/bookmarks/streak`    | Required | Get current streak (local)              |
-| `POST` | `/api/bookmarks/activity` | Required | Record daily activity (increments streak) |
+| Method   | Endpoint                              | Auth     | Description                               |
+| -------- | ------------------------------------- | -------- | ----------------------------------------- |
+| `POST`   | `/api/search`                         | Optional | Create search, returns slug               |
+| `GET`    | `/api/search/:slug`                   | Optional | Get search status and results             |
+| `GET`    | `/api/search/:slug/stream`            | Optional | SSE stream of job progress                |
+| `GET`    | `/api/searches`                       | Optional | List search history (by session or user)  |
+| `GET`    | `/api/search/:slug/explain/:ayah_key` | Optional | Get verse explanation on-demand           |
+| `GET`    | `/api/tafsir/:ayah_key`               | Optional | Get tafsir for a verse                    |
+| `POST`   | `/api/bookmarks`                      | Required | Save a verse                              |
+| `GET`    | `/api/bookmarks`                      | Required | List saved verses                         |
+| `DELETE` | `/api/bookmarks/:id`                  | Required | Delete a bookmark                         |
+| `POST`   | `/api/bookmarks/notes`                | Required | Create a journal note                     |
+| `GET`    | `/api/bookmarks/notes`                | Required | List journal notes                        |
+| `PATCH`  | `/api/bookmarks/notes/:id`            | Required | Update a note                             |
+| `DELETE` | `/api/bookmarks/notes/:id`            | Required | Delete a note                             |
+| `GET`    | `/api/bookmarks/streak`               | Required | Get current streak (local)                |
+| `POST`   | `/api/bookmarks/activity`             | Required | Record daily activity (increments streak) |
 
 ### 11.2 QF MCP — content retrieval (no auth required)
 

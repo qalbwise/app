@@ -269,7 +269,7 @@ uv run alembic upgrade head
 moon run api:migrate
 
 # Docker
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose up -d
 ```
 
 ---
