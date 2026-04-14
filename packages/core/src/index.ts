@@ -24,4 +24,7 @@ export const createApiWithModules = (
   };
 };
 
+import type { components } from "./schema.d.ts";
+
 export type { components, paths } from "./schema.d.ts";
+export type TokenResponse = components["schemas"]["TokenResponse"];

@@ -51,10 +51,3 @@ class NoteResponse(BaseModel):
 
 class NoteListResponse(BaseModel):
     notes: list[NoteResponse]
-
-
-class StreakResponse(BaseModel):
-    current_streak: int | None = None
-    longest_streak: int | None = None
-    status: str | None = None
-    last_activity_date: str | None = None

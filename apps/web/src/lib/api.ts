@@ -31,8 +31,5 @@ export const queryKeys = {
   notes: {
     all: ["notes"] as const,
   },
-  streak: {
-    all: ["streak"] as const,
-  },
   me: ["me"] as const,
 } as const;

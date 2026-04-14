@@ -7,16 +7,23 @@ export function useCreateSearch() {
   });
 }
 
+const POLL_TIMEOUT_MS = 3 * 60 * 1000; // stop polling after 3 minutes
+
 export function useSearchBySlug(slug: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.search.bySlug(slug),
     queryFn: () => api.search.getBySlug(slug),
     enabled,
     refetchInterval: (q) => {
-      if (q.state.data?.data?.status === "complete") return false;
-      if (q.state.data?.data?.status === "failed") return false;
-      return 2000;
+      const status = q.state.data?.data?.status;
+      if (status === "complete" || status === "failed") return false;
+      // Stop polling after timeout to prevent infinite spam
+      const dataUpdatedAt = q.state.dataUpdatedAt;
+      if (dataUpdatedAt && Date.now() - dataUpdatedAt > POLL_TIMEOUT_MS)
+        return false;
+      return 3000; // poll every 3s (was 2s)
     },
+    gcTime: 5 * 60 * 1000,
   });
 }
 

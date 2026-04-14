@@ -5,6 +5,8 @@
     "jsx": "react-jsx",
     "module": "ESNext",
     "paths": {
+      "@repo/core": ["../../packages/core/src/index.ts"],
+      "@/client": ["../../packages/core/src/client.ts"],
       "@/*": ["./src/*"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
