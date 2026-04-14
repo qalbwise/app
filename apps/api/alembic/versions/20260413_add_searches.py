@@ -37,18 +37,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_searches_slug"), "searches", ["slug"], unique=True)
     op.create_index(op.f("ix_searches_status"), "searches", ["status"], unique=False)
-    op.create_foreign_key(
-        "searches_user_id_fkey",
-        "searches",
-        "users",
-        ["user_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
 
 
 def downgrade() -> None:
-    op.drop_constraint("searches_user_id_fkey", "searches", type_="foreignkey")
     op.drop_index(op.f("ix_searches_status"), table_name="searches")
     op.drop_index(op.f("ix_searches_slug"), table_name="searches")
     op.drop_table("searches")
