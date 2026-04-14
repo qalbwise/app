@@ -100,6 +100,10 @@ async def stream_search(
     async def event_generator():
         last_status = None
         while True:
+            # Expire session cache so every iteration hits the DB fresh
+            await db.execute(select(1))
+            db.expire_all()
+
             result = await db.execute(select(Search).where(Search.slug == slug))
             search = result.scalar_one_or_none()
 

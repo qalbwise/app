@@ -4,6 +4,8 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import "../styles.css";
+import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/header";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,12 +26,16 @@ function RootComponent() {
   return (
     <>
       <QueryClientProvider client={queryClient}>
-        <Outlet />
+        <div className="flex min-h-screen flex-col bg-white">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
       </QueryClientProvider>
       <TanStackDevtools
-        config={{
-          position: "bottom-right",
-        }}
+        config={{ position: "bottom-right" }}
         plugins={[
           {
             name: "TanStack Router",

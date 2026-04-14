@@ -1,4 +1,3 @@
-import type { TokenResponse } from "@repo/core";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
@@ -7,9 +6,10 @@ export function useLogin() {
     mutationFn: (data: { email: string; password: string }) =>
       api.auth.login(data),
 
-    onSuccess: (tokens: TokenResponse) => {
-      localStorage.setItem("access_token", tokens.access_token);
-      localStorage.setItem("refresh_token", tokens.refresh_token);
+    onSuccess: ({ data }) => {
+      if (!data) return;
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
     },
   });
 }
