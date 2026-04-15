@@ -122,7 +122,7 @@ Respond in JSON format only, with no extra text:
     )
 
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="nvidia/nemotron-3-super-120b-a12b:free",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500,
     )
@@ -144,8 +144,6 @@ Respond in JSON format only, with no extra text:
         rankings = []
 
     index_map = {r["index"]: r["why_this_verse"] for r in rankings}
-
-    logger.info(f"OpenAI rankings: {rankings}")
 
     ranked = []
     for i, verse in enumerate(verses):
@@ -186,7 +184,7 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     )
 
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="nvidia/nemotron-3-super-120b-a12b:free",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=200,
     )
