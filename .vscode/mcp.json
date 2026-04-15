@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"quran": {
+			"url": "https://mcp.quran.ai/",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
