@@ -18,7 +18,7 @@ interface VerseCardProps {
   onSaveRequest?: (ayahKey: string) => void;
 }
 
-const RANK_OPACITIES = [1, 0.85, 0.7, 0.58, 0.46] as const;
+const RANK_OPACITIES = [1, 1, 1, 1, 1] as const;
 
 const RANK_DOT_COLORS = [
   ["#000", "#4e4e4e", "#e5e5e5"],
