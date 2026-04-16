@@ -21,23 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Register */
-        post: operations["register_auth_register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -49,6 +32,23 @@ export interface paths {
         put?: never;
         /** Login */
         post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login/access-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login With Access Token */
+        post: operations["login_with_access_token_auth_login_access_token_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -262,40 +262,6 @@ export interface paths {
         patch: operations["update_note_bookmarks_notes__note_id__patch"];
         trace?: never;
     };
-    "/bookmarks/activity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Record Activity */
-        post: operations["record_activity_bookmarks_activity_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/bookmarks/streak": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Streak */
-        get: operations["get_streak_bookmarks_streak_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -354,20 +320,20 @@ export interface components {
              */
             created_at: string;
         };
+        /** GoogleAccessTokenRequest */
+        GoogleAccessTokenRequest: {
+            /** Access Token */
+            access_token: string;
+        };
+        /** GoogleLoginRequest */
+        GoogleLoginRequest: {
+            /** Id Token */
+            id_token: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
-        };
-        /** LoginRequest */
-        LoginRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Password */
-            password: string;
         };
         /** NoteCreate */
         NoteCreate: {
@@ -421,18 +387,6 @@ export interface components {
             /** Refresh Token */
             refresh_token: string;
         };
-        /** RegisterRequest */
-        RegisterRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Full Name */
-            full_name: string;
-            /** Password */
-            password: string;
-        };
         /** SearchCreate */
         SearchCreate: {
             /** Topic */
@@ -460,17 +414,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-        };
-        /** StreakResponse */
-        StreakResponse: {
-            /** Current Streak */
-            current_streak?: number | null;
-            /** Longest Streak */
-            longest_streak?: number | null;
-            /** Status */
-            status?: string | null;
-            /** Last Activity Date */
-            last_activity_date?: string | null;
         };
         /** TafsirResponse */
         TafsirResponse: {
@@ -583,7 +526,7 @@ export interface operations {
             };
         };
     };
-    register_auth_register_post: {
+    login_auth_login_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -592,17 +535,17 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RegisterRequest"];
+                "application/json": components["schemas"]["GoogleLoginRequest"];
             };
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -616,7 +559,7 @@ export interface operations {
             };
         };
     };
-    login_auth_login_post: {
+    login_with_access_token_auth_login_access_token_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -625,7 +568,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LoginRequest"];
+                "application/json": components["schemas"]["GoogleAccessTokenRequest"];
             };
         };
         responses: {
@@ -1075,46 +1018,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    record_activity_bookmarks_activity_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_streak_bookmarks_streak_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StreakResponse"];
                 };
             };
         };

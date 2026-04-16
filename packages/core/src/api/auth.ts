@@ -3,11 +3,10 @@ import { createApi } from "@/client";
 type Client = ReturnType<typeof createApi>;
 
 export const createAuthApi = (client: Client) => ({
-  login: (body: { email: string; password: string }) =>
-    client.POST("/auth/login", { body }),
+  login: (body: { id_token: string }) => client.POST("/auth/login", { body }),
 
-  register: (body: { email: string; password: string; full_name: string }) =>
-    client.POST("/auth/register", { body }),
+  loginWithAccessToken: (body: { access_token: string }) =>
+    client.POST("/auth/login/access-token", { body }),
 
   refresh: (body: { refresh_token: string }) =>
     client.POST("/auth/refresh", { body }),
