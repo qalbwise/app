@@ -19,11 +19,23 @@ const rootElement = document.getElementById("app")!;
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  root.render(
-    <GoogleOAuthProvider clientId={clientId}>
-      <RouterProvider router={router} />
-    </GoogleOAuthProvider>
-  );
+  const AppContent = () => {
+    if (!clientId) {
+      return (
+        <div style={{ padding: "20px", color: "red" }}>
+          <h2>Configuration Error</h2>
+          <p>Google Client ID is not configured</p>
+        </div>
+      );
+    }
+    return (
+      <GoogleOAuthProvider clientId={clientId}>
+        <RouterProvider router={router} />
+      </GoogleOAuthProvider>
+    );
+  };
+
+  root.render(<AppContent />);
 }
