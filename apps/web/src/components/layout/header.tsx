@@ -8,7 +8,6 @@ import { useMe } from "@/modules/auth/queries/use-me";
 export const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
-  const [loginMode, setLoginMode] = useState<"signin" | "register">("signin");
 
   const me = useMe();
   const queryClient = useQueryClient();
@@ -28,13 +27,11 @@ export const Header = () => {
   }
 
   function openSignIn() {
-    setLoginMode("signin");
     setLoginSheetOpen(true);
     setMobileOpen(false);
   }
 
   function openRegister() {
-    setLoginMode("register");
     setLoginSheetOpen(true);
     setMobileOpen(false);
   }
@@ -204,7 +201,6 @@ export const Header = () => {
       <LoginSheet
         open={loginSheetOpen}
         onOpenChange={setLoginSheetOpen}
-        initialMode={loginMode}
         onSuccess={() => {
           setLoginSheetOpen(false);
           queryClient.invalidateQueries({ queryKey: queryKeys.me });

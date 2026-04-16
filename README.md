@@ -179,27 +179,6 @@ TypeScript types in `packages/core` are auto-generated from FastAPI's OpenAPI sc
 moon run core:generate
 ```
 
-The frontend never calls `fetch` directly — it uses the typed API client:
-
-```ts
-// apps/web/src/lib/api.ts — instantiated once
-import { createApiWithModules } from "@repo/core";
-
-export const api = createApiWithModules({
-  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
-  onTokenRefreshFailed: () => {
-    window.location.href = "/login";
-  },
-});
-
-// Usage in a hook
-const { data } = useQuery({
-  queryKey: ["users", "me"],
-  queryFn: () => api.users.me(),
-});
-// data is fully typed as UserResponse — no 'any'
-```
-
 ## Database Migrations
 
 ```bash
