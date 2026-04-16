@@ -27,7 +27,7 @@ async def get_qf_mcp_results_async(query: str) -> dict:
 
             result = await session.call_tool(
                 "search_quran",
-                arguments={"query": query, "translations": "auto"},
+                arguments={"query": query, "translations": "en"},
             )
 
             text_content = ""
