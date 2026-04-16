@@ -77,6 +77,13 @@ packages/core/src/
 - **Imports**: use `@/` for internal app imports, `@repo/core` for the shared package
 - **Naming**: always use `kebab-case` for filenames, `PascalCase` for components, and `camelCase` for functions
 - **Hooks**: prioritize use existing hook function from `react-use` instead of creating a new one
+- **Icons**: use Lucide icon library (`lucide-react`)
+
+#### Accessibility
+
+- Follow WCAG guidelines for accessibility
+- Use semantic HTML elements
+- Implement proper ARIA attributes when needed
 
 #### Formatting
 
@@ -91,7 +98,7 @@ packages/core/src/
 - Follow the established pattern of separating concerns for non-feature-specific components:
   - UI components in `components/ui/`
   - Layout components in `components/layout/`
-- Use `function fn()` syntax for normal functions and `const Component = () => {}` syntax for React components
+- Use `function fn()` syntax for normal functions and `const Component = () => {}` syntax for React components (not routes components)
 
 ### Shared (`packages/core`)
 
