@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useCreateSearch } from "@/modules/search/queries/use-search";
 
@@ -107,27 +108,7 @@ function Home() {
             >
               {isLoading ? (
                 <span className="flex items-center gap-1.5">
-                  <svg
-                    className="h-3.5 w-3.5 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeOpacity="0.3"
-                    />
-                    <path
-                      d="M12 2a10 10 0 0 1 10 10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
                   Searching…
                 </span>
               ) : (
