@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { containsOffensiveContent } from "@/lib/forbidden-words";
 import { useCreateSearch } from "@/modules/search/queries/use-search";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -24,6 +26,15 @@ function Home() {
     const trimmed = searchTopic.trim();
     if (!trimmed) return;
 
+    setSearchError(null);
+
+    if (containsOffensiveContent(trimmed)) {
+      toast.error(
+        "Search contains inappropriate language. Please try another topic."
+      );
+      return;
+    }
+
     try {
       const result = await createSearch.mutateAsync(trimmed);
       const slug = (result as { data?: { slug?: string } }).data?.slug;
@@ -32,10 +43,22 @@ function Home() {
       } else {
         setSearchError("Could not start search. Please try again.");
       }
-    } catch {
-      setSearchError(
-        "Search failed. Please check your connection and try again."
-      );
+    } catch (error) {
+      if ((error as any)?.response?.status === 400) {
+        toast.error(
+          (error as any)?.response?.data?.detail ||
+            "Search contains inappropriate language."
+        );
+      } else if ((error as any)?.response?.status === 429) {
+        const retryAfter = (error as any)?.response?.headers?.["retry-after"];
+        toast.error(
+          `Rate limit exceeded. Try again in ${retryAfter || "a few"} minutes.`
+        );
+      } else {
+        setSearchError(
+          "Search failed. Please check your connection and try again."
+        );
+      }
     }
   }
 
@@ -46,6 +69,7 @@ function Home() {
   }
 
   const isLoading = createSearch.isPending;
+  const hasOffensiveContent = containsOffensiveContent(topic);
 
   return (
     <div
@@ -102,9 +126,12 @@ function Home() {
             />
             <button
               type="submit"
-              disabled={isLoading || !topic.trim()}
+              disabled={isLoading || !topic.trim() || hasOffensiveContent}
               className="pill-btn-black absolute right-2 top-1/2 -translate-y-1/2 text-[14px]"
               style={{ height: "34px", padding: "0 18px" }}
+              title={
+                hasOffensiveContent ? "Inappropriate language detected" : ""
+              }
             >
               {isLoading ? (
                 <span className="flex items-center gap-1.5">

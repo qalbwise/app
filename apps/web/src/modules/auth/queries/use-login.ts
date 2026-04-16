@@ -3,8 +3,9 @@ import { api } from "@/lib/api";
 
 export function useLogin() {
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
-      api.auth.login(data),
+    mutationFn: (data: { access_token: string }) => {
+      return api.auth.loginWithAccessToken(data);
+    },
 
     onSuccess: ({ data }) => {
       if (!data) return;
