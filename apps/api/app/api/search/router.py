@@ -3,6 +3,8 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +21,7 @@ from app.models.user import User
 from app.modules.search import service
 
 router = APIRouter(prefix="/search", tags=["search"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 async def get_current_user_optional(
@@ -41,6 +44,7 @@ async def get_current_user_optional(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/hour")
 async def create_search(
     body: SearchCreate,
     db: AsyncSession = Depends(get_db),

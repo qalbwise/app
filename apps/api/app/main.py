@@ -2,13 +2,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from scalar_fastapi import get_scalar_api_reference
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.api.auth.router import router as auth_router
 from app.api.bookmarks.router import router as bookmarks_router
 from app.api.search.router import router as search_router
 from app.api.tafsir.router import router as tafsir_router
+from app.core.settings import get_settings
 
 app = FastAPI()
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=get_settings().REDIS_URL,
+    default_limits=["100/minute"],
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 origins = [
     "http://localhost:3000",

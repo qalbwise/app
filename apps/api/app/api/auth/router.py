@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth.serializer import (
-    LoginRequest,
+    GoogleLoginRequest,
     RefreshRequest,
-    RegisterRequest,
     TokenResponse,
     UserResponse,
 )
@@ -17,6 +19,11 @@ from app.modules.auth import service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
+limiter = Limiter(key_func=get_remote_address)
+
+
+class GoogleAccessTokenRequest(BaseModel):
+    access_token: str
 
 
 async def get_current_user(
@@ -43,33 +50,41 @@ async def get_current_user(
     return user
 
 
-@router.post(
-    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
-)
-async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    user = await service.register(db, req.email, req.full_name, req.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
-    return user
-
-
 @router.post("/login", response_model=TokenResponse)
-async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    tokens = await service.login(db, req.email, req.password)
+@limiter.limit("5/15minutes")
+async def login(
+    req: GoogleLoginRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    tokens = await service.login_google(db, req.id_token)
     if not tokens:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid Google token",
+        )
+    access, refresh = tokens
+    return TokenResponse(access_token=access, refresh_token=refresh)
+
+
+@router.post("/login/access-token", response_model=TokenResponse)
+@limiter.limit("5/15minutes")
+async def login_with_access_token(
+    req: GoogleAccessTokenRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    tokens = await service.login_google_access_token(db, req.access_token)
+    if not tokens:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google access token",
         )
     access, refresh = tokens
     return TokenResponse(access_token=access, refresh_token=refresh)
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/15minutes")
+async def refresh(
+    req: RefreshRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
     tokens = await service.refresh(db, req.refresh_token)
     if not tokens:
         raise HTTPException(
