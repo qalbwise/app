@@ -11,10 +11,12 @@
     "includes": [
       "packages/**/*",
       "apps/web/**/*",
-      "**/.vscode/**/*",
-      "!**/*.moon.yml",
-      "!**/apps/web/src/routeTree.gen.ts",
-      "!**/apps/web/src/styles.css"
+      "!**/.vscode/**/*",
+      "!**/*.node_modules/**/*",
+      "!apps/web/dist",
+      "!apps/web/src/routeTree.gen.ts",
+      "!apps/web/src/styles.css",
+      "!packages/core/src/schema.d.ts"
     ]
   },
   "formatter": {
