@@ -3,12 +3,14 @@ import { createApiWithModules } from "@repo/core";
 export const api = createApiWithModules({
   baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
   onTokenRefreshFailed: () => {
-    console.warn("Token refresh failed, redirecting to login...");
+    console.warn("Token refresh failed in api.ts");
+    console.warn("Current pathname:", window.location.pathname);
 
     if (
       typeof window !== "undefined" &&
       !window.location.pathname.startsWith("/login")
     ) {
+      console.warn("Redirecting to /login");
       window.location.href = "/login";
     }
   },

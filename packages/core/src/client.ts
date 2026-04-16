@@ -29,6 +29,13 @@ export const createApi = ({
     async onResponse({ response, request }) {
       if (response.status !== 401) return response;
 
+      const url = request.url;
+      const isAuthEndpoint = url.includes("/auth/");
+
+      if (isAuthEndpoint) {
+        return response;
+      }
+
       const refreshToken = localStorage.getItem("refresh_token");
       if (!refreshToken) {
         onTokenRefreshFailed?.();
@@ -45,7 +52,6 @@ export const createApi = ({
         return fetch(request);
       }
 
-      // Refresh failed — clear tokens and notify the app
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       onTokenRefreshFailed?.();

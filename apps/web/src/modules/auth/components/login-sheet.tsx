@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { type TokenResponse, useGoogleLogin } from "@react-oauth/google";
+import { useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -6,15 +7,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useLogin } from "@/modules/auth/queries/use-login";
-import { useRegister } from "@/modules/auth/queries/use-register";
 
 interface LoginSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Headline copy when triggering from a "save verse" context */
   promptContext?: string;
-  /** Which tab to open first */
-  initialMode?: "signin" | "register";
   onSuccess?: () => void;
 }
 
@@ -22,71 +19,46 @@ export const LoginSheet = ({
   open,
   onOpenChange,
   promptContext,
-  initialMode = "signin",
   onSuccess,
 }: LoginSheetProps) => {
-  const [mode, setMode] = useState<"signin" | "register">(initialMode);
-
-  /* Sync to initialMode every time the sheet opens so "Get started" = register tab */
-  useEffect(() => {
-    if (open) setMode(initialMode);
-  }, [open, initialMode]);
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("");
-
   const login = useLogin();
-  const register = useRegister();
+  const hasError = login.isError;
 
-  const isLoading = login.isPending || register.isPending;
-  const hasError = login.isError || register.isError;
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse: TokenResponse) => {
+      try {
+        await login.mutateAsync({
+          access_token: tokenResponse.access_token,
+        });
+        onSuccess?.();
+        onOpenChange(false);
+      } catch (error: unknown) {
+        console.error("Login failed:", error);
+      }
+    },
+    onError: (error) => {
+      console.error("Google login error:", error);
+    },
+    scope: "openid email profile",
+    flow: "implicit",
+  });
 
-  /* Reset form when sheet closes */
-  function handleOpenChange(v: boolean) {
-    if (!v) {
-      setEmail("");
-      setFullName("");
-      setPassword("");
-      login.reset();
-      register.reset();
-    }
-    onOpenChange(v);
-  }
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) {
+        login.reset();
+      }
+      onOpenChange(v);
+    },
+    [login, onOpenChange]
+  );
 
-  async function handleSignIn(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      await login.mutateAsync({ email, password });
-      onSuccess?.();
-      handleOpenChange(false);
-    } catch {
-      /* error rendered inline */
-    }
-  }
-
-  async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      await register.mutateAsync({ email, full_name: fullName, password });
-      /* Auto-login after successful registration */
-      await login.mutateAsync({ email, password });
-      onSuccess?.();
-      handleOpenChange(false);
-    } catch {
-      /* error rendered inline */
-    }
-  }
-
-  const title =
-    promptContext ??
-    (mode === "signin" ? "Welcome back" : "Create your account");
+  const title = promptContext ?? "Welcome back";
 
   const subtitle =
     promptContext != null
       ? "Sign in to build your personal Quran journal — free forever."
-      : mode === "signin"
-        ? "Sign in to your Qalbwise account."
-        : "Your personal Quran journal, free forever.";
+      : "Sign in to your Qalbwise account.";
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -101,177 +73,52 @@ export const LoginSheet = ({
           </p>
         </SheetHeader>
 
-        {/* Mode toggle */}
-        <div
-          className="mb-5 flex rounded-xl p-1"
-          style={{ background: "#f5f5f5" }}
-        >
+        <div className="mt-6">
           <button
             type="button"
-            onClick={() => {
-              setMode("signin");
-              login.reset();
-              register.reset();
-            }}
-            className="flex-1 rounded-lg py-2 text-[13px] font-medium transition-all"
-            style={{
-              background: mode === "signin" ? "#fff" : "transparent",
-              color: mode === "signin" ? "#000" : "#777169",
-              boxShadow: mode === "signin" ? "var(--shadow-card)" : "none",
-            }}
+            onClick={() => googleLogin()}
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-[15px] font-medium text-gray-700 transition-shadow hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-200"
+            style={{ boxShadow: "var(--shadow-soft)" }}
           >
-            Sign in
+            <span className="flex items-center justify-center gap-2">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M4.964 10.71A5.41 5.41 0 0 1 4.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M9 3.618c1.355 0 2.578.464 3.545 1.375l2.868-2.867A8.97 8.97 0 0 0 9 0 8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.618 9 3.618z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Continue with Google
+            </span>
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("register");
-              login.reset();
-              register.reset();
-            }}
-            className="flex-1 rounded-lg py-2 text-[13px] font-medium transition-all"
-            style={{
-              background: mode === "register" ? "#fff" : "transparent",
-              color: mode === "register" ? "#000" : "#777169",
-              boxShadow: mode === "register" ? "var(--shadow-card)" : "none",
-            }}
-          >
-            Sign up
-          </button>
-        </div>
 
-        {mode === "signin" ? (
-          <form onSubmit={handleSignIn} className="flex flex-col gap-3">
-            <AuthInput
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={setEmail}
-            />
-            <AuthInput
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={setPassword}
-            />
-            {hasError && <ErrorMsg />}
-            <SubmitButton loading={isLoading} label="Sign in" />
-          </form>
-        ) : (
-          <form onSubmit={handleRegister} className="flex flex-col gap-3">
-            <AuthInput
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={setEmail}
-            />
-            <AuthInput
-              type="text"
-              placeholder="Full name"
-              value={fullName}
-              onChange={setFullName}
-            />
-            <AuthInput
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={setPassword}
-            />
-            {hasError && <ErrorMsg isRegister />}
-            <SubmitButton loading={isLoading} label="Create account" />
-          </form>
-        )}
+          {hasError && (
+            <p
+              className="mt-3 text-[13px]"
+              style={{ color: "#dc2626", letterSpacing: "0.13px" }}
+            >
+              Sign-in failed. Please try again.
+            </p>
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );
 };
-
-/* ── Sub-components ── */
-
-const AuthInput = ({
-  type,
-  placeholder,
-  value,
-  onChange,
-}: {
-  type: string;
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-}) => (
-  <input
-    type={type}
-    placeholder={placeholder}
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    required
-    className="w-full rounded-xl px-4 py-3 text-[15px] outline-none transition-shadow"
-    style={{
-      border: "1px solid #e5e5e5",
-      boxShadow: "var(--shadow-soft)",
-      color: "#000",
-      background: "#fff",
-    }}
-    onFocus={(e) => {
-      e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
-    }}
-    onBlur={(e) => {
-      e.currentTarget.style.borderColor = "#e5e5e5";
-    }}
-  />
-);
-
-const ErrorMsg = ({ isRegister = false }: { isRegister?: boolean }) => (
-  <p
-    className="text-[13px]"
-    style={{ color: "#dc2626", letterSpacing: "0.13px" }}
-  >
-    {isRegister
-      ? "Registration failed. This email may already be in use."
-      : "Invalid email or password. Please try again."}
-  </p>
-);
-
-const SubmitButton = ({
-  loading,
-  label,
-}: {
-  loading: boolean;
-  label: string;
-}) => (
-  <button
-    type="submit"
-    disabled={loading}
-    className="pill-btn-black mt-1 w-full disabled:opacity-40"
-    style={{ height: "48px", fontSize: "15px" }}
-  >
-    {loading ? (
-      <span className="flex items-center justify-center gap-2">
-        <svg
-          className="h-4 w-4 animate-spin"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeOpacity="0.3"
-          />
-          <path
-            d="M12 2a10 10 0 0 1 10 10"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </svg>
-        Loading…
-      </span>
-    ) : (
-      label
-    )}
-  </button>
-);

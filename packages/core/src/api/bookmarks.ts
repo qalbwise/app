@@ -22,7 +22,7 @@ export const createBookmarksApi = (client: Client) => ({
   createNote: (body: {
     topic: string;
     content: string;
-    verses?: Array<Record<string, unknown>>;
+    verses?: Record<string, unknown>[];
   }) => client.POST("/bookmarks/notes", { body }),
 
   listNotes: () => client.GET("/bookmarks/notes"),
@@ -37,5 +37,4 @@ export const createBookmarksApi = (client: Client) => ({
     client.DELETE("/bookmarks/notes/{note_id}", {
       params: { path: { note_id: id } },
     }),
-
 });

@@ -2,9 +2,11 @@ import secrets
 import string
 from typing import Any
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.settings import FORBIDDEN_SEARCH_WORDS, is_leet_speak_variant
 from app.models.search import Search
 from app.modules.search.tasks import run_search
 
@@ -14,12 +16,28 @@ def generate_slug() -> str:
     return "srch_" + "".join(secrets.choice(chars) for _ in range(8))
 
 
+async def validate_search_input(topic: str) -> None:
+    topic_lower = topic.lower().strip()
+    words = topic_lower.split()
+    error_detail = "Search contains inappropriate language. Please try another topic."
+
+    for word in words:
+        if word in FORBIDDEN_SEARCH_WORDS:
+            raise HTTPException(status_code=400, detail=error_detail)
+
+        for forbidden_word in FORBIDDEN_SEARCH_WORDS:
+            if is_leet_speak_variant(word, forbidden_word):
+                raise HTTPException(status_code=400, detail=error_detail)
+
+
 async def create_search(
     db: AsyncSession,
     topic: str,
     user_id: str | None = None,
     session_id: str | None = None,
 ) -> Search:
+    await validate_search_input(topic)
+
     slug = generate_slug()
     search = Search(
         slug=slug,
