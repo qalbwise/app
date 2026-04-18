@@ -6,9 +6,9 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings import FORBIDDEN_SEARCH_WORDS, is_leet_speak_variant
 from app.models.search import Search
 from app.modules.search.tasks import run_search
+from app.modules.search.utils import FORBIDDEN_SEARCH_WORDS, is_leet_speak_variant
 
 
 def generate_slug() -> str:

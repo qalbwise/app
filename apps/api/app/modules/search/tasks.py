@@ -50,6 +50,21 @@ async def get_qf_mcp_results_async(query: str) -> dict:
                 return {"results": []}
 
 
+def normalize_ayah_key(key: str) -> str:
+    """
+    Quran.com v4 expects surah:ayah without leading zeros (e.g. 21:104 not 021:104).
+    MCP sometimes returns padded keys; empty API responses left Arabic as rasm-only.
+    """
+    key = (key or "").strip()
+    if ":" not in key:
+        return key
+    left, right = key.split(":", 1)
+    try:
+        return f"{int(left)}:{int(right)}"
+    except ValueError:
+        return key
+
+
 def _strip_html(text: str) -> str:
     """Remove HTML tags and decode common entities from translation strings."""
     text = _re.sub(r"<[^>]+>", "", text)
@@ -90,7 +105,7 @@ def parse_mcp_results(raw: dict) -> list[dict]:
     parsed = []
 
     for item in results:
-        ayah_key = item.get("ayah_key", "")
+        ayah_key = normalize_ayah_key(str(item.get("ayah_key", "")))
         translations = item.get("translations", [])
 
         surah_name = ""
@@ -136,34 +151,68 @@ async def enrich_verses_from_quran_com(
     text_key = "text_indopak" if use_indopak_edition else "text_uthmani"
     trans_url = f"{QDC_TRANSLATIONS_URL}/{QDC_TRANSLATION_EN_SAHEEH}"
 
+    req_headers = {
+        "User-Agent": "Qalbwise/1.0 (+https://qalbwise.app)",
+        "Accept": "application/json",
+    }
+    # Avoid Quran.com rate-limits when MCP returns many hits; Arabic/translation
+    # are fetched separately so a translation error never drops vocalized Arabic.
+    sem = asyncio.Semaphore(6)
+
     async def fetch_one(client: httpx.AsyncClient, verse: dict) -> None:
-        key = (verse.get("ayah_key") or "").strip()
+        key = normalize_ayah_key((verse.get("ayah_key") or "").strip())
         if not key:
             return
-        try:
-            ar_task = client.get(arabic_url, params={"verse_key": key})
-            tr_task = client.get(trans_url, params={"verse_key": key})
-            ar, tr = await asyncio.gather(ar_task, tr_task)
-            ar.raise_for_status()
-            tr.raise_for_status()
-            ar_data = ar.json()
-            tr_data = tr.json()
-            aitems = ar_data.get("verses") or []
-            if aitems:
-                text = aitems[0].get(text_key)
-                if isinstance(text, str) and text.strip():
-                    verse["arabic_text"] = text.strip()
-            titems = tr_data.get("translations") or []
-            if titems:
-                ttext = titems[0].get("text")
-                if isinstance(ttext, str) and ttext.strip():
-                    verse["translation"] = _strip_html(ttext.strip())
-                    meta = tr_data.get("meta") or {}
-                    verse["translator"] = (
-                        meta.get("author_name") or "Saheeh International"
+        async with sem:
+            try:
+                ar = await client.get(
+                    arabic_url,
+                    params={"verse_key": key},
+                    headers=req_headers,
+                )
+                ar.raise_for_status()
+                ar_data = ar.json()
+                aitems = ar_data.get("verses") or []
+                if not aitems:
+                    logger.warning(
+                        "Quran.com returned no verses for key {!r}",
+                        key,
                     )
-        except Exception as exc:
-            logger.warning("Quran.com verse enrich failed for {}: {}", key, exc)
+                else:
+                    v0 = aitems[0]
+                    text = (
+                        v0.get(text_key)
+                        or v0.get("text_uthmani")
+                        or v0.get("text_indopak")
+                    )
+                    if isinstance(text, str) and text.strip():
+                        verse["arabic_text"] = text.strip()
+            except Exception as exc:
+                logger.warning("Quran.com Arabic enrich failed for {}: {}", key, exc)
+
+            try:
+                tr = await client.get(
+                    trans_url,
+                    params={"verse_key": key},
+                    headers=req_headers,
+                )
+                tr.raise_for_status()
+                tr_data = tr.json()
+                titems = tr_data.get("translations") or []
+                if titems:
+                    ttext = titems[0].get("text")
+                    if isinstance(ttext, str) and ttext.strip():
+                        verse["translation"] = _strip_html(ttext.strip())
+                        meta = tr_data.get("meta") or {}
+                        verse["translator"] = (
+                            meta.get("author_name")
+                            or meta.get("translation_name")
+                            or "Saheeh International"
+                        )
+            except Exception as exc:
+                logger.warning(
+                    "Quran.com translation enrich failed for {}: {}", key, exc
+                )
 
     limits = httpx.Limits(max_keepalive_connections=10, max_connections=20)
     timeout = httpx.Timeout(30.0)
@@ -171,6 +220,7 @@ async def enrich_verses_from_quran_com(
         limits=limits,
         timeout=timeout,
         follow_redirects=True,
+        headers=req_headers,
     ) as client:
         await asyncio.gather(*(fetch_one(client, v) for v in verses))
 
@@ -195,8 +245,7 @@ async def rank_with_openai_async(topic: str, verses: list[dict]) -> list[dict]:
         for i, v in enumerate(verses[:20])
     )
 
-    prompt = f"""
-Given the user's topic: "{topic}"
+    prompt = f"""Given the user's topic: "{topic}"
 
 Here are the top relevant verses from the Quran:
 {verses_text}
@@ -205,8 +254,7 @@ Rank the top 3-5 verses that best relate to this topic.
 For each verse, provide the index (1-based) and a one-sentence explanation.
 
 Respond in JSON format only, with no extra text:
-[{{"index": 1, "why_this_verse": "..."}}, {{"index": 3, "why_this_verse": "..."}}]
-"""
+[{{"index": 1, "why_this_verse": "..."}}, {{"index": 3, "why_this_verse": "..."}}]"""
 
     prompt = append_english_only(prompt)
 
@@ -304,27 +352,15 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     ayah_key = verse.get("ayah_key", "")
     arabic_text = verse.get("arabic_text", "")
     translation = verse.get("translation", "")
+    verses_text = f"Verse ({ayah_key}): {arabic_text}\nTranslation: {translation}"
 
-    prompt = f"""
-You are a compassionate Quranic guide helping users find meaning and \
-comfort in the words of Allah.
+    prompt = f"""Given the user's topic: "{topic}"
+    Here is a verse from the Quran:
+    {verses_text}
 
-User's message: "{topic}"
-
-Verse ({ayah_key}):
-Arabic: {arabic_text}
-Translation: {translation}
-
-First, sense the tone of the user's message:
-- If it is personal, emotional, or reflective (e.g. seeking comfort, gratitude, hope): \
-    respond with warmth and speak directly to their heart — as if you \
-    are gently reminding them of Allah's care.
-- If it is a general topic or question: \
-    respond with a clear and concise scholarly explanation of the connection.
-
-In exactly one sentence, explain how this verse speaks to the user's message.
-Do not restate the verse. Do not add greetings or filler text.
-"""
+    Provide a one-sentence explanation of why this verse relates to the user's topic.
+    Respond in one sentence only, no extra text.
+    """
 
     prompt = append_english_only(prompt)
 

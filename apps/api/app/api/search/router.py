@@ -102,7 +102,7 @@ async def stream_search(
         )
 
     async def event_generator():
-        last_status = None
+        last_signature: tuple[str, str | None, str | None] | None = None
         while True:
             # Expire session cache so every iteration hits the DB fresh
             await db.execute(select(1))
@@ -114,8 +114,15 @@ async def stream_search(
             if not search:
                 break
 
-            if search.status != last_status:
-                last_status = search.status
+            results_fingerprint: str | None = None
+            if search.results:
+                results_fingerprint = json.dumps(
+                    search.results, ensure_ascii=False, sort_keys=True
+                )
+
+            signature = (search.status, search.step, results_fingerprint)
+            if signature != last_signature:
+                last_signature = signature
                 event_data = {
                     "status": search.status,
                     "step": search.step,

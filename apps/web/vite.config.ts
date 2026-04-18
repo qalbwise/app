@@ -20,6 +20,7 @@ const config = defineConfig({
       "@/client": resolve(__dirname, "../../packages/core/src/client.ts"),
     },
   },
+  envDir: resolve(__dirname, "../../"),
 });
 
 export default config;

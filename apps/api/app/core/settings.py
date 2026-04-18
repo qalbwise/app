@@ -1,8 +1,13 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# apps/api — where local `.env` usually lives (`moon run api:*` cwd is optional)
+_API_ROOT = Path(__file__).resolve().parent.parent.parent
+# Monorepo / workspace root (compose-style root `.env`)
+_REPO_ROOT = _API_ROOT.parent.parent
 
 
 class Settings(BaseSettings):
@@ -21,57 +26,17 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GOOGLE_CLIENT_ID: str | None = None
-    # Comma-separated; merged with built-in prod + local dev origins.
-    CORS_EXTRA_ORIGINS: str = ""
 
-    model_config = ConfigDict(env_file=".env", extra="ignore")
-
-
-FORBIDDEN_SEARCH_WORDS = {
-    "fuck",
-    "fucked",
-    "fucking",
-    "f*ck",
-    "f**k",
-    "fck",
-    "nigga",
-    "nigger",
-    "n1gga",
-    "n1gg4",
-    "ngga",
-    "bastard",
-    "b4stard",
-    "bastrd",
-    "dick",
-    "d1ck",
-    "d!ck",
-    "dck",
-    "bitch",
-    "b1tch",
-    "b!tch",
-    "asshole",
-    "a$$hole",
-    "@sshole",
-    "shit",
-    "sh1t",
-    "sh!t",
-}
-
-
-def is_leet_speak_variant(word: str, forbidden_word: str) -> bool:
-    normalized = (
-        word.lower()
-        .replace("1", "i")
-        .replace("3", "e")
-        .replace("@", "a")
-        .replace("$", "s")
-        .replace("!", "i")
-        .replace("0", "o")
-        .replace("4", "a")
-        .replace("5", "s")
-        .replace("7", "t")
+    model_config = SettingsConfigDict(
+        # Later files override earlier (apps/api `.env` wins over monorepo root).
+        env_file=(
+            tuple(
+                str(p) for p in (_REPO_ROOT / ".env", _API_ROOT / ".env") if p.is_file()
+            )
+            or None
+        ),
+        extra="ignore",
     )
-    return normalized == forbidden_word.lower()
 
 
 @lru_cache

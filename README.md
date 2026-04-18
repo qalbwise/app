@@ -206,12 +206,15 @@ Create a `.env` file in the project root with the following variables:
 | `POSTGRES_PASSWORD` | DB password                      |
 | `POSTGRES_DB`       | DB name                          |
 | `OPENAI_API_KEY`    | OpenAI API key                   |
+| `OPENAI_BASE_URL`   | OpenAI-compatible base URL      |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend) |
+| `GOOGLE_CLIENT_ID`  | Google OAuth client ID (backend) |
 
-For local development without Docker, copy the relevant variables to each app's `.env`:
-- `apps/api/.env` for backend
-- `apps/web/.env` for frontend
+Both the API and frontend load environment variables from the root `.env` file:
+- API: `apps/api/app/core/settings.py` loads from `ROOT_DIR / ".env"`
+- Frontend: Vite configured with `envDir: "../../"` in `vite.config.ts`
 
-For Docker deployment, the root `.env` is used automatically.
+Docker Compose reads from the root `.env` automatically.
 
 ## Git Workflow
 
