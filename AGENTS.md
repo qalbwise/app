@@ -285,9 +285,9 @@ docker compose up -d
 
 Create a `.env` file in the project root with all variables. Docker Compose reads from this file automatically.
 
-For local development without Docker, copy relevant variables to each app:
-- `apps/api/.env` - API variables
-- `apps/web/.env` - Frontend variables
+Both the API and frontend load environment variables from the root `.env` file:
+- API: `apps/api/app/core/settings.py` loads from `ROOT_DIR / ".env"`
+- Frontend: Vite configured with `envDir: "../../"` in `vite.config.ts`
 
 Root `.env` example:
 
@@ -314,7 +314,7 @@ OPENAI_API_KEY=
 6. Never add a new model without importing it in `alembic/env.py`
 7. Never use `print` or stdlib `logging` in the backend — use Loguru
 8. Never add Biome as a per-app dependency — it lives at the root only
-9. Never hardcode secrets — always load from `.env` via `settings.py`
+9. Never hardcode secrets — always load from the root `.env` via `settings.py` (API) or Vite envDir (frontend)
 10. Never commit `.env` files — only `.env.example`
 11. Never write obvious line-by-line comments — use docstrings for complex logic only
 
