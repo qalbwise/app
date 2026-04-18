@@ -20,6 +20,17 @@ interface VerseCardProps {
 
 const RANK_OPACITIES = [1, 1, 1, 1, 1] as const;
 
+/** English locale; MCP/API may still store `/ur/` or other paths in `url`. */
+function quranComEnUrl(ayahKey: string): string {
+  const raw = ayahKey.trim();
+  const parts = raw.split(":");
+  if (parts.length !== 2) return "https://quran.com/en";
+  const surah = Number.parseInt(parts[0]!, 10);
+  const ayah = Number.parseInt(parts[1]!, 10);
+  if (Number.isNaN(surah) || Number.isNaN(ayah)) return "https://quran.com/en";
+  return `https://quran.com/en/${surah}/${ayah}`;
+}
+
 export const VerseCard = ({
   verse,
   rank,
@@ -159,7 +170,7 @@ export const VerseCard = ({
           </button>
           {/* quran.com */}
           <a
-            href={verse.url}
+            href={quranComEnUrl(verse.ayah_key)}
             target="_blank"
             rel="noreferrer"
             className="text-[12px] font-medium no-underline transition-colors"

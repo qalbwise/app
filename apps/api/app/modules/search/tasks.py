@@ -65,6 +65,15 @@ def normalize_ayah_key(key: str) -> str:
         return key
 
 
+def quran_com_en_url(ayah_key: str) -> str:
+    """English locale page; MCP often returns /ur/ or other locales in `url`."""
+    key = normalize_ayah_key(ayah_key)
+    if ":" not in key:
+        return "https://quran.com"
+    surah, ayah = key.split(":", 1)
+    return f"https://quran.com/en/{surah}/{ayah}"
+
+
 def _strip_html(text: str) -> str:
     """Remove HTML tags and decode common entities from translation strings."""
     text = _re.sub(r"<[^>]+>", "", text)
@@ -123,7 +132,7 @@ def parse_mcp_results(raw: dict) -> list[dict]:
                 "translation": raw_translation,
                 "translator": translator,
                 "relevance_score": item.get("relevance_score", 0.0),
-                "url": item.get("url", ""),
+                "url": quran_com_en_url(ayah_key),
             }
         )
 
