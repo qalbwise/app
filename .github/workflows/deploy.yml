@@ -16,6 +16,29 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # required to diff against the previous commit
+
+      - name: Check directory changes
+        id: check_changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "changed_dirs<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          WEB_CHANGED=false
+          API_CHANGED=false
+
+          if echo "$CHANGED" | grep -q "^apps/web/"; then
+            WEB_CHANGED=true
+          fi
+          if echo "$CHANGED" | grep -qE "^apps/api/"; then
+            API_CHANGED=true
+          fi
+
+          echo "web_changed=$WEB_CHANGED" >> $GITHUB_OUTPUT
+          echo "api_changed=$API_CHANGED" >> $GITHUB_OUTPUT
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -24,10 +47,34 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          # Pass booleans as safe env vars — no shell injection risk
+          envs: WEB_CHANGED,API_CHANGED
           script: |
+            set -euo pipefail
+
             cd /home/deploy/apps/qalbwise
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
-            docker compose down
-            docker compose up -d --build
+
+            if [ "$WEB_CHANGED" = "true" ] && [ "$API_CHANGED" = "true" ]; then
+              echo "Both apps changed — rebuilding all"
+              docker compose up -d --build --no-deps api worker web
+            elif [ "$WEB_CHANGED" = "true" ]; then
+              echo "Only web changed"
+              docker compose up -d --build --no-deps web
+            elif [ "$API_CHANGED" = "true" ]; then
+              echo "Only api changed"
+              docker compose up -d --build --no-deps api worker
+              echo "Restart web so it picks up any API contract changes"
+              docker compose restart web
+            else
+              echo "No app-specific changes — rebuilding all"
+              docker compose up -d --build
+            fi
+
+            echo "Clean up dangling images to free disk space"
+            docker image prune -f
+        env:
+          WEB_CHANGED: ${{ steps.check_changes.outputs.web_changed }}
+          API_CHANGED: ${{ steps.check_changes.outputs.api_changed }}
