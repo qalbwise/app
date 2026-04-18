@@ -100,7 +100,8 @@ async def rank_with_openai_async(topic: str, verses: list[dict]) -> list[dict]:
         for i, v in enumerate(verses[:20])
     )
 
-    prompt = f"""Given the user's topic: "{topic}"
+    prompt = f"""
+Given the user's topic: "{topic}"
 
 Here are the top relevant verses from the Quran:
 {verses_text}
@@ -109,7 +110,8 @@ Rank the top 3-5 verses that best relate to this topic.
 For each verse, provide the index (1-based) and a one-sentence explanation.
 
 Respond in JSON format only, with no extra text:
-[{{"index": 1, "why_this_verse": "..."}}, {{"index": 3, "why_this_verse": "..."}}]"""
+[{{"index": 1, "why_this_verse": "..."}}, {{"index": 3, "why_this_verse": "..."}}]
+"""
 
     from app.core.settings import get_settings
 
@@ -162,15 +164,27 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     ayah_key = verse.get("ayah_key", "")
     arabic_text = verse.get("arabic_text", "")
     translation = verse.get("translation", "")
-    verses_text = f"Verse ({ayah_key}): {arabic_text}\nTranslation: {translation}"
 
-    prompt = f"""Given the user's topic: "{topic}"
-    Here is a verse from the Quran:
-    {verses_text}
+    prompt = f"""
+You are a compassionate Quranic guide helping users find meaning and \
+comfort in the words of Allah.
 
-    Provide a one-sentence explanation of why this verse relates to the user's topic.
-    Respond in one sentence only, no extra text.
-    """
+User's message: "{topic}"
+
+Verse ({ayah_key}):
+Arabic: {arabic_text}
+Translation: {translation}
+
+First, sense the tone of the user's message:
+- If it is personal, emotional, or reflective (e.g. seeking comfort, gratitude, hope): \
+    respond with warmth and speak directly to their heart — as if you \
+    are gently reminding them of Allah's care.
+- If it is a general topic or question: \
+    respond with a clear and concise scholarly explanation of the connection.
+
+In exactly one sentence, explain how this verse speaks to the user's message.
+Do not restate the verse. Do not add greetings or filler text.
+"""
 
     from app.core.settings import get_settings
 
