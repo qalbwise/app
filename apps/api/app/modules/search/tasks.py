@@ -125,9 +125,8 @@ Respond in JSON format only, with no extra text:
         model="nvidia/nemotron-3-super-120b-a12b:free",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500,
+        extra_body={"models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]},
     )
-
-    logger.info(f"OpenAI response content: {response.choices[0].message.content}")
 
     content = response.choices[0].message.content or ""
     content = content.strip()
@@ -187,6 +186,7 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
         model="nvidia/nemotron-3-super-120b-a12b:free",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=200,
+        extra_body={"models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]},
     )
 
     content = response.choices[0].message.content or ""
