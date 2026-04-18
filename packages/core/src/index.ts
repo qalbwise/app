@@ -28,3 +28,4 @@ import type { components } from "./schema.d.ts";
 
 export type { components, paths } from "./schema.d.ts";
 export type TokenResponse = components["schemas"]["TokenResponse"];
+export type { UserPreferencesUpdate } from "./api/users";

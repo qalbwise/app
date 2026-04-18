@@ -2,6 +2,7 @@ import type { components } from "@repo/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { LoginSheet } from "@/modules/auth/components/login-sheet";
+import { SearchFontControls } from "@/modules/preferences/components/search-font-controls";
 import { VerseCard } from "@/modules/search/components/verse-card";
 import { useSearchStream } from "@/modules/search/hooks/use-search-stream";
 import { useSearchBySlug } from "@/modules/search/queries/use-search";
@@ -112,14 +113,18 @@ function SearchPage() {
 
         {/* Status / count line */}
         {isLoading ? (
-          <p className="caption mb-10 fade-up">{stepMessage}</p>
+          <p className="caption mb-4 fade-up">{stepMessage}</p>
         ) : (
           results && (
-            <p className="caption mb-10">
+            <p className="caption mb-4">
               {results.length} {results.length === 1 ? "verse" : "verses"} found
             </p>
           )
         )}
+
+        <div className="mb-3 flex justify-end">
+          <SearchFontControls />
+        </div>
 
         {/* Content */}
         <div className="flex flex-col gap-4">

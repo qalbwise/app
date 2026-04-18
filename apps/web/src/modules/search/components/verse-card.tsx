@@ -142,10 +142,9 @@ export const VerseCard = ({
 
         {/* ── Translation ─────────────────────────────────── */}
         <p
-          className="mb-5 text-[15px] leading-relaxed"
+          className="mb-5 text-[15px] leading-relaxed not-italic"
           style={{
             color: "#4e4e4e",
-            fontStyle: "italic",
             letterSpacing: "0.15px",
           }}
         >

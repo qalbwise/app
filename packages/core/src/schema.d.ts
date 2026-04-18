@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put My Preferences */
+        put: operations["put_my_preferences_users_me_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/search": {
         parameters: {
             query?: never;
@@ -436,6 +453,31 @@ export interface components {
              */
             token_type: string;
         };
+        /** UserPreferences */
+        UserPreferences: {
+            /**
+             * Serif
+             * @description Use serif stack for Latin/UI body text
+             * @default false
+             */
+            serif: boolean;
+            /**
+             * Arabic Font
+             * @default hafs_quran
+             * @enum {string}
+             */
+            arabic_font: "hafs_quran" | "indopak";
+        };
+        /** UserPreferencesUpdate */
+        UserPreferencesUpdate: {
+            /** Serif */
+            serif: boolean;
+            /**
+             * Arabic Font
+             * @enum {string}
+             */
+            arabic_font: "hafs_quran" | "indopak";
+        };
         /** UserResponse */
         UserResponse: {
             /**
@@ -457,6 +499,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            preferences: components["schemas"]["UserPreferences"];
         };
         /** ValidationError */
         ValidationError: {
@@ -661,6 +704,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    put_my_preferences_users_me_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPreferences"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

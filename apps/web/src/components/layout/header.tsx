@@ -53,7 +53,7 @@ export const Header = () => {
             </span>
             <span
               className="text-[13px] font-normal"
-              style={{ color: "#777169", fontFamily: "serif" }}
+              style={{ color: "#777169", fontFamily: "var(--font-arabic)" }}
             >
               قلب
             </span>
