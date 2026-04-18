@@ -249,10 +249,29 @@ Value before friction. Users must experience the core value before being asked t
 
 ## 9. Technical Architecture
 
-### Monorepo structure
+### High-level overview
 
-Qalbwise is a full-stack monorepo managed with [Moon](https://moonrepo.dev) and [Proto](https://moonrepo.dev/proto). The repository lives at `github.com/qalbwise/app`.
+Qalbwise is a full-stack web application with:
+- A React frontend that handles UI and search interactions
+- A FastAPI backend that processes search requests and stores user data
+- A background worker that handles long-running search jobs
+- PostgreSQL for data storage
+- Redis for task queue and caching
 
+### Data flow
+
+```
+User submits topic
+       ↓
+Backend creates search record + queues background job → returns slug
+       ↓
+Frontend navigates to /search/:slug
+       ↓
+Backend streams progress updates to frontend
+       ↓
+Background worker: queries QF API for verses → ranks results → stores in database
+       ↓
+Frontend receives final results and renders verse cards
 ```
 qalbwise/
 ├── .moon/
@@ -341,286 +360,49 @@ SSE emits "complete" → frontend renders verse cards
 
 ## 10. Search System Design
 
-This section describes the complete system design for the core search feature — the flow from a user submitting a topic to results appearing on screen, including resilience to page refresh, navigation, and anonymous usage.
+This section describes how the search feature works — from user input to results.
 
 ### Design principles
 
-- **Job outlives the request.** The search job runs in a Celery worker process, completely independent of the HTTP connection. If the browser closes, the work continues.
-- **Slug = permanent address.** Every search creates a unique, persistent URL. The user can refresh, share, or return to it at any time.
-- **SSE over WebSocket.** The progress stream is strictly one-directional (server → client). Server-Sent Events are simpler, work natively over HTTP/2, and require no special client library. WebSocket is reserved for bidirectional communication, which this feature does not need.
-- **TanStack Query as fallback.** SSE connections can drop on mobile network switches or proxy timeouts. TanStack Query polling on the status endpoint provides resilience without additional infrastructure.
+- **Job outlives the request.** Search runs in the background, independent of the user's browser connection.
+- **Persistent URLs.** Every search gets a unique slug. Users can refresh, share, or bookmark the URL.
+- **Real-time progress.** Users see updates as their search progresses.
 
-### Database model
+### What happens when a user searches
 
-```python
-class Search(Base):
-    __tablename__ = "searches"
+1. **Submit** — User enters a topic and submits. Backend creates a search record and returns a slug.
 
-    id: uuid                    # Internal primary key
-    slug: str                   # Public URL identifier e.g. "srch_8f3k2m"
-    topic: str                  # Original user input
-    status: str                 # pending | processing | complete | failed
-    step: str | None            # Current step label for UX ("searching_quran" | "ranking")
-    raw_results: JSON | None    # Raw QF MCP response
-    results: JSON | None        # Final ranked + explained results
-    user_id: uuid | None        # Null for anonymous searches
-    session_id: str             # Session cookie for anonymous tracking
-    created_at: datetime
-    updated_at: datetime
-```
+2. **Navigate** — Frontend navigates to `/search/:slug`. Progress stream begins.
 
-### Step-by-step flow
+3. **Process** — Background worker queries the Quran API, ranks results, stores them in the database.
 
-#### Step 1 — Submit (Frontend → FastAPI)
+4. **Stream** — Backend streams progress updates to the frontend.
 
-The user types a topic and submits. The frontend fires a single `POST /api/search`. This is the only user interaction required — everything else is automatic.
+5. **Complete** — Results appear. The URL is now permanent and shareable.
 
-```typescript
-// apps/web/src/modules/search/hooks/useCreateSearch.ts
-const mutation = useMutation({
-  mutationFn: (topic: string) => api.search.create({ topic }),
-  onSuccess: ({ slug }) => {
-    navigate({ to: "/search/$slug", params: { slug } });
-  },
-});
-```
+### Edge cases
 
-#### Step 2 — Create record + enqueue task (FastAPI)
-
-The API does three things synchronously in under 50ms, then returns. The heavy work has not started yet.
-
-```python
-# apps/api/app/api/search/routes.py
-@router.post("/search", status_code=201)
-async def create_search(body: SearchCreate, db: Session, request: Request):
-    search = Search(
-        slug=generate_slug(),       # e.g. "srch_8f3k2m"
-        topic=body.topic,
-        status="pending",
-        session_id=request.cookies.get("session_id"),
-        user_id=current_user.id if current_user else None,
-    )
-    db.add(search)
-    db.commit()
-
-    run_search.delay(search.id)     # Enqueue Celery task
-
-    return { "slug": search.slug }
-```
-
-#### Step 3 — Navigate to slug page (Frontend)
-
-TanStack Router navigates immediately to `/search/srch_8f3k2m`. The slug page opens an SSE connection. From this point, the URL is permanent, shareable, and refresh-safe.
-
-```typescript
-// apps/web/src/routes/search/$slug.tsx
-export const Route = createFileRoute("/search/$slug")({
-  component: SearchPage,
-});
-
-function SearchPage() {
-  const { slug } = Route.useParams();
-
-  // Primary: SSE stream
-  useEffect(() => {
-    const es = new EventSource(`/api/search/${slug}/stream`);
-    es.onmessage = (e) => {
-      const event = JSON.parse(e.data);
-      setSearchState(event);
-      if (event.status === "complete" || event.status === "failed") {
-        es.close();
-      }
-    };
-    return () => es.close();
-  }, [slug]);
-
-  // Fallback: TanStack Query polling (if SSE drops)
-  const { data } = useQuery({
-    queryKey: ["search", slug],
-    queryFn: () => api.search.get(slug),
-    refetchInterval: (q) =>
-      q.state.data?.status === "complete" ? false : 2000,
-  });
-}
-```
-
-#### Step 4 — Run job (Celery worker)
-
-The Celery worker picks up the task from the Redis queue independently of any HTTP connection. It updates the Search record at each stage so that the status endpoint always reflects current progress.
-
-```python
-# apps/api/app/modules/search/tasks.py
-@celery.task
-def run_search(search_id: str):
-    with db_session() as db:
-        search = db.get(Search, search_id)
-
-        # Stage 1: QF MCP
-        search.status = "processing"
-        search.step = "searching_quran"
-        db.commit()
-
-        raw = call_mcp("search_quran", {
-            "query": search.topic,
-            "translations": "auto",
-        })
-        search.raw_results = raw
-        search.step = "ranking"
-        db.commit()
-
-        # Stage 2: OpenAI API
-        ranked = call_claude_rank(search.topic, raw)
-
-        search.results = ranked
-        search.status = "complete"
-        search.step = None
-        db.commit()
-```
-
-#### Step 5 — Stream progress (FastAPI SSE)
-
-A lightweight endpoint polls the database and streams status events to the connected client using FastAPI's `StreamingResponse`. No WebSocket handshake, no additional infrastructure.
-
-```python
-# apps/api/app/api/search/routes.py
-@router.get("/search/{slug}/stream")
-async def stream_search(slug: str, db: Session):
-    async def event_generator():
-        while True:
-            search = db.query(Search).filter_by(slug=slug).first()
-
-            yield f"data: {search.to_stream_json()}\n\n"
-
-            if search.status in ("complete", "failed"):
-                break
-
-            await asyncio.sleep(1)
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # Disable Nginx buffering
-        },
-    )
-```
-
-Events emitted over the stream:
-
-```
-data: {"status": "pending"}
-data: {"status": "processing", "step": "searching_quran"}
-data: {"status": "processing", "step": "ranking"}
-data: {"status": "complete", "results": [...]}
-```
-
-### Edge case handling
-
-#### User refreshes mid-load
-The slug page mounts, opens a new SSE connection to the same slug, and reads the current status from the database. The Celery task was never interrupted. The UI resumes from wherever the worker currently is — no re-processing, no data loss.
-
-#### User navigates back to home
-The SSE connection closes when the component unmounts. The Celery worker continues to completion regardless. The Search record is saved with full results. When the user returns to `/search/srch_8f3k2m` (via history or a direct link), the status is already `complete` and results render instantly from the database — the SSE stream closes immediately after emitting the first `complete` event.
-
-#### SSE connection drops (mobile network, proxy timeout)
-TanStack Query's `refetchInterval` polls `GET /api/search/:slug` every 2 seconds while the status is not `complete`. When polling detects `complete`, it updates the query cache and the UI renders results. The user experiences a seamless transition with at most 2 seconds of additional latency compared to the SSE path.
-
-#### Anonymous user (not logged in)
-Searches are associated with a session cookie (`session_id`), not a user account. The search history page queries by `session_id` for anonymous users. If the user later creates an account or logs in, their session's searches can be migrated to their user record. This preserves the "no login required to search" principle.
-
-#### Search history
-Every `Search` record is persisted in PostgreSQL. The history view is a standard `GET /api/searches` endpoint ordered by `created_at` — no additional infrastructure. Each history entry links back to its permanent slug URL.
-
-### Why Celery + Redis (not async FastAPI alone)
-
-FastAPI's `async` / `await` runs inside a single event loop. A long-running search job (MCP call + OpenAI call, potentially 3–8 seconds) would block that event loop if run synchronously, degrading all other requests. Using `asyncio.create_task` keeps it non-blocking but ties the job to the request lifecycle — if the connection closes, the task is cancelled.
-
-Celery moves the job entirely outside FastAPI into a separate worker process. The worker runs independently, has its own database connections, can be scaled horizontally, and is completely unaffected by what the browser does. Redis serves as the task broker (queue) and optionally as the result backend.
-
-### Why SSE (not WebSocket)
-
-|                     | SSE                          | WebSocket                       |
-| ------------------- | ---------------------------- | ------------------------------- |
-| Direction           | Server → Client only         | Bidirectional                   |
-| Protocol            | HTTP/1.1 or HTTP/2           | Separate WS protocol            |
-| FastAPI support     | Native (`StreamingResponse`) | Requires `websockets` library   |
-| Proxy/Nginx support | Excellent                    | Requires explicit configuration |
-| Auto-reconnect      | Built into `EventSource`     | Must implement manually         |
-| Use case fit        | Progress stream              | Chat, collaborative editing     |
-
-The search progress stream is strictly one-directional. SSE is the right tool. WebSocket adds protocol complexity with no benefit for this use case.
+- **User refreshes mid-search** — The page reconnects and reads current status from the database. The search continues in the background.
+- **User leaves and returns** — Coming back to the slug URL loads results directly from the database.
+- **Not logged in** — Searches are tracked via session cookie. User can create an account later to claim their search history.
 
 ---
 
-## 11. API and Integration Specifications
+## 11. API Integrations
 
-### 11.1 Internal API endpoints (FastAPI)
+### Quran Foundation API
 
-| Method   | Endpoint                              | Auth     | Description                               |
-| -------- | ------------------------------------- | -------- | ----------------------------------------- |
-| `POST`   | `/api/search`                         | Optional | Create search, returns slug               |
-| `GET`    | `/api/search/:slug`                   | Optional | Get search status and results             |
-| `GET`    | `/api/search/:slug/stream`            | Optional | SSE stream of job progress                |
-| `GET`    | `/api/searches`                       | Optional | List search history (by session or user)  |
-| `GET`    | `/api/search/:slug/explain/:ayah_key` | Optional | Get verse explanation on-demand           |
-| `GET`    | `/api/tafsir/:ayah_key`               | Optional | Get tafsir for a verse                    |
-| `POST`   | `/api/bookmarks`                      | Required | Save a verse                              |
-| `GET`    | `/api/bookmarks`                      | Required | List saved verses                         |
-| `DELETE` | `/api/bookmarks/:id`                  | Required | Delete a bookmark                         |
-| `POST`   | `/api/bookmarks/notes`                | Required | Create a journal note                     |
-| `GET`    | `/api/bookmarks/notes`                | Required | List journal notes                        |
-| `PATCH`  | `/api/bookmarks/notes/:id`            | Required | Update a note                             |
-| `DELETE` | `/api/bookmarks/notes/:id`            | Required | Delete a note                             |
-| `GET`    | `/api/bookmarks/streak`               | Required | Get current streak (local)                |
-| `POST`   | `/api/bookmarks/activity`             | Required | Record daily activity (increments streak) |
+Qalbwise integrates with the Quran Foundation's content API to provide:
+- **Verse search** — Query the Quran by topic in any language
+- **Tafsir lookup** — Get scholarly explanations for any verse
+- **Translations** — Multiple translations available (English, Arabic, etc.)
 
-### 11.2 QF MCP — content retrieval (no auth required)
+### User Data Storage
 
-**Endpoint:** `POST https://mcp.quran.ai/mcp`
-
-**Tool: `search_quran`**
-
-| Parameter      | Type               | Description                                                  |
-| -------------- | ------------------ | ------------------------------------------------------------ |
-| `query`        | string             | User's raw topic input — any language                        |
-| `translations` | string             | `"auto"` to auto-detect language and return best translation |
-| `surah`        | integer (optional) | Restrict search to a specific surah number                   |
-
-**Response fields used:**
-- `results[].ayah_key` — verse reference (e.g. `"93:5"`)
-- `results[].text` — Arabic text
-- `results[].translations[0].text` — translated text
-- `results[].translations[0].edition.author` — translator name
-- `results[].relevance_score` — float 0–1
-- `results[].url` — link to quran.com
-
-**Tool: `search_tafsir`**
-
-| Parameter           | Type    | Description                   |
-| ------------------- | ------- | ----------------------------- |
-| `query`             | string  | Topic or verse reference      |
-| `include_ayah_text` | boolean | `true` to include Arabic text |
-
-**MCP HTTP call (JSON-RPC 2.0):**
-```bash
-curl --request POST \
-  --url https://mcp.quran.ai/mcp \
-  --header 'Content-Type: application/json' \
-  --header 'Accept: application/json, text/event-stream' \
-  --data '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/call",
-    "params": {
-      "name": "search_quran",
-      "arguments": {
-        "query": "grief",
-        "translations": "auto"
-      }
-    }
-  }'
-```
+The app stores user-specific data in its own database:
+- **Saved verses** — Personal bookmark collection
+- **Journal notes** — Personal reflections on verses
+- **Streak tracking** — Daily engagement tracking
 
 ## 12. UI and Design Principles
 
@@ -674,7 +456,7 @@ Qalbwise directly targets the hackathon's stated problem: the drop-off in Quran 
 No login wall before search, persistent slug URLs that survive refresh and navigation, clean loading states with SSE progress, verse cards with clear hierarchy, smooth bottom-sheet login, post-login home with no onboarding tutorial.
 
 ### Technical execution (20 pts) — estimated: 17/20
-Full-stack monorepo with production-grade toolchain. Celery + Redis for resilient background job processing. SSE for real-time progress streaming. Type-safe frontend-to-backend API via auto-generated OpenAPI types. Docker Compose deployment. The search architecture — slug-based persistence, SSE streaming, TanStack Query polling fallback — is robust and well-considered.
+Stable infrastructure, persistent URLs, real-time progress streaming, resilient background processing. Well-architected search system designed for reliability.
 
 ### Innovation and creativity (15 pts) — estimated: 13/15
 Topic-first discovery angle, "Why this verse" LLM explanation, multi-language topic entry, and the name *Qalbwise* rooted in Quranic vocabulary (50:37).
@@ -705,19 +487,15 @@ The following are not part of the v1 hackathon submission:
 
 ## 15. Risks and Mitigations
 
-| Risk                                                                | Likelihood | Impact | Mitigation                                                                           |
-| ------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------ |
-| Edge-case topics don't map well to Quranic vocabulary               | Medium     | Medium | Graceful fallback: broader related theme suggestions + "try rephrasing as a feeling" |
-| QF MCP rate limits or downtime on demo day                          | Low        | High   | Test before deadline; cache a small set of example results as static fallback        |
-| LLM explanations sound like religious rulings                       | Medium     | High   | Tightly constrain system prompt; review outputs manually before submission           |
-| SSE connection dropped by proxy or mobile network                   | Medium     | Low    | TanStack Query polling fallback — at most 2 seconds additional latency               |
-| Celery worker unavailable in demo environment                       | Low        | High   | Ensure `moon run api:worker` is in demo startup script; add health check endpoint    |
-| Arabic text rendering issues on mobile browsers                     | Medium     | Medium | Use Uthmanic Hafs or Amiri font; test on mobile Chrome and Safari                    |
-| Type mismatch between FastAPI schema and generated TypeScript types | Low        | Medium | Run `moon run core:generate` after every Pydantic schema change; enforce in CI       |
-| Nginx buffering SSE events (common misconfiguration)                | Medium     | High   | Set `X-Accel-Buffering: no` header on SSE endpoint; verify in staging                |
+| Risk                                              | Likelihood | Impact | Mitigation                                               |
+| ------------------------------------------------ | ---------- | ------ | --------------------------------------------------------- |
+| Topics don't map to Quranic vocabulary           | Medium     | Medium | Suggest rephrasing or related themes                      |
+| External API downtime on demo day                | Low        | High   | Test before deadline; cache fallback results             |
+| AI explanations sound like religious rulings     | Medium     | High   | Constrain system prompt; review outputs manually         |
+| Connection drops on mobile network               | Medium     | Low    | Automatic retry                                         |
+| Background worker unavailable                   | Low        | High   | Include worker in demo startup; monitor health            |
+| Arabic text renders incorrectly on mobile         | Medium     | Medium | Test on mobile Chrome and Safari                        |
 
 ---
 
 *Qalbwise — wisdom for what's on your heart. Built for the Quran Foundation Hackathon, Ramadan 2026.*
-
-*This PRD reflects the final state of the project as of April 2026. v2.0 adds the complete search system design (Section 10), updated slug-based user flow, SSE architecture, Celery/Redis justification, and expanded risk and open questions sections.*
