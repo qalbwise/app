@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
+from app.api.users.serializer import UserPreferences
+
 
 class GoogleLoginRequest(BaseModel):
     id_token: str
@@ -24,5 +26,6 @@ class UserResponse(BaseModel):
     full_name: str
     is_active: bool
     created_at: datetime
+    preferences: UserPreferences
 
     model_config = {"from_attributes": True}

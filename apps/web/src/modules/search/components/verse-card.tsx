@@ -21,13 +21,16 @@ interface VerseCardProps {
 
 const RANK_OPACITIES = [1, 1, 1, 1, 1] as const;
 
-const RANK_DOT_COLORS = [
-  ["#000", "#4e4e4e", "#e5e5e5"],
-  ["#4e4e4e", "#777169", "#e5e5e5"],
-  ["#777169", "#e5e5e5", "#e5e5e5"],
-  ["#b0ada8", "#e5e5e5", "#e5e5e5"],
-  ["#e5e5e5", "#e5e5e5", "#e5e5e5"],
-] as const;
+/** English locale; MCP/API may still store `/ur/` or other paths in `url`. */
+function quranComEnUrl(ayahKey: string): string {
+  const raw = ayahKey.trim();
+  const parts = raw.split(":");
+  if (parts.length !== 2) return "https://quran.com/en";
+  const surah = Number.parseInt(parts[0]!, 10);
+  const ayah = Number.parseInt(parts[1]!, 10);
+  if (Number.isNaN(surah) || Number.isNaN(ayah)) return "https://quran.com/en";
+  return `https://quran.com/en/${surah}/${ayah}`;
+}
 
 export const VerseCard = ({
   verse,
@@ -41,7 +44,6 @@ export const VerseCard = ({
   const [copied, setCopied] = useState(false);
 
   const cardOpacity = RANK_OPACITIES[rank] ?? 0.46;
-  const dotColors = RANK_DOT_COLORS[rank] ?? RANK_DOT_COLORS[4];
   const isLoggedIn = Boolean(localStorage.getItem("access_token"));
 
   const needsExplain = expanded && !verse.why_this_verse;
@@ -109,38 +111,22 @@ export const VerseCard = ({
     >
       <div className="p-6">
         {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className="font-semibold text-[13px]"
-              style={{ color: "#000" }}
-            >
-              {verse.surah_name}
-            </span>
-            <span
-              className="font-medium text-[12px]"
-              style={{
-                color: "#777169",
-                background: "rgba(245,242,239,0.8)",
-                padding: "2px 8px",
-                borderRadius: "9999px",
-                border: "1px solid rgba(78,50,23,0.1)",
-              }}
-            >
-              {verse.ayah_key}
-            </span>
-          </div>
-
-          {/* Ranking dots */}
-          <div className="flex items-center gap-1">
-            {(["a", "b", "c"] as const).map((slot, i) => (
-              <div
-                key={slot}
-                className="h-[6px] w-[6px] rounded-full"
-                style={{ background: dotColors[i] }}
-              />
-            ))}
-          </div>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-[13px] font-semibold" style={{ color: "#000" }}>
+            {verse.surah_name}
+          </span>
+          <span
+            className="text-[12px] font-medium"
+            style={{
+              color: "#777169",
+              background: "rgba(245,242,239,0.8)",
+              padding: "2px 8px",
+              borderRadius: "9999px",
+              border: "1px solid rgba(78,50,23,0.1)",
+            }}
+          >
+            {verse.ayah_key}
+          </span>
         </div>
 
         {/* ── Arabic text ─────────────────────────────────── */}
@@ -148,10 +134,9 @@ export const VerseCard = ({
 
         {/* ── Translation ─────────────────────────────────── */}
         <p
-          className="mb-5 text-[15px] leading-relaxed"
+          className="mb-5 text-[15px] leading-relaxed not-italic"
           style={{
             color: "#4e4e4e",
-            fontStyle: "italic",
             letterSpacing: "0.15px",
           }}
         >
@@ -191,7 +176,7 @@ export const VerseCard = ({
           </button>
           {/* quran.com */}
           <a
-            href={verse.url}
+            href={quranComEnUrl(verse.ayah_key)}
             target="_blank"
             rel="noreferrer"
             className="font-medium text-[12px] no-underline transition-colors"
