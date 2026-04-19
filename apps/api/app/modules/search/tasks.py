@@ -6,13 +6,22 @@ from uuid import UUID
 import httpx
 from celery import Task
 from loguru import logger
+from openai import AsyncOpenAI
 from sqlalchemy import select
 
 from app.core.celery import celery_app
+from app.core.settings import get_settings
 from app.models.search import Search
 from app.models.user import User
 from app.modules.llm.prompts import append_english_only
 from app.modules.users.service import preferences_from_row
+
+settings = get_settings()
+
+client = AsyncOpenAI(
+    base_url=settings.OPENAI_BASE_URL,
+    api_key=settings.OPENAI_API_KEY,
+)
 
 
 class CallbackTask(Task):
@@ -267,25 +276,14 @@ Respond in JSON format only, with no extra text:
 
     prompt = append_english_only(prompt)
 
-    from app.core.settings import get_settings, llm_api_key, llm_client_kwargs
-
-    settings = get_settings()
-
-    if not llm_api_key(settings):
-        logger.info(
-            "No LLM API key (OPENROUTER_API_KEY or OPENAI_API_KEY); skipping ranking"
-        )
-        return fallback_ranked_verses(verses)
-
-    from openai import AsyncOpenAI
-
-    client = AsyncOpenAI(**llm_client_kwargs(settings))
-
     try:
         response = await client.chat.completions.create(
-            model=settings.OPENAI_CHAT_MODEL,
+            model="nvidia/nemotron-3-super-120b-a12b:free",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
+            extra_body={
+                "models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]
+            },
         )
     except Exception as exc:
         logger.warning("OpenAI ranking failed, using search order: {}", exc)
@@ -373,22 +371,14 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
 
     prompt = append_english_only(prompt)
 
-    from app.core.settings import get_settings, llm_api_key, llm_client_kwargs
-
-    settings = get_settings()
-
-    from openai import AsyncOpenAI
-
-    if not llm_api_key(settings):
-        return ""
-
-    client = AsyncOpenAI(**llm_client_kwargs(settings))
-
     try:
         response = await client.chat.completions.create(
-            model=settings.OPENAI_CHAT_MODEL,
+            model="nvidia/nemotron-3-super-120b-a12b:free",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=200,
+            extra_body={
+                "models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]
+            },
         )
     except Exception as exc:
         logger.warning("OpenAI verse explanation failed: {}", exc)
