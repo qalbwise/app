@@ -1,7 +1,11 @@
 import { createApiWithModules } from "@repo/core";
 
+import { getApiBaseUrl } from "./api-base-url";
+
+export { getApiBaseUrl } from "./api-base-url";
+
 export const api = createApiWithModules({
-  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  baseUrl: getApiBaseUrl(),
   onTokenRefreshFailed: () => {
     console.warn("Token refresh failed in api.ts");
     console.warn("Current pathname:", window.location.pathname);
