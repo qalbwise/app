@@ -16,6 +16,7 @@ from app.core.database import get_db
 from app.core.security.jwt import verify_token
 from app.models.user import User
 from app.modules.auth import service
+from app.modules.users import service as users_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
@@ -102,4 +103,4 @@ async def logout():
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    return users_service.build_user_response(current_user)

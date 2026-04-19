@@ -1,12 +1,18 @@
+import asyncio
 import json
 import re as _re
+from uuid import UUID
 
+import httpx
 from celery import Task
 from loguru import logger
+from sqlalchemy import select
 
 from app.core.celery import celery_app
 from app.models.search import Search
-from app.models.user import User  # noqa: F401
+from app.models.user import User
+from app.modules.llm.prompts import append_english_only
+from app.modules.users.service import preferences_from_row
 
 
 class CallbackTask(Task):
@@ -44,6 +50,30 @@ async def get_qf_mcp_results_async(query: str) -> dict:
                 return {"results": []}
 
 
+def normalize_ayah_key(key: str) -> str:
+    """
+    Quran.com v4 expects surah:ayah without leading zeros (e.g. 21:104 not 021:104).
+    MCP sometimes returns padded keys; empty API responses left Arabic as rasm-only.
+    """
+    key = (key or "").strip()
+    if ":" not in key:
+        return key
+    left, right = key.split(":", 1)
+    try:
+        return f"{int(left)}:{int(right)}"
+    except ValueError:
+        return key
+
+
+def quran_com_en_url(ayah_key: str) -> str:
+    """English locale page; MCP often returns /ur/ or other locales in `url`."""
+    key = normalize_ayah_key(ayah_key)
+    if ":" not in key:
+        return "https://quran.com"
+    surah, ayah = key.split(":", 1)
+    return f"https://quran.com/en/{surah}/{ayah}"
+
+
 def _strip_html(text: str) -> str:
     """Remove HTML tags and decode common entities from translation strings."""
     text = _re.sub(r"<[^>]+>", "", text)
@@ -56,12 +86,35 @@ def _strip_html(text: str) -> str:
     return text.strip()
 
 
+def _pick_english_translation(translations: list[dict]) -> tuple[str, str]:
+    """Prefer an English edition; MCP often lists fr/ar entries before en."""
+    if not translations:
+        return "", ""
+
+    def edition_lang(t: dict) -> str:
+        ed = t.get("edition") or {}
+        return str(ed.get("language_name") or ed.get("language") or "").lower()
+
+    for t in translations:
+        lang = edition_lang(t)
+        if "english" in lang or lang == "en":
+            ed = t.get("edition") or {}
+            author = ed.get("author_name") or ed.get("author") or ""
+            return _strip_html(t.get("text", "")), author
+
+    t0 = translations[0]
+    ed0 = t0.get("edition") or {}
+    return _strip_html(t0.get("text", "")), (
+        ed0.get("author_name") or ed0.get("author") or ""
+    )
+
+
 def parse_mcp_results(raw: dict) -> list[dict]:
     results = raw.get("results", [])
     parsed = []
 
     for item in results:
-        ayah_key = item.get("ayah_key", "")
+        ayah_key = normalize_ayah_key(str(item.get("ayah_key", "")))
         translations = item.get("translations", [])
 
         surah_name = ""
@@ -69,25 +122,126 @@ def parse_mcp_results(raw: dict) -> list[dict]:
             surah_num = ayah_key.split(":")[0]
             surah_name = f"Surah {surah_num}"
 
-        raw_translation = translations[0].get("text", "") if translations else ""
+        raw_translation, translator = _pick_english_translation(translations)
 
         parsed.append(
             {
                 "ayah_key": ayah_key,
                 "surah_name": surah_name,
                 "arabic_text": item.get("text", ""),
-                "translation": _strip_html(raw_translation),
-                "translator": (
-                    translations[0].get("edition", {}).get("author", "")
-                    if translations
-                    else ""
-                ),
+                "translation": raw_translation,
+                "translator": translator,
                 "relevance_score": item.get("relevance_score", 0.0),
-                "url": item.get("url", ""),
+                "url": quran_com_en_url(ayah_key),
             }
         )
 
     return parsed
+
+
+QDC_VERSES_UTHMANI = "https://api.quran.com/api/v4/quran/verses/uthmani"
+QDC_VERSES_INDOPAK = "https://api.quran.com/api/v4/quran/verses/indopak"
+QDC_TRANSLATION_EN_SAHEEH = 20
+QDC_TRANSLATIONS_URL = "https://api.quran.com/api/v4/quran/translations"
+
+
+async def enrich_verses_from_quran_com(
+    verses: list[dict], *, use_indopak_edition: bool
+) -> None:
+    """
+    MCP search: Arabic is often rasm-only; translations may be the wrong locale.
+    Quran.com supplies vocalized Arabic (Uthmani / IndoPak) and Saheeh
+    International (English).
+    """
+    if not verses:
+        return
+
+    arabic_url = QDC_VERSES_INDOPAK if use_indopak_edition else QDC_VERSES_UTHMANI
+    text_key = "text_indopak" if use_indopak_edition else "text_uthmani"
+    trans_url = f"{QDC_TRANSLATIONS_URL}/{QDC_TRANSLATION_EN_SAHEEH}"
+
+    req_headers = {
+        "User-Agent": "Qalbwise/1.0 (+https://qalbwise.app)",
+        "Accept": "application/json",
+    }
+    # Avoid Quran.com rate-limits when MCP returns many hits; Arabic/translation
+    # are fetched separately so a translation error never drops vocalized Arabic.
+    sem = asyncio.Semaphore(6)
+
+    async def fetch_one(client: httpx.AsyncClient, verse: dict) -> None:
+        key = normalize_ayah_key((verse.get("ayah_key") or "").strip())
+        if not key:
+            return
+        async with sem:
+            try:
+                ar = await client.get(
+                    arabic_url,
+                    params={"verse_key": key},
+                    headers=req_headers,
+                )
+                ar.raise_for_status()
+                ar_data = ar.json()
+                aitems = ar_data.get("verses") or []
+                if not aitems:
+                    logger.warning(
+                        "Quran.com returned no verses for key {!r}",
+                        key,
+                    )
+                else:
+                    v0 = aitems[0]
+                    text = (
+                        v0.get(text_key)
+                        or v0.get("text_uthmani")
+                        or v0.get("text_indopak")
+                    )
+                    if isinstance(text, str) and text.strip():
+                        verse["arabic_text"] = text.strip()
+            except Exception as exc:
+                logger.warning("Quran.com Arabic enrich failed for {}: {}", key, exc)
+
+            try:
+                tr = await client.get(
+                    trans_url,
+                    params={"verse_key": key},
+                    headers=req_headers,
+                )
+                tr.raise_for_status()
+                tr_data = tr.json()
+                titems = tr_data.get("translations") or []
+                if titems:
+                    ttext = titems[0].get("text")
+                    if isinstance(ttext, str) and ttext.strip():
+                        verse["translation"] = _strip_html(ttext.strip())
+                        meta = tr_data.get("meta") or {}
+                        verse["translator"] = (
+                            meta.get("author_name")
+                            or meta.get("translation_name")
+                            or "Saheeh International"
+                        )
+            except Exception as exc:
+                logger.warning(
+                    "Quran.com translation enrich failed for {}: {}", key, exc
+                )
+
+    limits = httpx.Limits(max_keepalive_connections=10, max_connections=20)
+    timeout = httpx.Timeout(30.0)
+    async with httpx.AsyncClient(
+        limits=limits,
+        timeout=timeout,
+        follow_redirects=True,
+        headers=req_headers,
+    ) as client:
+        await asyncio.gather(*(fetch_one(client, v) for v in verses))
+
+
+def fallback_ranked_verses(verses: list[dict], max_n: int = 5) -> list[dict]:
+    """MCP order when LLM ranking is unavailable."""
+    ranked: list[dict] = []
+    for i, verse in enumerate(verses[:max_n]):
+        verse_copy = verse.copy()
+        verse_copy["rank"] = i
+        ranked.append(verse_copy)
+    return ranked
 
 
 async def rank_with_openai_async(topic: str, verses: list[dict]) -> list[dict]:
@@ -111,22 +265,31 @@ For each verse, provide the index (1-based) and a one-sentence explanation.
 Respond in JSON format only, with no extra text:
 [{{"index": 1, "why_this_verse": "..."}}, {{"index": 3, "why_this_verse": "..."}}]"""
 
-    from app.core.settings import get_settings
+    prompt = append_english_only(prompt)
+
+    from app.core.settings import get_settings, llm_api_key, llm_client_kwargs
 
     settings = get_settings()
 
+    if not llm_api_key(settings):
+        logger.info(
+            "No LLM API key (OPENROUTER_API_KEY or OPENAI_API_KEY); skipping ranking"
+        )
+        return fallback_ranked_verses(verses)
+
     from openai import AsyncOpenAI
 
-    client = AsyncOpenAI(
-        base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY
-    )
+    client = AsyncOpenAI(**llm_client_kwargs(settings))
 
-    response = await client.chat.completions.create(
-        model="nvidia/nemotron-3-super-120b-a12b:free",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=500,
-        extra_body={"models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]},
-    )
+    try:
+        response = await client.chat.completions.create(
+            model=settings.OPENAI_CHAT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500,
+        )
+    except Exception as exc:
+        logger.warning("OpenAI ranking failed, using search order: {}", exc)
+        return fallback_ranked_verses(verses)
 
     content = response.choices[0].message.content or ""
     content = content.strip()
@@ -139,17 +302,53 @@ Respond in JSON format only, with no extra text:
     try:
         rankings = json.loads(content)
     except Exception:
-        logger.info(f"Failed to parse JSON, raw content: {content}")
+        logger.info(f"Failed to parse ranking JSON, raw content: {content}")
         rankings = []
 
-    index_map = {r["index"]: r["why_this_verse"] for r in rankings}
+    if not isinstance(rankings, list):
+        return fallback_ranked_verses(verses)
 
-    ranked = []
+    index_map: dict[int, str] = {}
+    ordered_indices: list[int] = []
+    for r in rankings:
+        if not isinstance(r, dict):
+            continue
+        try:
+            idx = int(r["index"])
+            why = str(r.get("why_this_verse") or "")
+        except (KeyError, ValueError, TypeError):
+            continue
+        if 1 <= idx <= len(verses):
+            index_map[idx] = why
+            ordered_indices.append(idx)
+
+    seen_idx: set[int] = set()
+    unique_order: list[int] = []
+    for idx in ordered_indices:
+        if idx not in seen_idx:
+            seen_idx.add(idx)
+            unique_order.append(idx)
+
+    if not unique_order:
+        return fallback_ranked_verses(verses)
+
+    ranked: list[dict] = []
+    used_i: set[int] = set()
+    for idx in unique_order:
+        i = idx - 1
+        verse_copy = verses[i].copy()
+        verse_copy["why_this_verse"] = index_map.get(idx, "")
+        verse_copy["rank"] = len(ranked)
+        ranked.append(verse_copy)
+        used_i.add(i)
+
     for i, verse in enumerate(verses):
+        if i in used_i:
+            continue
+        if len(ranked) >= 5:
+            break
         verse_copy = verse.copy()
-        if i == 0 and index_map.get(1):
-            verse_copy["why_this_verse"] = index_map.get(1)
-        verse_copy["rank"] = i
+        verse_copy["rank"] = len(ranked)
         ranked.append(verse_copy)
 
     return ranked[:5]
@@ -172,22 +371,28 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
     Respond in one sentence only, no extra text.
     """
 
-    from app.core.settings import get_settings
+    prompt = append_english_only(prompt)
+
+    from app.core.settings import get_settings, llm_api_key, llm_client_kwargs
 
     settings = get_settings()
 
     from openai import AsyncOpenAI
 
-    client = AsyncOpenAI(
-        base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY
-    )
+    if not llm_api_key(settings):
+        return ""
 
-    response = await client.chat.completions.create(
-        model="nvidia/nemotron-3-super-120b-a12b:free",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=200,
-        extra_body={"models": ["z-ai/glm-4.5-air:free", "openai/gpt-oss-120b:free"]},
-    )
+    client = AsyncOpenAI(**llm_client_kwargs(settings))
+
+    try:
+        response = await client.chat.completions.create(
+            model=settings.OPENAI_CHAT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200,
+        )
+    except Exception as exc:
+        logger.warning("OpenAI verse explanation failed: {}", exc)
+        return ""
 
     content = response.choices[0].message.content or ""
     return content.strip()
@@ -196,7 +401,6 @@ async def get_verse_explanation_async(topic: str, verse: dict) -> str:
 @celery_app.task(bind=True, base=CallbackTask)
 def run_search(self, search_id: str):
     async def process():
-        from sqlalchemy import select
         from sqlalchemy.ext.asyncio import (
             AsyncSession,
             async_sessionmaker,
@@ -214,7 +418,8 @@ def run_search(self, search_id: str):
         )
 
         async with _session_maker() as db:
-            result = await db.execute(select(Search).where(Search.id == search_id))
+            sid = UUID(search_id) if isinstance(search_id, str) else search_id
+            result = await db.execute(select(Search).where(Search.id == sid))
             search = result.scalar_one_or_none()
 
             if not search:
@@ -231,6 +436,21 @@ def run_search(self, search_id: str):
                 await db.commit()
 
                 parsed = parse_mcp_results(raw)
+
+                use_indopak_edition = False
+                if search.user_id:
+                    urow = await db.execute(
+                        select(User).where(User.id == search.user_id)
+                    )
+                    user = urow.scalar_one_or_none()
+                    if user and user.preferences:
+                        prefs = preferences_from_row(user.preferences)
+                        use_indopak_edition = prefs.arabic_font == "indopak"
+
+                if parsed:
+                    await enrich_verses_from_quran_com(
+                        parsed, use_indopak_edition=use_indopak_edition
+                    )
 
                 if parsed:
                     ranked = await rank_with_openai_async(search.topic, parsed)
@@ -249,7 +469,5 @@ def run_search(self, search_id: str):
                 await db.commit()
 
         await _engine.dispose()
-
-    import asyncio
 
     asyncio.run(process())

@@ -10,6 +10,7 @@ from app.api.auth.router import router as auth_router
 from app.api.bookmarks.router import router as bookmarks_router
 from app.api.search.router import router as search_router
 from app.api.tafsir.router import router as tafsir_router
+from app.api.users.router import router as users_router
 from app.core.settings import get_settings
 
 app = FastAPI()
@@ -52,6 +53,7 @@ async def health():
 
 
 app.include_router(auth_router)
+app.include_router(users_router)
 app.include_router(search_router)
 app.include_router(tafsir_router)
 app.include_router(bookmarks_router)

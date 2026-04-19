@@ -2,6 +2,7 @@ import type { components } from "@repo/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { LoginSheet } from "@/modules/auth/components/login-sheet";
+import { SearchFontControls } from "@/modules/preferences/components/search-font-controls";
 import { VerseCard } from "@/modules/search/components/verse-card";
 import { useSearchStream } from "@/modules/search/hooks/use-search-stream";
 import { useSearchBySlug } from "@/modules/search/queries/use-search";
@@ -42,10 +43,17 @@ function SearchPage() {
   const searchData = query.data?.data;
   const topic = searchData?.topic ?? "";
 
+  /* Prefer SSE payload; if complete but stream omitted results, use GET body */
   const results =
-    stream.status === "complete" && stream.results
+    stream.status === "complete" && stream.results && stream.results.length > 0
       ? stream.results
-      : (searchData?.results ?? null);
+      : stream.status === "complete" &&
+          searchData?.results &&
+          searchData.results.length > 0
+        ? searchData.results
+        : stream.results && stream.results.length > 0
+          ? stream.results
+          : (searchData?.results ?? null);
 
   const currentStatus =
     stream.status !== "idle"
@@ -112,14 +120,18 @@ function SearchPage() {
 
         {/* Status / count line */}
         {isLoading ? (
-          <p className="caption mb-10 fade-up">{stepMessage}</p>
+          <p className="caption mb-4 fade-up">{stepMessage}</p>
         ) : (
           results && (
-            <p className="caption mb-10">
+            <p className="caption mb-4">
               {results.length} {results.length === 1 ? "verse" : "verses"} found
             </p>
           )
         )}
+
+        <div className="mb-3 flex justify-end">
+          <SearchFontControls />
+        </div>
 
         {/* Content */}
         <div className="flex flex-col gap-4">
@@ -208,16 +220,9 @@ const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
     aria-hidden="true"
   >
     {/* Header row */}
-    <div className="mb-4 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <span className="skeleton-pulse h-3 w-28 rounded" />
-        <span className="skeleton-pulse h-3 w-10 rounded" />
-      </div>
-      <div className="flex gap-1">
-        {[0, 1, 2].map((i) => (
-          <span key={i} className="skeleton-pulse h-1.5 w-1.5 rounded-full" />
-        ))}
-      </div>
+    <div className="mb-4 flex items-center gap-2">
+      <span className="skeleton-pulse h-3 w-28 rounded" />
+      <span className="skeleton-pulse h-3 w-10 rounded" />
     </div>
     {/* Arabic block */}
     <div className="skeleton-pulse mb-4 h-14 w-full rounded-xl" />

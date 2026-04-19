@@ -1,25 +1,18 @@
-from datetime import datetime
-from uuid import UUID
+from typing import Literal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field
 
-
-class UserBase(BaseModel):
-    email: EmailStr
-    full_name: str
+ArabicFontId = Literal["hafs_quran", "indopak"]
 
 
-class UserCreate(UserBase):
-    password: str
+class UserPreferences(BaseModel):
+    serif: bool = Field(
+        default=False,
+        description="Use serif stack for Latin/UI body text",
+    )
+    arabic_font: ArabicFontId = Field(default="hafs_quran")
 
 
-class UserResponse(UserBase):
-    id: UUID
-    created_at: datetime
-    is_active: bool
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
+class UserPreferencesUpdate(BaseModel):
+    serif: bool
+    arabic_font: ArabicFontId

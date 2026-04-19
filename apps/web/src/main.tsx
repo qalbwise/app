@@ -22,19 +22,14 @@ if (!rootElement.innerHTML) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const AppContent = () => {
-    if (!clientId) {
+    if (clientId) {
       return (
-        <div style={{ padding: "20px", color: "red" }}>
-          <h2>Configuration Error</h2>
-          <p>Google Client ID is not configured</p>
-        </div>
+        <GoogleOAuthProvider clientId={clientId}>
+          <RouterProvider router={router} />
+        </GoogleOAuthProvider>
       );
     }
-    return (
-      <GoogleOAuthProvider clientId={clientId}>
-        <RouterProvider router={router} />
-      </GoogleOAuthProvider>
-    );
+    return <RouterProvider router={router} />;
   };
 
   root.render(<AppContent />);
