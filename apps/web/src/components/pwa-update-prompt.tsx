@@ -1,6 +1,6 @@
+import { useRegisterSW } from "virtual:pwa-register/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { useRegisterSW } from "virtual:pwa-register/react";
 
 /**
  * PWA update banner — Motion for React (gestures + AnimatePresence) with
