@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useNetworkState } from "react-use";
 import { toast } from "sonner";
 import { containsOffensiveContent } from "@/lib/forbidden-words";
 import { useCreateSearch } from "@/modules/search/queries/use-search";
@@ -21,10 +22,17 @@ function Home() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const navigate = useNavigate();
   const createSearch = useCreateSearch();
+  const network = useNetworkState();
+  const online = network.online ?? true;
 
   async function handleSearch(searchTopic: string) {
     const trimmed = searchTopic.trim();
     if (!trimmed) return;
+
+    if (!online) {
+      toast.error("Search unavailable offline");
+      return;
+    }
 
     setSearchError(null);
 
@@ -70,6 +78,7 @@ function Home() {
 
   const isLoading = createSearch.isPending;
   const hasOffensiveContent = containsOffensiveContent(topic);
+  const isDisabled = isLoading || !online;
 
   return (
     <div
@@ -79,7 +88,7 @@ function Home() {
       {/* Hero text */}
       <div className="fade-up mx-auto max-w-2xl text-center">
         <p
-          className="mb-4 text-[12px] font-semibold uppercase tracking-widest"
+          className="mb-4 font-semibold text-[12px] uppercase tracking-widest"
           style={{ color: "#777169", letterSpacing: "0.12em" }}
         />
 
@@ -107,8 +116,8 @@ function Home() {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Type anything on your mind…"
-              disabled={isLoading}
-              className="w-full rounded-full py-4 pl-6 pr-36 text-[15px] outline-none transition-all placeholder:text-[#b0ada8]"
+              disabled={isDisabled}
+              className="w-full rounded-full py-4 pr-36 pl-6 text-[15px] outline-none transition-all placeholder:text-[#b0ada8]"
               style={{
                 border: "1px solid rgba(0,0,0,0.1)",
                 boxShadow: "var(--shadow-outline)",
@@ -126,11 +135,15 @@ function Home() {
             />
             <button
               type="submit"
-              disabled={isLoading || !topic.trim() || hasOffensiveContent}
-              className="pill-btn-black absolute right-2 top-1/2 -translate-y-1/2 text-[14px]"
+              disabled={isDisabled || !topic.trim() || hasOffensiveContent}
+              className="pill-btn-black absolute top-1/2 right-2 -translate-y-1/2 text-[14px]"
               style={{ height: "34px", padding: "0 18px" }}
               title={
-                hasOffensiveContent ? "Inappropriate language detected" : ""
+                hasOffensiveContent
+                  ? "Inappropriate language detected"
+                  : !online
+                    ? "Offline"
+                    : ""
               }
             >
               {isLoading ? (
@@ -138,6 +151,8 @@ function Home() {
                   <Loader2 className="size-3.5 animate-spin" aria-hidden />
                   Searching…
                 </span>
+              ) : !online ? (
+                "Offline"
               ) : (
                 "Search"
               )}
@@ -165,7 +180,7 @@ function Home() {
                 setSearchError(null);
                 handleSearch(chip);
               }}
-              disabled={isLoading}
+              disabled={isDisabled}
               className="warm-btn"
             >
               {chip}

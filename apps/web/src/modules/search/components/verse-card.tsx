@@ -1,5 +1,6 @@
 import type { components } from "@repo/core";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useCreateBookmark } from "@/modules/bookmarks/queries/use-bookmarks";
 import {
   useTafsir,
@@ -60,6 +61,11 @@ export const VerseCard = ({
       return;
     }
     if (saved || createBookmark.isPending) return;
+
+    if (!navigator.onLine) {
+      toast.error("Sync when back online");
+      return;
+    }
 
     try {
       await createBookmark.mutateAsync({
@@ -156,7 +162,7 @@ export const VerseCard = ({
           <button
             type="button"
             onClick={handleShare}
-            className="text-[12px] font-medium transition-all"
+            className="font-medium text-[12px] transition-all"
             style={{
               padding: "5px 12px",
               borderRadius: "9999px",
@@ -173,7 +179,7 @@ export const VerseCard = ({
             href={quranComEnUrl(verse.ayah_key)}
             target="_blank"
             rel="noreferrer"
-            className="text-[12px] font-medium no-underline transition-colors"
+            className="font-medium text-[12px] no-underline transition-colors"
             style={{
               color: "#777169",
               padding: "5px 12px",
@@ -191,7 +197,7 @@ export const VerseCard = ({
             type="button"
             onClick={handleSave}
             disabled={createBookmark.isPending}
-            className="ml-auto text-[12px] font-medium transition-all disabled:opacity-40"
+            className="ml-auto font-medium text-[12px] transition-all disabled:opacity-40"
             style={{
               padding: "5px 12px",
               border: `1px solid ${saved ? "rgba(78,50,23,0.2)" : "#e5e5e5"}`,
@@ -231,7 +237,7 @@ export const VerseCard = ({
           {/* Why this verse */}
           <div className="mb-5">
             <p
-              className="mb-2 text-[11px] font-semibold uppercase tracking-widest"
+              className="mb-2 font-semibold text-[11px] uppercase tracking-widest"
               style={{ color: "#777169" }}
             >
               Why this verse
@@ -259,7 +265,7 @@ export const VerseCard = ({
               style={{ borderColor: "rgba(0,0,0,0.06)" }}
             >
               <p
-                className="mb-2 text-[11px] font-semibold uppercase tracking-widest"
+                className="mb-2 font-semibold text-[11px] uppercase tracking-widest"
                 style={{ color: "#777169" }}
               >
                 Tafsir
@@ -318,7 +324,7 @@ const ActionChip = ({
   <button
     type="button"
     onClick={onClick}
-    className="text-[12px] font-medium transition-all"
+    className="font-medium text-[12px] transition-all"
     style={{
       padding: "5px 12px",
       borderRadius: "9999px",

@@ -1,14 +1,34 @@
-
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Discover what the Quran says about anything on your mind."
+    />
     <title>Qalbwise</title>
+    <!-- Favicon & PWA icons: static files in apps/web/public -->
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f9f8e6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Qalbwise" />
+    <meta name="msapplication-TileColor" content="#f9f8e6" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script defer src="https://umami.qalbwise.app/script.js" data-website-id="63a98790-7472-4eb3-9947-44cc3c9effdb"></script>
+    <script
+      defer
+      src="https://umami.qalbwise.app/script.js"
+      data-website-id="63a98790-7472-4eb3-9947-44cc3c9effdb"
+    ></script>
   </body>
 </html>

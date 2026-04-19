@@ -1,5 +1,6 @@
 import type { components } from "@repo/core";
 import { useEffect, useRef, useState } from "react";
+import { getApiBaseUrl } from "@/lib/api-base-url";
 
 type VerseResult = components["schemas"]["VerseResult"];
 
@@ -40,11 +41,7 @@ export function useSearchStream(slug: string): SearchStreamState {
 
     doneRef.current = false;
 
-    const baseUrl =
-      (import.meta.env.VITE_API_URL as string | undefined) ||
-      "http://localhost:8000";
-
-    const es = new EventSource(`${baseUrl}/search/${slug}/stream`);
+    const es = new EventSource(`${getApiBaseUrl()}/search/${slug}/stream`);
     esRef.current = es;
 
     setState({

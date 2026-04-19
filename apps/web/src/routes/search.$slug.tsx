@@ -1,6 +1,8 @@
 import type { components } from "@repo/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNetworkState } from "react-use";
+import { toast } from "sonner";
 import { LoginSheet } from "@/modules/auth/components/login-sheet";
 import { SearchFontControls } from "@/modules/preferences/components/search-font-controls";
 import { VerseCard } from "@/modules/search/components/verse-card";
@@ -24,6 +26,9 @@ function SearchPage() {
   const { slug } = Route.useParams();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [pendingSaveAyah, setPendingSaveAyah] = useState<string | null>(null);
+  const offlineToastShownRef = useRef(false);
+  const network = useNetworkState();
+  const online = network.online ?? true;
 
   /* Primary: SSE real-time stream */
   const stream = useSearchStream(slug);
@@ -71,6 +76,24 @@ function SearchPage() {
 
   const stepMessage =
     STEP_MESSAGES[stream.step ?? currentStatus] ?? "Searching…";
+
+  /* One-time toast per slug when offline with cached results */
+  useEffect(() => {
+    const sessionKey = `offline-toast-${slug}`;
+    if (online) {
+      offlineToastShownRef.current = false;
+      return;
+    }
+    if (
+      query.isSuccess &&
+      !offlineToastShownRef.current &&
+      !sessionStorage.getItem(sessionKey)
+    ) {
+      offlineToastShownRef.current = true;
+      sessionStorage.setItem(sessionKey, "1");
+      toast.message("You're offline — viewing cached results");
+    }
+  }, [online, query.isSuccess, slug]);
 
   function handleSaveVerse(ayahKey: string) {
     const isLoggedIn = Boolean(localStorage.getItem("access_token"));
@@ -159,7 +182,7 @@ function SearchPage() {
           ) : !results || results.length === 0 ? (
             <div className="card-surface p-10 text-center">
               <p
-                className="mb-2 text-[15px] font-medium"
+                className="mb-2 font-medium text-[15px]"
                 style={{ color: "#4e4e4e" }}
               >
                 No verses found

@@ -1,6 +1,8 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { MotionConfig } from "motion/react";
 import ReactDOM from "react-dom/client";
+import { PwaUpdatePrompt } from "@/components/pwa-update-prompt";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -26,11 +28,16 @@ if (!rootElement.innerHTML) {
       return (
         <GoogleOAuthProvider clientId={clientId}>
           <RouterProvider router={router} />
+          <PwaUpdatePrompt />
         </GoogleOAuthProvider>
       );
     }
     return <RouterProvider router={router} />;
   };
 
-  root.render(<AppContent />);
+  root.render(
+    <MotionConfig reducedMotion="user">
+      <AppContent />
+    </MotionConfig>
+  );
 }
