@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -43,11 +43,15 @@ async def validate_search_input(topic: str) -> None:
 
     for word in words:
         if word in FORBIDDEN_SEARCH_WORDS:
-            raise HTTPException(status_code=400, detail=error_detail)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail
+            )
 
         for forbidden_word in FORBIDDEN_SEARCH_WORDS:
             if is_leet_speak_variant(word, forbidden_word):
-                raise HTTPException(status_code=400, detail=error_detail)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail
+                )
 
 
 async def create_search(
@@ -60,7 +64,9 @@ async def create_search(
 
     canonical_query = normalize_query(topic)
     if not canonical_query:
-        raise HTTPException(status_code=400, detail="Search topic is required.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Search topic is required."
+        )
 
     result = await db.execute(
         select(Topic).where(Topic.canonical_query == canonical_query)
