@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -9,11 +11,18 @@ from slowapi.util import get_remote_address
 from app.api.auth.router import router as auth_router
 from app.api.bookmarks.router import router as bookmarks_router
 from app.api.search.router import router as search_router
-from app.api.tafsir.router import router as tafsir_router
 from app.api.users.router import router as users_router
 from app.core.settings import get_settings
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up the API...")
+    yield
+    logger.info("API shutting down")
+
+
+app = FastAPI(lifespan=lifespan, title="Qalbwise API")
 
 limiter = Limiter(
     key_func=get_remote_address,
@@ -42,11 +51,6 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup():
-    logger.info("API starting up")
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -55,7 +59,6 @@ async def health():
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(search_router)
-app.include_router(tafsir_router)
 app.include_router(bookmarks_router)
 
 
