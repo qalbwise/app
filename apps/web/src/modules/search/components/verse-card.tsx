@@ -1,8 +1,11 @@
 import type { components } from "@repo/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCreateBookmark } from "@/modules/bookmarks/queries/use-bookmarks";
-import { useVersePage } from "@/modules/search/queries/use-search";
+import {
+  useExplainVerse,
+  useVersePage,
+} from "@/modules/search/queries/use-search";
 
 type VerseResult = components["schemas"]["VerseResult"];
 
@@ -39,6 +42,7 @@ export const VerseCard = ({
   const [showTafsir, setShowTafsir] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
 
   const cardOpacity = RANK_OPACITIES[rank] ?? 0.46;
   const isLoggedIn = Boolean(localStorage.getItem("access_token"));
@@ -48,9 +52,24 @@ export const VerseCard = ({
   const createBookmark = useCreateBookmark();
 
   const loadedVerse = versePage.data?.data?.verse;
-  const whyText = verse.why_this_verse ?? loadedVerse?.why_this_verse ?? null;
+  const whyText =
+    verse.why_this_verse ?? loadedVerse?.why_this_verse ?? fetchedWhyText;
   const tafsirText = loadedVerse?.tafsir_excerpt ?? verse.tafsir_excerpt;
   const tafsirAuthor = loadedVerse?.tafsir_author ?? verse.tafsir_author;
+
+  const explainVerse = useExplainVerse(slug, rank + 1, expanded && !whyText);
+  const isLoadingWhyText = expanded && !whyText && explainVerse.isPending;
+
+  useEffect(() => {
+    if (
+      explainVerse.isSuccess &&
+      explainVerse.data &&
+      explainVerse.data.data &&
+      typeof explainVerse.data.data.why_this_verse === "string"
+    ) {
+      setFetchedWhyText(explainVerse.data.data.why_this_verse);
+    }
+  }, [explainVerse.isSuccess, explainVerse.data]);
 
   async function handleSave() {
     if (!isLoggedIn) {
@@ -239,7 +258,9 @@ export const VerseCard = ({
             >
               Why this verse
             </p>
-            {whyText ? (
+            {isLoadingWhyText ? (
+              <LoadingDots />
+            ) : whyText ? (
               <p
                 className="text-[14px] leading-relaxed"
                 style={{ color: "#4e4e4e", letterSpacing: "0.14px" }}

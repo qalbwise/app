@@ -26,6 +26,8 @@ export const queryKeys = {
     bySlug: (slug: string) => ["search", slug] as const,
     versePage: (slug: string, page: number) =>
       ["search", slug, "verse", page] as const,
+    explainVerse: (slug: string, page: number) =>
+      ["search", slug, "verse", page, "explain"] as const,
   },
   bookmarks: {
     all: ["bookmarks"] as const,

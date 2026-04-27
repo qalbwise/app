@@ -34,3 +34,11 @@ export function useVersePage(slug: string, page: number, enabled = true) {
     enabled,
   });
 }
+
+export function useExplainVerse(slug: string, page: number, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.search.explainVerse(slug, page),
+    queryFn: () => api.search.explainVerse(slug, page),
+    enabled,
+  });
+}
