@@ -17,7 +17,8 @@ export const Route = createFileRoute("/search/$slug")({
 
 const STEP_MESSAGES: Record<string, string> = {
   searching_quran: "Searching the Quran…",
-  ranking: "Ranking the best matches…",
+  fetching_metadata: "Gathering verse details…",
+  ranking: "Preparing your results…",
   pending: "Preparing your search…",
   processing: "Searching the Quran…",
 };
@@ -29,9 +30,12 @@ function SearchPage() {
   const offlineToastShownRef = useRef(false);
   const network = useNetworkState();
   const online = network.online ?? true;
+  const wasCacheHit =
+    typeof sessionStorage !== "undefined" &&
+    sessionStorage.getItem(`search-cache-hit-${slug}`) === "1";
 
   /* Primary: SSE real-time stream */
-  const stream = useSearchStream(slug);
+  const stream = useSearchStream(slug, !wasCacheHit);
 
   /*
    * Fallback polling:
@@ -41,29 +45,25 @@ function SearchPage() {
   const isStreamDone =
     stream.status === "complete" || stream.status === "failed";
   const pollEnabled =
-    stream.connectionLost || (stream.status === "idle" && !isStreamDone);
+    wasCacheHit ||
+    stream.connectionLost ||
+    (stream.status === "idle" && !isStreamDone);
   const query = useSearchBySlug(slug, pollEnabled);
 
   /* Source of truth: prefer SSE results when complete, else polling data */
   const searchData = query.data?.data;
   const topic = searchData?.topic ?? "";
 
-  /* Prefer SSE payload; if complete but stream omitted results, use GET body */
-  const results =
-    stream.status === "complete" && stream.results && stream.results.length > 0
-      ? stream.results
-      : stream.status === "complete" &&
-          searchData?.results &&
-          searchData.results.length > 0
-        ? searchData.results
-        : stream.results && stream.results.length > 0
-          ? stream.results
-          : (searchData?.results ?? null);
-
   const currentStatus =
-    stream.status !== "idle"
+    stream.status !== "idle" && stream.status !== "pending"
       ? stream.status
       : (searchData?.status ?? "pending");
+
+  /* Prefer SSE payload; if complete but stream omitted results, use GET body */
+  const results =
+    stream.results && stream.results.length > 0
+      ? stream.results
+      : (searchData?.results ?? null);
 
   /* Connection lost + polling error = definitive failure */
   const isDefinitelyFailed =

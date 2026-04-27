@@ -46,7 +46,15 @@ function Home() {
     try {
       const result = await createSearch.mutateAsync(trimmed);
       const slug = (result as { data?: { slug?: string } }).data?.slug;
+      const cached = Boolean(
+        (result as { data?: { cached?: boolean } }).data?.cached
+      );
       if (slug) {
+        if (cached) {
+          sessionStorage.setItem(`search-cache-hit-${slug}`, "1");
+        } else {
+          sessionStorage.removeItem(`search-cache-hit-${slug}`);
+        }
         navigate({ to: "/search/$slug", params: { slug } });
       } else {
         setSearchError("Could not start search. Please try again.");
