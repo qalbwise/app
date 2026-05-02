@@ -38,13 +38,12 @@ registerRoute(
   new NetworkOnly()
 );
 
-// ── Route 3: GET /search* & /tafsir* (excluding /stream, /auth/) — SWR ─────
+// ── Route 3: GET /search* (excluding /stream, /auth/) — SWR ────────────────
 registerRoute(
   ({ url, request }) =>
     request.method === "GET" &&
     url.origin === API_ORIGIN &&
-    (url.pathname.startsWith("/search") ||
-      url.pathname.startsWith("/tafsir")) &&
+    url.pathname.startsWith("/search") &&
     !url.pathname.includes("/stream") &&
     !url.pathname.startsWith("/auth/"),
   new StaleWhileRevalidate({

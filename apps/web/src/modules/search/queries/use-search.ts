@@ -27,18 +27,18 @@ export function useSearchBySlug(slug: string, enabled = true) {
   });
 }
 
-export function useTafsir(ayahKey: string, enabled = true) {
+export function useVersePage(slug: string, page: number, enabled = true) {
   return useQuery({
-    queryKey: queryKeys.tafsir.byAyahKey(ayahKey),
-    queryFn: () => api.tafsir.get(ayahKey),
+    queryKey: queryKeys.search.versePage(slug, page),
+    queryFn: () => api.search.getVersePage(slug, page),
     enabled,
   });
 }
 
-export function useVerseExplain(slug: string, ayahKey: string, enabled = true) {
+export function useExplainVerse(slug: string, page: number, enabled = true) {
   return useQuery({
-    queryKey: queryKeys.search.explain(slug, ayahKey),
-    queryFn: () => api.search.explain(slug, ayahKey),
+    queryKey: queryKeys.search.explainVerse(slug, page),
+    queryFn: () => api.search.explainVerse(slug, page),
     enabled,
   });
 }

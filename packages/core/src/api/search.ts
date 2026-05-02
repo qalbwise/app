@@ -11,8 +11,13 @@ export const createSearchApi = (client: Client) => ({
   stream: (slug: string) =>
     client.GET("/search/{slug}/stream", { params: { path: { slug } } }),
 
-  explain: (slug: string, ayahKey: string) =>
-    client.GET("/search/{slug}/explain/{ayah_key}", {
-      params: { path: { slug, ayah_key: ayahKey } },
+  getVersePage: (slug: string, page: number) =>
+    client.GET("/search/{slug}/verse/{page}", {
+      params: { path: { slug, page } },
+    }),
+
+  explainVerse: (slug: string, page: number) =>
+    client.GET("/search/{slug}/verse/{page}/explain", {
+      params: { path: { slug, page } },
     }),
 });

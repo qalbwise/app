@@ -130,7 +130,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Searches */
+        get: operations["list_searches_search_get"];
         put?: never;
         /** Create Search */
         post: operations["create_search_search_post"];
@@ -174,15 +175,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/search/{slug}/explain/{ayah_key}": {
+    "/search/{slug}/verse/{page}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Explain Verse */
-        get: operations["explain_verse_search__slug__explain__ayah_key__get"];
+        /** Get Verse Page */
+        get: operations["get_verse_page_search__slug__verse__page__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -191,15 +192,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tafsir/{ayah_key}": {
+    "/search/{slug}/verse/{page}/explain": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Tafsir */
-        get: operations["get_tafsir_tafsir__ayah_key__get"];
+        /** Explain Verse */
+        get: operations["explain_verse_search__slug__verse__page__explain_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -409,6 +410,18 @@ export interface components {
             /** Topic */
             topic: string;
         };
+        /** SearchCreateResponse */
+        SearchCreateResponse: {
+            /** Slug */
+            slug: string;
+            /** Cached */
+            cached: boolean;
+        };
+        /** SearchListResponse */
+        SearchListResponse: {
+            /** Searches */
+            searches: components["schemas"]["SearchResponse"][];
+        };
         /** SearchResponse */
         SearchResponse: {
             /**
@@ -424,6 +437,8 @@ export interface components {
             status: string;
             /** Step */
             step?: string | null;
+            /** Search Count */
+            search_count: number;
             /** Results */
             results?: components["schemas"]["VerseResult"][] | null;
             /**
@@ -431,15 +446,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-        };
-        /** TafsirResponse */
-        TafsirResponse: {
-            /** Ayah Key */
-            ayah_key: string;
-            /** Tafsir */
-            tafsir: string;
-            /** Source */
-            source?: string | null;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -514,12 +520,13 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
-        /** VerseExplainResponse */
-        VerseExplainResponse: {
-            /** Ayah Key */
-            ayah_key: string;
-            /** Why This Verse */
-            why_this_verse: string;
+        /** VersePageResponse */
+        VersePageResponse: {
+            /** Page */
+            page: number;
+            /** Total Pages */
+            total_pages: number;
+            verse: components["schemas"]["VerseResult"];
         };
         /** VerseResult */
         VerseResult: {
@@ -531,7 +538,10 @@ export interface components {
             arabic_text: string;
             /** Translation */
             translation: string;
-            /** Translator */
+            /**
+             * Translator
+             * @default Saheeh International
+             */
             translator: string;
             /** Relevance Score */
             relevance_score: number;
@@ -539,6 +549,12 @@ export interface components {
             url: string;
             /** Why This Verse */
             why_this_verse?: string | null;
+            /** Tafsir Excerpt */
+            tafsir_excerpt?: string | null;
+            /** Tafsir Author */
+            tafsir_author?: string | null;
+            /** Tafsir Edition */
+            tafsir_edition?: string | null;
         };
     };
     responses: never;
@@ -741,6 +757,26 @@ export interface operations {
             };
         };
     };
+    list_searches_search_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchListResponse"];
+                };
+            };
+        };
+    };
     create_search_search_post: {
         parameters: {
             query?: never;
@@ -760,7 +796,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SearchCreateResponse"];
                 };
             };
             /** @description Validation Error */
@@ -836,13 +872,13 @@ export interface operations {
             };
         };
     };
-    explain_verse_search__slug__explain__ayah_key__get: {
+    get_verse_page_search__slug__verse__page__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 slug: string;
-                ayah_key: string;
+                page: number;
             };
             cookie?: never;
         };
@@ -854,7 +890,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VerseExplainResponse"];
+                    "application/json": components["schemas"]["VersePageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -868,12 +904,13 @@ export interface operations {
             };
         };
     };
-    get_tafsir_tafsir__ayah_key__get: {
+    explain_verse_search__slug__verse__page__explain_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                ayah_key: string;
+                slug: string;
+                page: number;
             };
             cookie?: never;
         };
@@ -885,7 +922,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TafsirResponse"];
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

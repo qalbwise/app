@@ -9,15 +9,23 @@ class SearchCreate(BaseModel):
     topic: str
 
 
+class SearchCreateResponse(BaseModel):
+    slug: str
+    cached: bool
+
+
 class VerseResult(BaseModel):
     ayah_key: str
     surah_name: str
     arabic_text: str
     translation: str
-    translator: str
+    translator: str = "Saheeh International"
     relevance_score: float
     url: str
     why_this_verse: str | None = None
+    tafsir_excerpt: str | None = None
+    tafsir_author: str | None = None
+    tafsir_edition: str | None = None
 
 
 class SearchResponse(BaseModel):
@@ -26,10 +34,9 @@ class SearchResponse(BaseModel):
     topic: str
     status: str
     step: str | None = None
+    search_count: int
     results: list[VerseResult] | None = None
     created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class SearchStreamEvent(BaseModel):
@@ -42,12 +49,7 @@ class SearchListResponse(BaseModel):
     searches: list[SearchResponse]
 
 
-class VerseExplainResponse(BaseModel):
-    ayah_key: str
-    why_this_verse: str
-
-
-class TafsirResponse(BaseModel):
-    ayah_key: str
-    tafsir: str
-    source: str | None = None
+class VersePageResponse(BaseModel):
+    page: int
+    total_pages: int
+    verse: VerseResult

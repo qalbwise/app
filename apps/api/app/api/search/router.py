@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -7,26 +8,32 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.search.serializer import (
     SearchCreate,
+    SearchCreateResponse,
     SearchListResponse,
     SearchResponse,
-    VerseExplainResponse,
+    VersePageResponse,
     VerseResult,
 )
 from app.core.database import get_db
-from app.models.search import Search
+from app.models.search import Topic, TopicResult
 from app.models.user import User
 from app.modules.search import service
+from app.modules.search.utils import serialize_result, serialize_results
+from app.modules.tafsir.service import get_or_fetch_tafsir
 
 router = APIRouter(prefix="/search", tags=["search"])
 limiter = Limiter(key_func=get_remote_address)
 
+DbDep = Annotated[AsyncSession, Depends(get_db)]
+
 
 async def get_current_user_optional(
     request: Request,
-    db: AsyncSession = Depends(get_db),
+    db: DbDep,
 ) -> User | None:
     from app.core.security.jwt import verify_token
 
@@ -43,59 +50,59 @@ async def get_current_user_optional(
     return result.scalar_one_or_none()
 
 
+CurrentUserOptionalDep = Annotated[User | None, Depends(get_current_user_optional)]
+
+
+def topic_to_response(topic: Topic, *, include_results: bool = True) -> SearchResponse:
+    results = None
+    if include_results:
+        results = [VerseResult(**r) for r in serialize_results(topic.results)]
+
+    return SearchResponse(
+        id=topic.id,
+        slug=topic.slug,
+        topic=topic.canonical_query,
+        status=topic.status,
+        step=topic.step,
+        search_count=topic.search_count,
+        results=results,
+        created_at=topic.created_at,
+    )
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/hour")
 async def create_search(
     body: SearchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User | None = Depends(get_current_user_optional),
-    request: Request = None,
-):
-    session_id = None
-    if request:
-        session_id = request.cookies.get("session_id")
+    db: DbDep,
+    current_user: CurrentUserOptionalDep,
+    request: Request,
+) -> SearchCreateResponse:
+    session_id = request.cookies.get("session_id")
 
-    search = await service.create_search(
+    created = await service.create_search(
         db, body.topic, str(current_user.id) if current_user else None, session_id
     )
 
-    return {"slug": search.slug}
+    return SearchCreateResponse(slug=created.topic.slug, cached=created.cached)
 
 
-@router.get("/{slug}", response_model=SearchResponse)
-async def get_search(
-    slug: str,
-    db: AsyncSession = Depends(get_db),
-):
-    search = await service.get_search_by_slug(db, slug)
-    if not search:
+@router.get("/{slug}")
+async def get_search(slug: str, db: DbDep) -> SearchResponse:
+    topic = await service.get_topic_by_slug(db, slug, include_results=True)
+    if not topic:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Search not found",
         )
 
-    results = None
-    if search.results:
-        results = [VerseResult(**r) for r in search.results]
-
-    return SearchResponse(
-        id=search.id,
-        slug=search.slug,
-        topic=search.topic,
-        status=search.status,
-        step=search.step,
-        results=results,
-        created_at=search.created_at,
-    )
+    return topic_to_response(topic)
 
 
 @router.get("/{slug}/stream")
-async def stream_search(
-    slug: str,
-    db: AsyncSession = Depends(get_db),
-):
-    search = await service.get_search_by_slug(db, slug)
-    if not search:
+async def stream_search(slug: str, db: DbDep) -> StreamingResponse:
+    topic = await service.get_topic_by_slug(db, slug)
+    if not topic:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Search not found",
@@ -104,35 +111,43 @@ async def stream_search(
     async def event_generator():
         last_signature: tuple[str, str | None, str | None] | None = None
         while True:
-            # Expire session cache so every iteration hits the DB fresh
             await db.execute(select(1))
             db.expire_all()
 
-            result = await db.execute(select(Search).where(Search.slug == slug))
-            search = result.scalar_one_or_none()
+            result = await db.execute(
+                select(Topic)
+                .where(Topic.slug == slug)
+                .options(selectinload(Topic.results))
+            )
+            current_topic = result.scalar_one_or_none()
 
-            if not search:
+            if not current_topic:
                 break
 
-            results_fingerprint: str | None = None
-            if search.results:
+            serialized_results = serialize_results(current_topic.results)
+            results_fingerprint = None
+            if serialized_results:
                 results_fingerprint = json.dumps(
-                    search.results, ensure_ascii=False, sort_keys=True
+                    serialized_results, ensure_ascii=False, sort_keys=True
                 )
 
-            signature = (search.status, search.step, results_fingerprint)
+            signature = (
+                current_topic.status,
+                current_topic.step,
+                results_fingerprint,
+            )
             if signature != last_signature:
                 last_signature = signature
                 event_data = {
-                    "status": search.status,
-                    "step": search.step,
+                    "status": current_topic.status,
+                    "step": current_topic.step,
                 }
-                if search.results:
-                    event_data["results"] = search.results
+                if serialized_results:
+                    event_data["results"] = serialized_results
 
                 yield f"data: {json.dumps(event_data)}\n\n"
 
-            if search.status in ("complete", "failed"):
+            if current_topic.status in ("complete", "failed"):
                 break
 
             await asyncio.sleep(1)
@@ -147,72 +162,96 @@ async def stream_search(
     )
 
 
-@router.get("/{slug}/explain/{ayah_key}", response_model=VerseExplainResponse)
-async def explain_verse(
-    slug: str,
-    ayah_key: str,
-    db: AsyncSession = Depends(get_db),
-):
-    from app.modules.search import tasks
-
-    search = await service.get_search_by_slug(db, slug)
-    if not search:
+@router.get("/{slug}/verse/{page}")
+async def get_verse_page(slug: str, page: int, db: DbDep) -> VersePageResponse:
+    topic = await service.get_topic_by_slug(db, slug)
+    if not topic:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Search not found",
         )
 
-    if not search.results:
+    result = await db.execute(
+        select(TopicResult)
+        .where(TopicResult.topic_id == topic.id)
+        .order_by(TopicResult.rank)
+    )
+    results = list(result.scalars().all())
+    if page < 1 or page > len(results):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No results found",
+            detail="Verse page not found",
         )
 
-    verse_data = None
-    for v in search.results:
-        if v.get("ayah_key") == ayah_key:
-            verse_data = v
-            break
+    topic_result = await get_or_fetch_tafsir(db, results[page - 1])
 
-    if not verse_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Verse not found in results",
-        )
-
-    topic = search.topic
-    why_this_verse = await tasks.get_verse_explanation_async(topic, verse_data)
-
-    return VerseExplainResponse(
-        ayah_key=ayah_key,
-        why_this_verse=why_this_verse,
+    return VersePageResponse(
+        page=page,
+        total_pages=len(results),
+        verse=VerseResult(**serialize_result(topic_result)),
     )
 
 
+@router.get("")
 async def list_searches(
-    db: AsyncSession = Depends(get_db),
-    current_user: User | None = Depends(get_current_user_optional),
-    request: Request = None,
-):
-    session_id = None
-    if request:
-        session_id = request.cookies.get("session_id")
+    db: DbDep,
+    current_user: CurrentUserOptionalDep,
+    request: Request,
+) -> SearchListResponse:
+    session_id = request.cookies.get("session_id")
 
-    searches = await service.list_searches(
+    topics = await service.list_searches(
         db, str(current_user.id) if current_user else None, session_id
     )
 
     return SearchListResponse(
-        searches=[
-            SearchResponse(
-                id=s.id,
-                slug=s.slug,
-                topic=s.topic,
-                status=s.status,
-                step=s.step,
-                results=None,
-                created_at=s.created_at,
-            )
-            for s in searches
-        ]
+        searches=[topic_to_response(topic, include_results=False) for topic in topics]
     )
+
+
+@router.get("/{slug}/verse/{page}/explain")
+async def explain_verse(
+    slug: str,
+    page: int,
+    db: DbDep,
+) -> dict:
+    topic = await service.get_topic_by_slug(db, slug)
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+        )
+
+    result = await db.execute(
+        select(TopicResult)
+        .where(TopicResult.topic_id == topic.id)
+        .order_by(TopicResult.rank)
+    )
+    results = list(result.scalars().all())
+    if page < 1 or page > len(results):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Verse page not found",
+        )
+
+    topic_result = results[page - 1]
+
+    if topic_result.why_this_verse:
+        return {"why_this_verse": topic_result.why_this_verse}
+
+    from app.modules.search.tasks import get_verse_explanation_async
+
+    explanation = await get_verse_explanation_async(
+        topic.canonical_query,
+        {
+            "ayah_key": topic_result.ayah_key,
+            "arabic_text": topic_result.arabic_text,
+            "translation": topic_result.translation,
+        },
+    )
+
+    if explanation:
+        topic_result.why_this_verse = explanation
+        await db.commit()
+
+    return {"why_this_verse": explanation}

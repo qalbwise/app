@@ -24,12 +24,10 @@ export const queryKeys = {
   search: {
     all: ["search"] as const,
     bySlug: (slug: string) => ["search", slug] as const,
-    explain: (slug: string, ayahKey: string) =>
-      ["search", slug, "explain", ayahKey] as const,
-  },
-  tafsir: {
-    all: ["tafsir"] as const,
-    byAyahKey: (ayahKey: string) => ["tafsir", ayahKey] as const,
+    versePage: (slug: string, page: number) =>
+      ["search", slug, "verse", page] as const,
+    explainVerse: (slug: string, page: number) =>
+      ["search", slug, "verse", page, "explain"] as const,
   },
   bookmarks: {
     all: ["bookmarks"] as const,

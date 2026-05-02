@@ -1,10 +1,10 @@
 import type { components } from "@repo/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCreateBookmark } from "@/modules/bookmarks/queries/use-bookmarks";
 import {
-  useTafsir,
-  useVerseExplain,
+  useExplainVerse,
+  useVersePage,
 } from "@/modules/search/queries/use-search";
 
 type VerseResult = components["schemas"]["VerseResult"];
@@ -42,18 +42,34 @@ export const VerseCard = ({
   const [showTafsir, setShowTafsir] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
 
   const cardOpacity = RANK_OPACITIES[rank] ?? 0.46;
   const isLoggedIn = Boolean(localStorage.getItem("access_token"));
 
-  const needsExplain = expanded && !verse.why_this_verse;
-  const explain = useVerseExplain(slug, verse.ayah_key, needsExplain);
-  const tafsir = useTafsir(verse.ayah_key, showTafsir);
+  const versePage = useVersePage(slug, rank + 1, showTafsir);
 
   const createBookmark = useCreateBookmark();
 
+  const loadedVerse = versePage.data?.data?.verse;
   const whyText =
-    verse.why_this_verse ?? explain.data?.data?.why_this_verse ?? null;
+    verse.why_this_verse ?? loadedVerse?.why_this_verse ?? fetchedWhyText;
+  const tafsirText = loadedVerse?.tafsir_excerpt ?? verse.tafsir_excerpt;
+  const tafsirAuthor = loadedVerse?.tafsir_author ?? verse.tafsir_author;
+
+  const explainVerse = useExplainVerse(slug, rank + 1, expanded && !whyText);
+  const isLoadingWhyText = expanded && !whyText && explainVerse.isPending;
+
+  useEffect(() => {
+    if (
+      explainVerse.isSuccess &&
+      explainVerse.data &&
+      explainVerse.data.data &&
+      typeof explainVerse.data.data.why_this_verse === "string"
+    ) {
+      setFetchedWhyText(explainVerse.data.data.why_this_verse);
+    }
+  }, [explainVerse.isSuccess, explainVerse.data]);
 
   async function handleSave() {
     if (!isLoggedIn) {
@@ -242,7 +258,7 @@ export const VerseCard = ({
             >
               Why this verse
             </p>
-            {explain.isPending && needsExplain ? (
+            {isLoadingWhyText ? (
               <LoadingDots />
             ) : whyText ? (
               <p
@@ -269,23 +285,23 @@ export const VerseCard = ({
                 style={{ color: "#777169" }}
               >
                 Tafsir
-                {tafsir.data?.data?.source && (
+                {tafsirAuthor && (
                   <span
                     className="ml-1.5 normal-case"
                     style={{ color: "#b0ada8" }}
                   >
-                    · {tafsir.data.data.source}
+                    · {tafsirAuthor}
                   </span>
                 )}
               </p>
-              {tafsir.isPending ? (
+              {versePage.isPending ? (
                 <LoadingDots />
-              ) : tafsir.data?.data?.tafsir ? (
+              ) : tafsirText ? (
                 <p
                   className="text-[14px] leading-relaxed"
                   style={{ color: "#4e4e4e", letterSpacing: "0.14px" }}
                 >
-                  {tafsir.data.data.tafsir}
+                  {tafsirText}
                 </p>
               ) : (
                 <p className="text-[14px]" style={{ color: "#b0ada8" }}>

@@ -25,7 +25,10 @@ export interface SearchStreamState {
  * Sets `connectionLost: true` if the connection drops mid-flight so the
  * caller can activate TanStack Query polling as a fallback.
  */
-export function useSearchStream(slug: string): SearchStreamState {
+export function useSearchStream(
+  slug: string,
+  enabled = true
+): SearchStreamState {
   const [state, setState] = useState<SearchStreamState>({
     status: "idle",
     step: null,
@@ -37,7 +40,16 @@ export function useSearchStream(slug: string): SearchStreamState {
   const doneRef = useRef(false);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug || !enabled) {
+      esRef.current?.close();
+      setState({
+        status: "idle",
+        step: null,
+        results: null,
+        connectionLost: false,
+      });
+      return;
+    }
 
     doneRef.current = false;
 
@@ -88,7 +100,7 @@ export function useSearchStream(slug: string): SearchStreamState {
     return () => {
       es.close();
     };
-  }, [slug]);
+  }, [slug, enabled]);
 
   return state;
 }
