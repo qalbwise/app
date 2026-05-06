@@ -1,24 +1,24 @@
 {
-	"repository": {
-		"type": "git",
-		"url": "git+git@github.com:qalbwise/app.git"
-	},
-	"author": {
-		"email": "up2dul@gmail.com",
-		"name": "Qalbwise"
-	},
-	"scripts": {
-		"lint": "biome lint",
-		"format": "biome format --write .",
-		"check": "biome check --write .",
-		"prepare": "lefthook install"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.4.10",
-		"@commitlint/cli": "^20.5.0",
-		"@commitlint/config-conventional": "^20.5.0",
-		"@commitlint/types": "^20.5.0",
-		"lefthook": "^2.1.5"
-	},
-	"packageManager": "pnpm@10.27.0"
+  "repository": {
+    "type": "git",
+    "url": "git+git@github.com:qalbwise/app.git"
+  },
+  "author": {
+    "email": "up2dul@gmail.com",
+    "name": "Qalbwise"
+  },
+  "scripts": {
+    "lint": "biome lint",
+    "format": "biome format --write .",
+    "check": "biome check --write --unsafe .",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.10",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/types": "^20.5.0",
+    "lefthook": "^2.1.5"
+  },
+  "packageManager": "pnpm@10.27.0"
 }
