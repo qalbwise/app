@@ -1,9 +1,9 @@
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { MotionConfig } from "motion/react";
 import ReactDOM from "react-dom/client";
-import { PwaUpdatePrompt } from "@/components/pwa-update-prompt";
+
 import { routeTree } from "./routeTree.gen";
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/plus-jakarta-sans/wght.css";
 
 const router = createRouter({
   routeTree,
@@ -21,23 +21,5 @@ const rootElement = document.getElementById("app")!;
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-  const AppContent = () => {
-    if (clientId) {
-      return (
-        <GoogleOAuthProvider clientId={clientId}>
-          <RouterProvider router={router} />
-          <PwaUpdatePrompt />
-        </GoogleOAuthProvider>
-      );
-    }
-    return <RouterProvider router={router} />;
-  };
-
-  root.render(
-    <MotionConfig reducedMotion="user">
-      <AppContent />
-    </MotionConfig>
-  );
+  root.render(<RouterProvider router={router} />);
 }
