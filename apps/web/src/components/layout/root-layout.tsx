@@ -26,7 +26,7 @@ const backgroundLayers = [
     color: "#fafafa",
     image: patternBottom,
     position: "center 480px",
-    repeat: "no-repeat",
+    repeat: "repeat-x",
     size: "auto",
   },
   {
