@@ -53,22 +53,11 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
       {/* Sheet panel */}
       <div
         ref={sheetRef}
-        className="absolute bottom-0 left-0 right-0 animate-in slide-in-from-bottom duration-300"
-        style={{
-          background: "#fff",
-          borderRadius: "20px 20px 0 0",
-          boxShadow:
-            "rgba(0,0,0,0.3) 0px -4px 40px, rgba(0,0,0,0.06) 0px 0px 0px 1px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
+        className="slide-in-from-bottom absolute right-0 bottom-0 left-0 max-h-[90vh] animate-in overflow-y-auto rounded-t-[20px] bg-background shadow-[rgba(0,0,0,0.3)_0_-4px_40px,rgba(0,0,0,0.06)_0_0_0_1px] duration-300"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div
-            className="h-1 w-10 rounded-full"
-            style={{ background: "#e5e5e5" }}
-          />
+          <div className="h-1 w-10 rounded-full bg-border" />
         </div>
         {children}
       </div>
@@ -77,7 +66,7 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
 }
 
 export function SheetContent({ children, className }: SheetContentProps) {
-  return <div className={cn("px-6 pb-8 pt-2", className)}>{children}</div>;
+  return <div className={cn("px-6 pt-2 pb-8", className)}>{children}</div>;
 }
 
 export function SheetHeader({ children, className }: SheetHeaderProps) {
@@ -88,7 +77,7 @@ export function SheetTitle({ children, className }: SheetTitleProps) {
   return (
     <h2
       className={cn(
-        "text-[24px] font-light leading-tight tracking-[-0.4px] text-black",
+        "font-light text-[24px] text-black leading-tight tracking-[-0.4px]",
         className
       )}
     >
