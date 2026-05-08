@@ -85,7 +85,7 @@
     @apply font-display;
   }
   .main-wrap {
-    @apply px-8 sm:px-32 md:px-40 lg:px-75 xl:px-80;
+    @apply px-8 sm:px-32 md:px-40 lg:px-75 xl:px-80 2xl:px-115;
   }
 }
 
