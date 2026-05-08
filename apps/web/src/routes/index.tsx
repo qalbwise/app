@@ -1,20 +1,28 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 import { useNetworkState } from "react-use";
 import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { containsOffensiveContent } from "@/lib/forbidden-words";
 import { useCreateSearch } from "@/modules/search/queries/use-search";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 const TOPIC_CHIPS = [
-  "grief",
-  "anxiety",
-  "gratitude",
-  "new beginning",
-  "fear of failure",
-  "patience",
+  "Grief",
+  "Anxiety",
+  "Gratitude",
+  "New Beginning",
+  "Fear of Failure",
+  "Patience",
 ] as const;
 
 function Home() {
@@ -78,7 +86,7 @@ function Home() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setSearchError(null);
     handleSearch(topic);
@@ -89,123 +97,56 @@ function Home() {
   const isDisabled = isLoading || !online;
 
   return (
-    <div
-      className="flex min-h-[calc(100vh-56px-80px)] flex-col items-center justify-center px-4 py-20"
-      style={{ background: "#fff" }}
-    >
-      {/* Hero text */}
-      <div className="fade-up mx-auto max-w-2xl text-center">
-        <p
-          className="mb-4 font-semibold text-[12px] uppercase tracking-widest"
-          style={{ color: "#777169", letterSpacing: "0.12em" }}
-        />
-
-        <h1 className="display-hero mb-5">What's on your qalb today?</h1>
-
-        <p
-          className="mb-12 text-[18px] leading-relaxed"
-          style={{
-            color: "#4e4e4e",
-            fontWeight: 400,
-            letterSpacing: "0.18px",
-            maxWidth: "480px",
-            margin: "0 auto 48px",
-          }}
-        >
-          Discover what the Quran says about anything in your life — grief,
-          fear, ambition, gratitude.
+    <>
+      <section className="flex flex-col items-center gap-4 text-pretty text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl">
+          What is in your <span className="dark:text-gold">qalb</span> today?
+        </h1>
+        <p className="max-w-xl font-light">
+          Discover what the Quran, sunnahs & tafsir relates to what your qalb
+          currently feels.{" "}
+          <span className="dark:text-gold">
+            Grief, fear, ambition, gratitude.
+          </span>
         </p>
+      </section>
 
-        {/* Search form */}
-        <form onSubmit={handleSubmit} className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Type anything on your mind…"
-              disabled={isDisabled}
-              className="w-full rounded-full py-4 pr-36 pl-6 text-[15px] outline-none transition-all placeholder:text-[#b0ada8]"
-              style={{
-                border: "1px solid rgba(0,0,0,0.1)",
-                boxShadow: "var(--shadow-outline)",
-                background: "#ffffff",
-                color: "#000",
-                letterSpacing: "0.15px",
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.boxShadow =
-                  "rgba(0,0,0,0.1) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 1px 2px, rgba(0,0,0,0.04) 0px 2px 4px";
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.boxShadow = "var(--shadow-outline)";
-              }}
+      <section className="mt-12 space-y-4">
+        <form className="flex w-full justify-center">
+          <InputGroup className="h-18 w-full rounded-full px-4 py-6 md:w-175">
+            <InputGroupInput
+              placeholder="Type anything on your mind..."
+              className="rounded-4xl placeholder:text-sm"
             />
-            <button
-              type="submit"
-              disabled={isDisabled || !topic.trim() || hasOffensiveContent}
-              className="pill-btn-black absolute top-1/2 right-2 -translate-y-1/2 text-[14px]"
-              style={{ height: "34px", padding: "0 18px" }}
-              title={
-                hasOffensiveContent
-                  ? "Inappropriate language detected"
-                  : !online
-                    ? "Offline"
-                    : ""
-              }
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                  Searching…
-                </span>
-              ) : !online ? (
-                "Offline"
-              ) : (
-                "Search"
-              )}
-            </button>
-          </div>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                type="submit"
+                variant="default"
+                className="size-9.5 rounded-full text-sm md:w-26.5"
+              >
+                <Search />
+                <span className="hidden md:inline">Search</span>
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
         </form>
 
-        {/* Inline search error */}
-        {searchError && (
-          <p
-            className="mb-4 text-[13px]"
-            style={{ color: "#dc2626", letterSpacing: "0.13px" }}
-          >
-            {searchError}
-          </p>
-        )}
-
-        {/* Topic chips */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {TOPIC_CHIPS.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => {
-                setSearchError(null);
-                handleSearch(chip);
-              }}
-              disabled={isDisabled}
-              className="warm-btn"
-            >
-              {chip}
-            </button>
+        <ul className="flex flex-wrap justify-center gap-2 lg:gap-4">
+          {TOPIC_CHIPS.map((topic) => (
+            <li key={topic} className="inline-block">
+              <Button variant="outline" className="text-sm">
+                {topic}
+              </Button>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </section>
 
-      {/* Subtle tagline */}
-      <p
-        className="mt-20 text-center text-[13px]"
-        style={{ color: "#b0ada8", maxWidth: "320px", lineHeight: 1.6 }}
-      >
-        "There truly is a reminder in this for whoever has a heart."
-        <br />
-        <em style={{ color: "#c8c4bf" }}>— Quran 50:37</em>
-      </p>
-    </div>
+      {/* TODO: Create a static list of verses and randomize it */}
+      <section className="mt-12 text-balance text-center font-sans text-muted-foreground text-sm">
+        <p>"There truly is a reminder in this for whoever has a heart."</p>
+        <p className="mt-2 italic">~ Quran 50:37</p>
+      </section>
+    </>
   );
 }
