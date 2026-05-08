@@ -1,33 +1,33 @@
-export const Footer = () => {
-  const year = new Date().getFullYear();
+const year = new Date().getFullYear();
 
+export const Footer = () => {
   return (
-    <footer
-      className="py-10 px-4"
-      style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}
-    >
-      <div className="page-wrap flex flex-col items-center justify-between gap-3 sm:flex-row">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[14px]" style={{ color: "#777169" }}>
-            © {year} Qalbwise
-          </span>
-          <span className="text-[14px]" style={{ color: "#e5e5e5" }}>
-            ·
-          </span>
-          <span className="text-[14px]" style={{ color: "#777169" }}>
-            Built for the Quran Foundation Hackathon
-          </span>
-        </div>
+    <footer className="main-wrap flex flex-col gap-4 border-black/5 border-t bg-white/95 py-5 text-muted-foreground text-sm backdrop-blur-sm md:gap-1 lg:gap-0">
+      <div className="flex flex-col justify-between gap-2 md:flex-row">
+        <p>&copy; {year} Qalbwise</p>
+
         <a
           href="https://github.com/qalbwise/app"
           target="_blank"
           rel="noreferrer"
-          className="text-[13px] no-underline transition-colors hover:text-black"
-          style={{ color: "#777169" }}
+          className="transition-all hover:text-foreground hover:underline"
         >
           GitHub
         </a>
       </div>
+
+      <p className="md:text-center">
+        Built for the{" "}
+        <a
+          href="https://launch.provisioncapital.com/quran-hackathon"
+          target="_blank"
+          rel="noreferrer"
+          className="transition-all hover:text-foreground hover:underline"
+        >
+          Quran Foundation
+        </a>{" "}
+        Hackathon
+      </p>
     </footer>
   );
 };
