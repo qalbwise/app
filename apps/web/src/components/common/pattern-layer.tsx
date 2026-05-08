@@ -7,6 +7,8 @@ type PatternLayerProps = {
   zIndex?: number;
   id: string;
   className?: string;
+  repeat?: string;
+  maskSize?: string;
 };
 
 export function PatternLayer({
@@ -15,6 +17,8 @@ export function PatternLayer({
   image,
   position,
   zIndex = 0,
+  repeat = "no-repeat",
+  maskSize = "auto",
 }: PatternLayerProps) {
   return (
     <div
@@ -24,12 +28,12 @@ export function PatternLayer({
         backgroundColor: color,
         WebkitMaskImage: `url(${image})`,
         WebkitMaskPosition: position,
-        WebkitMaskRepeat: "no-repeat",
-        WebkitMaskSize: "auto",
+        WebkitMaskRepeat: repeat,
+        WebkitMaskSize: maskSize,
         maskImage: `url(${image})`,
         maskPosition: position,
-        maskRepeat: "no-repeat",
-        maskSize: "auto",
+        maskRepeat: repeat,
+        maskSize: maskSize,
         zIndex,
       }}
     />

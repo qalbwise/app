@@ -3,9 +3,9 @@ import { useEffect } from "react";
 import patternBottom from "@/assets/pattern-bottom.svg";
 import patternTop from "@/assets/pattern-top.svg";
 import patternX from "@/assets/pattern-x.svg";
+import { PatternLayer } from "@/components/common/pattern-layer";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
-import { PatternLayer } from "@/components/ui/pattern-layer";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { usePreferencesHydration } from "@/modules/preferences/hooks/use-preferences-hydration";
@@ -18,24 +18,32 @@ const backgroundLayers = [
     color: "#e0e0e0",
     image: patternTop,
     position: "center -502px",
+    repeat: "no-repeat",
+    size: "auto",
   },
   {
     id: "pattern-bottom",
     color: "#fafafa",
     image: patternBottom,
     position: "center 480px",
+    repeat: "no-repeat",
+    size: "auto",
   },
   {
     id: "pattern-x-left",
     color: "var(--clr-warm-stone)",
     image: patternX,
     position: "-48px",
+    repeat: "repeat-y",
+    size: "96px auto",
   },
   {
     id: "pattern-x-right",
     color: "var(--clr-warm-stone)",
     image: patternX,
     position: "calc(100% + 48px) 0",
+    repeat: "repeat-y",
+    size: "96px auto",
   },
 ] as const;
 
@@ -83,14 +91,16 @@ export const RootLayout = ({ children }: { children: React.ReactNode }) => {
           className={
             layer.id.startsWith("pattern-x") ? "hidden md:block" : undefined
           }
+          repeat={layer.repeat}
+          maskSize={layer.size}
         />
       ))}
 
-      <div className="relative z-10 flex min-h-svh flex-col">
+      <div className="relative z-1 flex min-h-svh flex-col">
         <Header />
         <main
           id="main-content"
-          className="main-wrap flex-1 items-center pt-24 pb-12 sm:pt-28 md:pt-32 lg:pt-40"
+          className="main-wrap flex-1 items-center pt-9 pb-11"
         >
           {children}
         </main>
