@@ -1,12 +1,10 @@
 import type { components } from "@repo/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNetworkState } from "react-use";
 import { toast } from "sonner";
-import { LoginSheet } from "@/modules/auth/components/login-sheet";
-import { SearchFontControls } from "@/modules/preferences/components/search-font-controls";
-import { VerseCard } from "@/modules/search/components/verse-card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { useSearchStream } from "@/modules/search/hooks/use-search-stream";
 import { useSearchBySlug } from "@/modules/search/queries/use-search";
 
@@ -106,138 +104,50 @@ function SearchPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px-80px)] bg-white px-4 py-14">
-      <div className="page-wrap max-w-2xl">
-        {/* Back link */}
-        <Link
-          to="/"
-          className="mb-8 inline-flex items-center gap-1.5 text-[14px] text-muted-foreground no-underline transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          New search
-        </Link>
+    <>
+      <section className="flex flex-col gap-4">
+        <div className="relative flex flex-col gap-y-2 md:flex-row md:justify-center">
+          <Link
+            to="/"
+            className="left-0 flex items-center gap-1 text-sm transition-all hover:text-muted-foreground hover:underline md:absolute"
+          >
+            <ChevronLeft />
+            New Search
+          </Link>
 
-        {/* Topic heading */}
-        {topic ? (
-          <h1 className="display-heading mb-2">{topic}</h1>
-        ) : (
-          <div
-            className="skeleton-pulse mb-2 h-9 w-64 rounded-lg"
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Status / count line */}
-        {isLoading ? (
-          <p className="caption fade-up mb-4">{stepMessage}</p>
-        ) : (
-          results && (
-            <p className="caption mb-4">
-              {results.length} {results.length === 1 ? "verse" : "verses"} found
-            </p>
-          )
-        )}
-
-        <div className="mb-3 flex justify-end">
-          <SearchFontControls />
+          <h1 className="relative">
+            Showing <span className="font-bold">5 results </span>of:
+          </h1>
         </div>
 
-        {/* Content */}
-        <div className="flex flex-col gap-4">
-          {isLoading ? (
-            <>
-              <SkeletonCard />
-              <SkeletonCard delay={80} />
-              <SkeletonCard delay={160} />
-            </>
-          ) : isDefinitelyFailed ||
-            currentStatus === "failed" ||
-            query.isError ? (
-            <div className="card-surface p-10 text-center">
-              <p className="mb-4 text-[15px] text-secondary-foreground">
-                Search failed. Please try a different topic.
-              </p>
-              <Link
-                to="/"
-                className="pill-btn-black inline-flex h-10 px-5 no-underline"
-              >
-                Try again
-              </Link>
-            </div>
-          ) : !results || results.length === 0 ? (
-            <div className="card-surface p-10 text-center">
-              <p className="mb-2 font-medium text-[15px] text-secondary-foreground">
-                No verses found
-              </p>
-              <p className="mb-6 text-[14px] text-muted-foreground">
-                Try rephrasing your topic in different words.
-              </p>
-              <Link
-                to="/"
-                className="pill-btn-black inline-flex h-10 px-5 no-underline"
-              >
-                Search again
-              </Link>
-            </div>
-          ) : (
-            (results as VerseResult[]).map(
-              (verse: VerseResult, index: number) => (
-                <div
-                  key={verse.ayah_key}
-                  className="fade-up"
-                  style={{ animationDelay: `${index * 60}ms` }}
-                >
-                  <VerseCard
-                    verse={verse}
-                    rank={index}
-                    slug={slug}
-                    onSaveRequest={handleSaveVerse}
-                  />
-                </div>
-              )
-            )
-          )}
-        </div>
-      </div>
+        <span className="text-balance text-center font-medium font-sans text-2xl italic">
+          “I needed some guide to always be grateful towards that I already
+          have”
+        </span>
+      </section>
 
-      {/* Login bottom sheet */}
-      <LoginSheet
-        open={loginSheetOpen}
-        onOpenChange={setLoginSheetOpen}
-        promptContext="Save your verse"
-        onSuccess={() => {
-          setLoginSheetOpen(false);
-          if (pendingSaveAyah) {
-            /* After login, user can re-tap save */
-            setPendingSaveAyah(null);
-          }
-        }}
-      />
-    </div>
+      <section className="mt-8">
+        <Card className="px-7 py-8 font-sans">
+          <CardHeader className="flex flex-col items-center gap-4 italic">
+            <div className="flex items-center justify-center gap-4">
+              <h1 className="font-medium text-xl">Surah 79 (An-Nazi'at)</h1>
+
+              <span className="rounded-3xl border border-border bg-secondary px-3 py-1 font-medium">
+                79 : 8
+              </span>
+            </div>
+
+            <a
+              href="https://quran.com/79/8"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-center text-secondary-foreground underline transition-all hover:text-muted-foreground"
+            >
+              quran.com reference
+            </a>
+          </CardHeader>
+        </Card>
+      </section>
+    </>
   );
 }
-
-const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
-  <div
-    className="card-surface p-6"
-    style={{ animationDelay: `${delay}ms` }}
-    aria-hidden="true"
-  >
-    {/* Header row */}
-    <div className="mb-4 flex items-center gap-2">
-      <span className="skeleton-pulse h-3 w-28 rounded" />
-      <span className="skeleton-pulse h-3 w-10 rounded" />
-    </div>
-    {/* Arabic block */}
-    <div className="skeleton-pulse mb-4 h-14 w-full rounded-xl" />
-    {/* Translation lines */}
-    <div className="skeleton-pulse mb-2 h-4 w-full rounded" />
-    <div className="skeleton-pulse mb-5 h-4 w-4/5 rounded" />
-    {/* Action row */}
-    <div className="flex gap-2">
-      <span className="skeleton-pulse h-7 w-28 rounded-full" />
-      <span className="skeleton-pulse h-7 w-24 rounded-full" />
-      <span className="skeleton-pulse h-7 w-20 rounded-full" />
-    </div>
-  </div>
-);
