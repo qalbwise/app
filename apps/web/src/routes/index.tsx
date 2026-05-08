@@ -98,7 +98,7 @@ function Home() {
 
   return (
     <>
-      <section className="flex flex-col items-center gap-4 text-pretty text-center">
+      <section className="flex flex-col items-center gap-4 text-pretty text-center sm:mt-19 md:mt-23 lg:mt-31">
         <h1 className="text-3xl sm:text-4xl md:text-5xl">
           What is in your <span className="dark:text-gold">qalb</span> today?
         </h1>
@@ -117,6 +117,7 @@ function Home() {
             <InputGroupInput
               placeholder="Type anything on your mind..."
               className="rounded-4xl placeholder:text-sm"
+              autoComplete="off"
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
