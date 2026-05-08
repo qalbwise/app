@@ -27,32 +27,20 @@ function JournalPage() {
   const [tab, setTab] = useState<"bookmarks" | "notes">("bookmarks");
 
   return (
-    <div
-      className="min-h-[calc(100vh-56px-80px)]"
-      style={{ background: "#fff" }}
-    >
+    <div className="min-h-[calc(100vh-56px-80px)] bg-white">
       <div className="page-wrap py-12">
         {/* Page header */}
         <div className="mb-8">
-          <h1
-            className="mb-2 text-[32px] font-bold"
-            style={{ color: "#000", letterSpacing: "-0.5px" }}
-          >
+          <h1 className="mb-2 font-bold text-[32px] text-foreground">
             My Journal
           </h1>
-          <p
-            className="text-[15px]"
-            style={{ color: "#777169", letterSpacing: "0.15px" }}
-          >
+          <p className="text-[15px] text-muted-foreground">
             Your personal collection of saved verses and reflections.
           </p>
         </div>
 
         {/* Tab bar */}
-        <div
-          className="mb-8 inline-flex rounded-xl p-1"
-          style={{ background: "#f5f5f5" }}
-        >
+        <div className="mb-8 inline-flex rounded-xl bg-muted p-1">
           <TabButton
             active={tab === "bookmarks"}
             onClick={() => setTab("bookmarks")}
@@ -79,11 +67,7 @@ function BookmarksTab() {
     return (
       <div className="flex flex-col gap-4">
         {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="skeleton-pulse h-32 rounded-2xl"
-            style={{ background: "#f5f5f5" }}
-          />
+          <div key={i} className="skeleton-pulse h-32 rounded-2xl bg-muted" />
         ))}
       </div>
     );
@@ -129,19 +113,10 @@ const BookmarkCard = ({
   <article className="card-surface p-5">
     <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <span className="text-[13px] font-semibold" style={{ color: "#000" }}>
+        <span className="font-semibold text-[13px] text-foreground">
           {bookmark.surah_name}
         </span>
-        <span
-          className="text-[11px] font-medium"
-          style={{
-            color: "#777169",
-            background: "rgba(245,242,239,0.8)",
-            padding: "2px 8px",
-            borderRadius: "9999px",
-            border: "1px solid rgba(78,50,23,0.1)",
-          }}
-        >
+        <span className="rounded-full border border-[rgba(78,50,23,0.1)] bg-(--clr-warm-stone) px-2 py-0.5 font-medium text-[11px] text-muted-foreground">
           {bookmark.ayah_key}
         </span>
       </div>
@@ -149,10 +124,7 @@ const BookmarkCard = ({
         type="button"
         onClick={onDelete}
         disabled={deleting}
-        className="text-[12px] transition-colors disabled:opacity-30"
-        style={{ color: "#b0ada8" }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#dc2626")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "#b0ada8")}
+        className="text-(--clr-placeholder) text-[12px] transition-colors hover:text-destructive disabled:opacity-30"
         aria-label="Delete bookmark"
       >
         {deleting ? "…" : "✕"}
@@ -164,14 +136,7 @@ const BookmarkCard = ({
     )}
 
     {bookmark.translation && (
-      <p
-        className="text-[14px] leading-relaxed"
-        style={{
-          color: "#4e4e4e",
-          fontStyle: "italic",
-          letterSpacing: "0.14px",
-        }}
-      >
+      <p className="text-[14px] text-secondary-foreground italic leading-relaxed">
         {bookmark.translation}
       </p>
     )}
@@ -202,11 +167,7 @@ function NotesTab() {
     return (
       <div className="flex flex-col gap-4">
         {[0, 1].map((i) => (
-          <div
-            key={i}
-            className="skeleton-pulse h-28 rounded-2xl"
-            style={{ background: "#f5f5f5" }}
-          />
+          <div key={i} className="skeleton-pulse h-28 rounded-2xl bg-muted" />
         ))}
       </div>
     );
@@ -222,39 +183,32 @@ function NotesTab() {
           onSubmit={handleCreate}
           className="card-surface flex flex-col gap-3 p-5"
         >
-          <p
-            className="text-[13px] font-semibold uppercase tracking-widest"
-            style={{ color: "#777169" }}
-          >
+          <p className="font-semibold text-[13px] text-muted-foreground uppercase tracking-widest">
             New reflection
           </p>
           <input
             type="text"
             placeholder="Topic (e.g. on patience)"
+            aria-label="Reflection topic"
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
             required
-            className="w-full rounded-xl px-4 py-3 text-[14px] outline-none"
-            style={{
-              border: "1px solid #e5e5e5",
-              color: "#000",
-            }}
+            className="w-full rounded-xl border border-border px-4 py-3 text-[14px] text-foreground outline-none"
           />
           <textarea
             placeholder="Write your reflection here…"
+            aria-label="Reflection content"
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
             required
             rows={5}
-            className="w-full rounded-xl px-4 py-3 text-[14px] leading-relaxed outline-none resize-none"
-            style={{ border: "1px solid #e5e5e5", color: "#000" }}
+            className="w-full resize-none rounded-xl border border-border px-4 py-3 text-[14px] text-foreground leading-relaxed outline-none"
           />
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={createNote.isPending}
-              className="pill-btn-black text-[13px] disabled:opacity-40"
-              style={{ height: "36px", padding: "0 18px" }}
+              className="pill-btn-black h-9 px-4.5 text-[13px] disabled:opacity-40"
             >
               {createNote.isPending ? "Saving…" : "Save"}
             </button>
@@ -265,8 +219,7 @@ function NotesTab() {
                 setNewTopic("");
                 setNewContent("");
               }}
-              className="pill-btn-white text-[13px]"
-              style={{ height: "36px", padding: "0 18px" }}
+              className="pill-btn-white h-9 px-4.5 text-[13px]"
             >
               Cancel
             </button>
@@ -276,8 +229,7 @@ function NotesTab() {
         <button
           type="button"
           onClick={() => setComposing(true)}
-          className="pill-btn-black self-start text-[13px]"
-          style={{ height: "36px", padding: "0 18px" }}
+          className="pill-btn-black h-9 self-start px-4.5 text-[13px]"
         >
           + New reflection
         </button>
@@ -322,34 +274,22 @@ const NoteCard = ({
     <article className="card-surface p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-[15px] font-semibold" style={{ color: "#000" }}>
+          <p className="font-semibold text-[15px] text-foreground">
             {note.topic}
           </p>
-          <p className="text-[12px]" style={{ color: "#b0ada8" }}>
-            {date}
-          </p>
+          <p className="text-(--clr-placeholder) text-[12px]">{date}</p>
         </div>
         <button
           type="button"
           onClick={onDelete}
           disabled={deleting}
-          className="shrink-0 text-[12px] transition-colors disabled:opacity-30"
-          style={{ color: "#b0ada8", marginTop: "2px" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#dc2626")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#b0ada8")}
+          className="mt-0.5 shrink-0 text-(--clr-placeholder) text-[12px] transition-colors hover:text-destructive disabled:opacity-30"
           aria-label="Delete note"
         >
           {deleting ? "…" : "✕"}
         </button>
       </div>
-      <p
-        className="text-[14px] leading-relaxed"
-        style={{
-          color: "#4e4e4e",
-          letterSpacing: "0.14px",
-          whiteSpace: "pre-wrap",
-        }}
-      >
+      <p className="whitespace-pre-wrap text-[14px] text-secondary-foreground leading-relaxed">
         {note.content}
       </p>
     </article>
@@ -370,12 +310,11 @@ const TabButton = ({
   <button
     type="button"
     onClick={onClick}
-    className="rounded-lg px-5 py-2 text-[13px] font-medium transition-all"
-    style={{
-      background: active ? "#fff" : "transparent",
-      color: active ? "#000" : "#777169",
-      boxShadow: active ? "var(--shadow-card)" : "none",
-    }}
+    className={`rounded-lg px-5 py-2 font-medium text-[13px] transition-all ${
+      active
+        ? "bg-white text-foreground shadow-(--shadow-card)"
+        : "bg-transparent text-muted-foreground"
+    }`}
   >
     {label}
   </button>
@@ -390,18 +329,10 @@ const EmptyState = ({
   title: string;
   body: string;
 }) => (
-  <div
-    className="flex flex-col items-center gap-3 rounded-2xl py-16 text-center"
-    style={{ background: "rgba(245,242,239,0.4)" }}
-  >
+  <div className="flex flex-col items-center gap-3 rounded-2xl bg-[rgba(245,242,239,0.4)] py-16 text-center">
     <span className="text-4xl">{icon}</span>
-    <p className="text-[16px] font-medium" style={{ color: "#4e4e4e" }}>
-      {title}
-    </p>
-    <p
-      className="max-w-xs text-[14px] leading-relaxed"
-      style={{ color: "#b0ada8" }}
-    >
+    <p className="font-medium text-[16px] text-secondary-foreground">{title}</p>
+    <p className="max-w-xs text-(--clr-placeholder) text-[14px] leading-relaxed">
       {body}
     </p>
   </div>

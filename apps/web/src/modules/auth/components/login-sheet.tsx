@@ -6,6 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { useLogin } from "@/modules/auth/queries/use-login";
 
 interface LoginSheetProps {
@@ -75,10 +76,7 @@ function LoginSheetGoogle({
       <SheetContent className="mx-auto max-w-sm">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
-          <p
-            className="text-[15px] leading-relaxed"
-            style={{ color: "#777169", letterSpacing: "0.15px" }}
-          >
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             {subtitle}
           </p>
         </SheetHeader>
@@ -87,8 +85,11 @@ function LoginSheetGoogle({
           <button
             type="button"
             onClick={() => googleLogin()}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-[15px] font-medium text-gray-700 transition-shadow hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-200"
-            style={{ boxShadow: "var(--shadow-soft)" }}
+            className={cn(
+              "w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-[15px] text-gray-700",
+              "transition-shadow hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-200",
+              "shadow-(--shadow-soft)"
+            )}
           >
             <span className="flex items-center justify-center gap-2">
               <svg
@@ -120,10 +121,7 @@ function LoginSheetGoogle({
           </button>
 
           {hasError && (
-            <p
-              className="mt-3 text-[13px]"
-              style={{ color: "#dc2626", letterSpacing: "0.13px" }}
-            >
+            <p className="mt-3 text-[13px] text-destructive">
               Sign-in failed. Please try again.
             </p>
           )}
@@ -152,28 +150,22 @@ function LoginSheetDevPlaceholder({
       <SheetContent className="mx-auto max-w-sm">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
-          <p
-            className="text-[15px] leading-relaxed"
-            style={{ color: "#777169", letterSpacing: "0.15px" }}
-          >
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             Google Sign-In is not configured for this environment.
           </p>
         </SheetHeader>
         <div className="mt-6 space-y-3">
-          <p
-            className="text-[14px] leading-relaxed"
-            style={{ color: "#4e4e4e" }}
-          >
+          <p className="text-[14px] text-secondary-foreground leading-relaxed">
             Add{" "}
-            <code className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[13px]">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[13px]">
               VITE_GOOGLE_CLIENT_ID
             </code>{" "}
             to{" "}
-            <code className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[13px]">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[13px]">
               apps/web/.env
             </code>{" "}
             (see{" "}
-            <code className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[13px]">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[13px]">
               .env.example
             </code>
             ), then restart the dev server.

@@ -12,14 +12,14 @@ const LATIN_TYPE_OPTIONS: { serif: boolean; label: string }[] = [
 ];
 
 const sectionLabelClass =
-  "mb-2 text-[12px] font-medium uppercase tracking-wider text-[#777169]";
+  "mb-2 text-[12px] font-medium uppercase tracking-wider text-muted-foreground";
 
 const segmentTrackClass =
-  "flex rounded-full p-1 bg-[#f5f5f5] shadow-[inset_rgba(0,0,0,0.06)_0_0_0_0.5px]";
+  "flex rounded-full p-1 bg-muted shadow-[inset_rgba(0,0,0,0.06)_0_0_0_0.5px]";
 
 function segmentOptionClass(selected: boolean) {
   return cn(
-    "flex-1 rounded-full px-2 py-2.5 text-center text-[13px] font-medium transition-all duration-150",
+    "flex-1 rounded-full px-2 py-2.5 text-center font-medium text-[13px] transition-all duration-150",
     "font-[family-name:var(--font-sans)] tracking-[0.01em]",
     selected
       ? "bg-white text-black shadow-[rgba(0,0,0,0.06)_0_0_0_1px,rgba(0,0,0,0.04)_0_1px_2px,rgba(0,0,0,0.04)_0_2px_4px]"
@@ -85,13 +85,13 @@ export const ReadingSettingsSidebar = () => {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Reading settings"
-        className="inline-flex shrink-0 items-center justify-center rounded-md p-1 text-[#777169] transition-colors hover:text-[#4e4e4e]"
+        className="inline-flex shrink-0 items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:text-secondary-foreground"
       >
         <Settings className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-[60]">
+        <div className="fixed inset-0 z-60">
           <button
             type="button"
             aria-label="Close settings"
@@ -100,13 +100,13 @@ export const ReadingSettingsSidebar = () => {
           />
           <aside
             className={cn(
-              "animate-in slide-in-from-right fade-in absolute inset-y-0 right-0 flex w-full max-w-[420px] flex-col",
-              "border-l border-[#e5e5e5] bg-white duration-200",
+              "slide-in-from-right fade-in absolute inset-y-0 right-0 flex w-full max-w-105 animate-in flex-col",
+              "border-[#e5e5e5] border-l bg-white duration-200",
               "shadow-[rgba(0,0,0,0.04)_-8px_0_24px]"
             )}
           >
-            <header className="shrink-0 border-b border-[rgba(0,0,0,0.05)] px-6 pb-5 pt-8">
-              <h2 className="font-[family-name:var(--font-display)] text-[24px] font-light leading-[1.17] tracking-[-0.02em] text-black">
+            <header className="shrink-0 border-[rgba(0,0,0,0.05)] border-b px-6 pt-8 pb-5">
+              <h2 className="font-(family-name:--font-display) font-light text-[24px] text-black leading-[1.17] tracking-[-0.02em]">
                 Reading settings
               </h2>
               <p className="caption mt-2 max-w-[320px]">
@@ -114,7 +114,7 @@ export const ReadingSettingsSidebar = () => {
               </p>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-32 pt-8">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-8 pb-32">
               <div className="flex flex-col gap-8">
                 <div>
                   <p
@@ -125,15 +125,9 @@ export const ReadingSettingsSidebar = () => {
                   >
                     Preview
                   </p>
-                  <div
-                    className="card-surface rounded-[20px] px-5 py-5"
-                    style={{
-                      boxShadow:
-                        "rgba(0,0,0,0.06) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 1px 2px, rgba(0,0,0,0.04) 0px 2px 4px",
-                    }}
-                  >
+                  <div className="card-surface rounded-[20px] px-5 py-5 shadow-[rgba(0,0,0,0.06)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_1px_2px,rgba(0,0,0,0.04)_0px_2px_4px]">
                     <p
-                      className="mb-3 text-right text-[26px] leading-[1.9] text-black"
+                      className="mb-3 text-right text-[26px] text-foreground leading-[1.9]"
                       style={{
                         fontFamily: `var(--font-arabic), serif`,
                         fontSize: "var(--arabic-text-size, 22px)",
@@ -143,7 +137,7 @@ export const ReadingSettingsSidebar = () => {
                     </p>
                     <p
                       className={cn(
-                        "text-[14px] font-normal leading-relaxed tracking-[0.14px] text-[#4e4e4e]",
+                        "font-normal text-[#4e4e4e] text-[14px] leading-relaxed tracking-[0.14px]",
                         serif ? "font-serif" : "font-sans"
                       )}
                     >
@@ -208,7 +202,7 @@ export const ReadingSettingsSidebar = () => {
                 </div>
 
                 <div>
-                  <p className="text-[13px] font-medium tracking-[0.14px] text-[#4e4e4e]">
+                  <p className="font-medium text-[13px] text-secondary-foreground tracking-[0.14px]">
                     Arabic font size
                   </p>
                   <div className="mt-3 flex items-center gap-3">
@@ -224,7 +218,7 @@ export const ReadingSettingsSidebar = () => {
                     >
                       <Minus className="h-4 w-4" strokeWidth={1.75} />
                     </button>
-                    <span className="min-w-[2.5rem] text-center text-[16px] font-medium tabular-nums tracking-[0.16px] text-black">
+                    <span className="min-w-10 text-center font-medium text-[16px] text-black tabular-nums tracking-[0.16px]">
                       {arabicSizeStep}
                     </span>
                     <button
@@ -244,16 +238,11 @@ export const ReadingSettingsSidebar = () => {
               </div>
             </div>
 
-            <footer
-              className="absolute bottom-0 left-0 right-0 flex items-center justify-between gap-4 border-t border-[rgba(0,0,0,0.05)] bg-white px-6 py-5"
-              style={{
-                boxShadow: "rgba(0,0,0,0.04) 0 -4px 12px -4px",
-              }}
-            >
+            <footer className="absolute right-0 bottom-0 left-0 flex items-center justify-between gap-4 border-black/5 border-t bg-white px-6 py-5 shadow-[rgba(0,0,0,0.04)_0_-4px_12px_-4px]">
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-[14px] font-medium tracking-[0.14px] text-[#777169] transition-colors hover:text-black"
+                className="font-medium text-[14px] text-muted-foreground tracking-[0.14px] transition-colors hover:text-foreground"
               >
                 Reset
               </button>

@@ -1,5 +1,6 @@
 import type { components } from "@repo/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNetworkState } from "react-use";
 import { toast } from "sonner";
@@ -110,24 +111,9 @@ function SearchPage() {
         {/* Back link */}
         <Link
           to="/"
-          className="mb-8 inline-flex items-center gap-1.5 text-[14px] no-underline transition-colors hover:text-black"
-          style={{ color: "#777169" }}
+          className="mb-8 inline-flex items-center gap-1.5 text-[14px] text-muted-foreground no-underline transition-colors hover:text-foreground"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M8.5 2.5L4 7l4.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowLeft className="size-4" />
           New search
         </Link>
 
@@ -143,7 +129,7 @@ function SearchPage() {
 
         {/* Status / count line */}
         {isLoading ? (
-          <p className="caption mb-4 fade-up">{stepMessage}</p>
+          <p className="caption fade-up mb-4">{stepMessage}</p>
         ) : (
           results && (
             <p className="caption mb-4">
@@ -168,32 +154,27 @@ function SearchPage() {
             currentStatus === "failed" ||
             query.isError ? (
             <div className="card-surface p-10 text-center">
-              <p className="mb-4 text-[15px]" style={{ color: "#4e4e4e" }}>
+              <p className="mb-4 text-[15px] text-secondary-foreground">
                 Search failed. Please try a different topic.
               </p>
               <Link
                 to="/"
-                className="pill-btn-black inline-flex no-underline"
-                style={{ height: "40px", padding: "0 20px" }}
+                className="pill-btn-black inline-flex h-10 px-5 no-underline"
               >
                 Try again
               </Link>
             </div>
           ) : !results || results.length === 0 ? (
             <div className="card-surface p-10 text-center">
-              <p
-                className="mb-2 font-medium text-[15px]"
-                style={{ color: "#4e4e4e" }}
-              >
+              <p className="mb-2 font-medium text-[15px] text-secondary-foreground">
                 No verses found
               </p>
-              <p className="mb-6 text-[14px]" style={{ color: "#777169" }}>
+              <p className="mb-6 text-[14px] text-muted-foreground">
                 Try rephrasing your topic in different words.
               </p>
               <Link
                 to="/"
-                className="pill-btn-black inline-flex no-underline"
-                style={{ height: "40px", padding: "0 20px" }}
+                className="pill-btn-black inline-flex h-10 px-5 no-underline"
               >
                 Search again
               </Link>
