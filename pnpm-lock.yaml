@@ -46,7 +46,7 @@ importers:
         version: 4.2.2(vite@7.3.2(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))
       '@tanstack/react-devtools':
         specifier: latest
-        version: 0.10.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)
+        version: 0.10.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)
       '@tanstack/react-query':
         specifier: ^5.96.2
         version: 5.96.2(react@19.2.4)
@@ -65,6 +65,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      immer:
+        specifier: ^11.1.8
+        version: 11.1.8
       lucide-react:
         specifier: ^0.545.0
         version: 0.545.0(react@19.2.4)
@@ -118,7 +121,7 @@ importers:
         version: 7.4.0
       zustand:
         specifier: ^5.0.12
-        version: 5.0.12(@types/react@19.2.14)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
+        version: 5.0.12(@types/react@19.2.14)(immer@11.1.8)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
     devDependencies:
       '@tailwindcss/typography':
         specifier: ^0.5.16
@@ -1518,8 +1521,8 @@ packages:
     peerDependencies:
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
-  '@tanstack/devtools@0.11.2':
-    resolution: {integrity: sha512-K8+tsBx+ptTLqqd4dOF10B6laj1g+XYImqYZL9n0jBINGaT+sOf17PKV9pbBt8kdbZeIGsHaJ5OZWCyZoHqN4A==}
+  '@tanstack/devtools@0.12.0':
+    resolution: {integrity: sha512-KiRMl8lFTTpNEOU4kt9mdZqQ8mTVEPwRLE8I1g3IJe5y1WpOhwNUU1E5vCq8VUsWJukszI6QmPbMs4Gw+C3cyQ==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -1532,8 +1535,8 @@ packages:
   '@tanstack/query-core@5.96.2':
     resolution: {integrity: sha512-hzI6cTVh4KNRk8UtoIBS7Lv9g6BnJPXvBKsvYH1aGWvv0347jT3BnSvztOE+kD76XGvZnRC/t6qdW1CaIfwCeA==}
 
-  '@tanstack/react-devtools@0.10.2':
-    resolution: {integrity: sha512-1BmZyxOrI5SqmRJ5MgkYZNNdnlLsJxQRI2YgorrAvcF2MxK6x5RcuStvD8+YlXoMw3JtNukPxoITirKAnKYDQA==}
+  '@tanstack/react-devtools@0.10.3':
+    resolution: {integrity: sha512-yUCoG7GwnnDb/aaXnimPUTqES7ICMO9LwII27f4RVxFKRS8z7ePqKIGVpQhVu/L0pvArJ8SBAWL8fxuUE1HYqQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/react': '>=16.8'
@@ -2467,6 +2470,9 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
+
+  immer@11.1.8:
+    resolution: {integrity: sha512-/tbkHMW7y10Lx6i1crLjD4/OhNkRG+Fo7byZHtah0547nIeXYcpIXaUh0IAQY6gO5459qpGGYapcEOHtFXkIuA==}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -5542,7 +5548,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@tanstack/devtools@0.11.2(csstype@3.2.3)(solid-js@1.9.12)':
+  '@tanstack/devtools@0.12.0(csstype@3.2.3)(solid-js@1.9.12)':
     dependencies:
       '@solid-primitives/event-listener': 2.4.5(solid-js@1.9.12)
       '@solid-primitives/keyboard': 1.3.5(solid-js@1.9.12)
@@ -5562,9 +5568,9 @@ snapshots:
 
   '@tanstack/query-core@5.96.2': {}
 
-  '@tanstack/react-devtools@0.10.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)':
+  '@tanstack/react-devtools@0.10.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(solid-js@1.9.12)':
     dependencies:
-      '@tanstack/devtools': 0.11.2(csstype@3.2.3)(solid-js@1.9.12)
+      '@tanstack/devtools': 0.12.0(csstype@3.2.3)(solid-js@1.9.12)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.2.4
@@ -6611,6 +6617,8 @@ snapshots:
   idb@7.1.1: {}
 
   ignore@5.3.2: {}
+
+  immer@11.1.8: {}
 
   import-fresh@3.3.1:
     dependencies:
@@ -8262,8 +8270,9 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zustand@5.0.12(@types/react@19.2.14)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)):
+  zustand@5.0.12(@types/react@19.2.14)(immer@11.1.8)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)):
     optionalDependencies:
       '@types/react': 19.2.14
+      immer: 11.1.8
       react: 19.2.4
       use-sync-external-store: 1.6.0(react@19.2.4)
