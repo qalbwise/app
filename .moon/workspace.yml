@@ -8,6 +8,7 @@ $schema: 'https://moonrepo.dev/schemas/workspace.json'
 projects:
   web: 'apps/web'
   api: 'apps/api'
+  core: 'packages/core'
 
 # Configures the version control system (VCS). Also known as
 # source code management (SCM).
