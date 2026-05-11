@@ -61,7 +61,7 @@ function SearchPage() {
   const query = useSearchBySlug(slug, pollEnabled);
 
   /* Source of truth: prefer SSE results when complete, else polling data */
-  const searchData = query.data?.data;
+  const searchData = query.data;
   const topic = searchData?.topic ?? "";
 
   const currentStatus =
