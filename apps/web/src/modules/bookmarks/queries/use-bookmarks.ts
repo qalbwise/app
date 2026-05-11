@@ -1,44 +1,64 @@
+import type { components } from "@repo/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocalStorage } from "react-use";
+import { toast } from "sonner";
 
 import { api, queryKeys } from "@/lib/api";
 
-type BookmarkCreate = {
-  ayah_key: string;
-  surah_name: string;
-  arabic_text: string;
-  translation: string;
-  note?: string;
-  extra_data?: Record<string, unknown>;
-};
+type BookmarkListResponse = components["schemas"]["BookmarkListResponse"];
+type BookmarkResponse = components["schemas"]["BookmarkResponse"];
+type BookmarkCreate = components["schemas"]["BookmarkCreate"];
 
-function isLoggedIn() {
-  return Boolean(localStorage.getItem("access_token"));
+function useIsLoggedIn() {
+  const [accessToken] = useLocalStorage("access_token");
+  return Boolean(accessToken);
 }
 
 export function useBookmarks() {
-  return useQuery({
+  const isLoggedIn = useIsLoggedIn();
+  return useQuery<BookmarkListResponse>({
     queryKey: queryKeys.bookmarks.all,
-    queryFn: () => api.bookmarks.list(),
-    enabled: isLoggedIn(),
+    queryFn: async () => {
+      const res = await api.bookmarks.list();
+      if (res.error) throw new Error("Failed to fetch bookmarks");
+      return res.data;
+    },
+    enabled: isLoggedIn,
   });
 }
 
 export function useCreateBookmark() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (body: BookmarkCreate) => api.bookmarks.create(body),
+  return useMutation<BookmarkResponse, Error, BookmarkCreate>({
+    mutationFn: async (body) => {
+      const res = await api.bookmarks.create({
+        ...body,
+        note: body.note ?? undefined,
+        extra_data: body.extra_data ?? undefined,
+      });
+      if (res.error) throw new Error("Failed to create bookmark");
+      return res.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useDeleteBookmark() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.bookmarks.delete(id),
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      await api.bookmarks.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
