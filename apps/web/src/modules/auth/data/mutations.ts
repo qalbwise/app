@@ -1,16 +1,15 @@
 import type { components } from "@repo/core";
 import { useMutation } from "@tanstack/react-query";
-import { useLocalStorage } from "react-use";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/modules/auth/stores/auth-store";
 
 type TokenResponse = components["schemas"]["TokenResponse"];
 type GoogleAccessTokenRequest =
   components["schemas"]["GoogleAccessTokenRequest"];
 
 export function useLogin() {
-  const [, setAccessToken] = useLocalStorage("access_token");
-  const [, setRefreshToken] = useLocalStorage("refresh_token");
+  const setTokens = useAuthStore((state) => state.setTokens);
 
   return useMutation<TokenResponse, Error, GoogleAccessTokenRequest>({
     mutationFn: async (data) => {
@@ -21,8 +20,7 @@ export function useLogin() {
 
     onSuccess: (data) => {
       if (!data) return;
-      setAccessToken(data.access_token);
-      setRefreshToken(data.refresh_token);
+      setTokens(data.access_token, data.refresh_token);
       toast.success("Logged in successfully");
     },
     onError: (error) => {

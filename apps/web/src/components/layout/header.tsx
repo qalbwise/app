@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
 import { LoginSheet } from "@/modules/auth/components/login-sheet";
 import { useMe } from "@/modules/auth/data/queries";
+import { useAuth } from "@/modules/auth/hooks/use-auth";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -13,14 +14,12 @@ export function Header() {
   const me = useMe();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth();
 
-  const isLoggedIn =
-    Boolean(localStorage.getItem("access_token")) && Boolean(me.data);
   const user = me.data;
 
   function handleSignOut() {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    logout();
     queryClient.invalidateQueries({ queryKey: queryKeys.me });
     queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
     navigate({ to: "/" });
