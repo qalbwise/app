@@ -1,28 +1,46 @@
 import type { components } from "@repo/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalStorage } from "react-use";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api, queryKeys } from "@/lib/api";
 
-type NoteListResponse = components["schemas"]["NoteListResponse"];
+type BookmarkResponse = components["schemas"]["BookmarkResponse"];
+type BookmarkCreate = components["schemas"]["BookmarkCreate"];
 type NoteResponse = components["schemas"]["NoteResponse"];
 type NoteCreate = components["schemas"]["NoteCreate"];
 
-function useIsLoggedIn() {
-  const [accessToken] = useLocalStorage("access_token");
-  return Boolean(accessToken);
-}
-
-export function useNotes() {
-  const isLoggedIn = useIsLoggedIn();
-  return useQuery<NoteListResponse>({
-    queryKey: queryKeys.notes.all,
-    queryFn: async () => {
-      const res = await api.bookmarks.listNotes();
-      if (res.error) throw new Error("Failed to fetch notes");
+export function useCreateBookmark() {
+  const queryClient = useQueryClient();
+  return useMutation<BookmarkResponse, Error, BookmarkCreate>({
+    mutationFn: async (body) => {
+      const res = await api.bookmarks.create({
+        ...body,
+        note: body.note ?? undefined,
+        extra_data: body.extra_data ?? undefined,
+      });
+      if (res.error) throw new Error("Failed to create bookmark");
       return res.data;
     },
-    enabled: isLoggedIn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useDeleteBookmark() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      await api.bookmarks.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 }
 

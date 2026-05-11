@@ -1,24 +1,9 @@
 import type { components } from "@repo/core";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/lib/api";
 
-type SearchCreateResponse = components["schemas"]["SearchCreateResponse"];
 type SearchResponse = components["schemas"]["SearchResponse"];
 type VersePageResponse = components["schemas"]["VersePageResponse"];
-
-export function useCreateSearch() {
-  return useMutation<SearchCreateResponse, Error, { topic: string }>({
-    mutationFn: async (data) => {
-      const res = await api.search.create(data);
-      if (res.error) throw new Error("Failed to create search");
-      return res.data;
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-}
 
 const POLL_TIMEOUT_MS = 3 * 60 * 1000; // stop polling after 3 minutes
 
