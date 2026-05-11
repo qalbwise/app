@@ -7,7 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useLogin } from "@/modules/auth/queries/use-login";
+import { useLogin } from "@/modules/auth/data/mutations";
 
 interface LoginSheetProps {
   open: boolean;

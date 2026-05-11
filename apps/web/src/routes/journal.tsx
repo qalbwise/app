@@ -2,14 +2,11 @@ import type { components } from "@repo/core";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  useBookmarks,
-  useDeleteBookmark,
-} from "@/modules/bookmarks/queries/use-bookmarks";
-import {
   useCreateNote,
+  useDeleteBookmark,
   useDeleteNote,
-  useNotes,
-} from "@/modules/bookmarks/queries/use-notes";
+} from "@/modules/bookmarks/data/mutations";
+import { useBookmarks, useNotes } from "@/modules/bookmarks/data/queries";
 
 type Bookmark = components["schemas"]["BookmarkResponse"];
 type Note = components["schemas"]["NoteResponse"];
@@ -73,7 +70,7 @@ function BookmarksTab() {
     );
   }
 
-  const items = (bookmarks.data?.data?.bookmarks ?? []) as Bookmark[];
+  const items = (bookmarks.data?.bookmarks ?? []) as Bookmark[];
 
   if (items.length === 0) {
     return (
@@ -173,7 +170,7 @@ function NotesTab() {
     );
   }
 
-  const items = (notes.data?.data?.notes ?? []) as Note[];
+  const items = (notes.data?.notes ?? []) as Note[];
 
   return (
     <div className="flex flex-col gap-6">

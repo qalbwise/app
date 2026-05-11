@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
 import { LoginSheet } from "@/modules/auth/components/login-sheet";
-import { useMe } from "@/modules/auth/queries/use-me";
+import { useMe } from "@/modules/auth/data/queries";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,8 +15,8 @@ export function Header() {
   const navigate = useNavigate();
 
   const isLoggedIn =
-    Boolean(localStorage.getItem("access_token")) && Boolean(me.data?.data);
-  const user = me.data?.data;
+    Boolean(localStorage.getItem("access_token")) && Boolean(me.data);
+  const user = me.data;
 
   function handleSignOut() {
     localStorage.removeItem("access_token");

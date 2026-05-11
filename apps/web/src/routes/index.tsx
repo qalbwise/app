@@ -12,7 +12,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { containsOffensiveContent } from "@/lib/forbidden-words";
-import { useCreateSearch } from "@/modules/search/queries/use-search";
+import { useCreateSearch } from "@/modules/search/data/mutations";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -52,7 +52,7 @@ function Home() {
     }
 
     try {
-      const result = await createSearch.mutateAsync(trimmed);
+      const result = await createSearch.mutateAsync({ topic: trimmed });
       const slug = (result as { data?: { slug?: string } }).data?.slug;
       const cached = Boolean(
         (result as { data?: { cached?: boolean } }).data?.cached

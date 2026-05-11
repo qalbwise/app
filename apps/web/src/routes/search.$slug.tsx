@@ -16,8 +16,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Separator } from "@/components/ui/separator";
+import { useSearchBySlug } from "@/modules/search/data/queries";
 import { useSearchStream } from "@/modules/search/hooks/use-search-stream";
-import { useSearchBySlug } from "@/modules/search/queries/use-search";
 
 type VerseResult = components["schemas"]["VerseResult"];
 

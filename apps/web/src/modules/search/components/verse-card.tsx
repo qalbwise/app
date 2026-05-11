@@ -2,11 +2,8 @@ import type { components } from "@repo/core";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCreateBookmark } from "@/modules/bookmarks/queries/use-bookmarks";
-import {
-  useExplainVerse,
-  useVersePage,
-} from "@/modules/search/queries/use-search";
+import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
+import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
 
 type VerseResult = components["schemas"]["VerseResult"];
 
@@ -52,7 +49,7 @@ export const VerseCard = ({
 
   const createBookmark = useCreateBookmark();
 
-  const loadedVerse = versePage.data?.data?.verse;
+  const loadedVerse = versePage.data?.verse;
   const whyText =
     verse.why_this_verse ?? loadedVerse?.why_this_verse ?? fetchedWhyText;
   const tafsirText = loadedVerse?.tafsir_excerpt ?? verse.tafsir_excerpt;
@@ -64,10 +61,10 @@ export const VerseCard = ({
   useEffect(() => {
     if (
       explainVerse.isSuccess &&
-      explainVerse.data?.data &&
-      typeof explainVerse.data.data.why_this_verse === "string"
+      explainVerse.data &&
+      typeof explainVerse.data.verse.why_this_verse === "string"
     ) {
-      setFetchedWhyText(explainVerse.data.data.why_this_verse);
+      setFetchedWhyText(explainVerse.data.verse.why_this_verse);
     }
   }, [explainVerse.isSuccess, explainVerse.data]);
 
