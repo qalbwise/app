@@ -100,7 +100,7 @@ packages/core/src/
 - Follow the established pattern of separating concerns for non-feature-specific components:
   - UI components in `components/ui/`
   - Layout components in `components/layout/`
-- Use `function fn()` syntax for normal functions and `const Component = () => {}` syntax for React components (not routes components)
+- Use `function fn()` syntax for normal functions and for React components
 
 ### Shared (`packages/core`)
 
