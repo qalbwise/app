@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
  * PWA update banner — Motion for React (gestures + AnimatePresence) with
  * reduced-motion support: https://motion.dev/docs/react
  */
-export const PwaUpdatePrompt = () => {
+export function PwaUpdatePrompt() {
   const [visible, setVisible] = useState(false);
   const reloadingRef = useRef(false);
   const pollIntervalRef = useRef<number | null>(null);
@@ -103,4 +103,4 @@ export const PwaUpdatePrompt = () => {
       )}
     </AnimatePresence>
   );
-};
+}
