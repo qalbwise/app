@@ -15,7 +15,7 @@ import { useFontPreferencesStore } from "@/modules/preferences/stores/font-prefe
 const backgroundLayers = [
   {
     id: "pattern-top",
-    color: "#e0e0e0",
+    color: "var(--color-pattern-top)",
     image: patternTop,
     position: "center -502px",
     repeat: "no-repeat",
@@ -23,7 +23,7 @@ const backgroundLayers = [
   },
   {
     id: "pattern-bottom",
-    color: "#fafafa",
+    color: "var(--color-pattern-bottom)",
     image: patternBottom,
     position: "center 480px",
     repeat: "repeat-x",
@@ -31,7 +31,7 @@ const backgroundLayers = [
   },
   {
     id: "pattern-x-left",
-    color: "var(--clr-warm-stone)",
+    color: "var(--color-pattern-x)",
     image: patternX,
     position: "-48px",
     repeat: "repeat-y",
@@ -39,7 +39,7 @@ const backgroundLayers = [
   },
   {
     id: "pattern-x-right",
-    color: "var(--clr-warm-stone)",
+    color: "var(--color-pattern-x)",
     image: patternX,
     position: "calc(100% + 48px) 0",
     repeat: "repeat-y",
@@ -104,7 +104,8 @@ export const RootLayout = ({ children }: { children: React.ReactNode }) => {
         >
           {children}
         </main>
-        <Toaster />
+        {/* TODO: add `richColors` prop after implemented the theme switcher to the app */}
+        <Toaster position="bottom-center" />
         <Footer />
       </div>
     </div>
