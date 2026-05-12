@@ -37,12 +37,14 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
+  disabled?: boolean;
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
   React.ComponentProps<"a">;
 
 function PaginationLink({
   className,
   isActive,
+  disabled,
   size = "icon",
   ...props
 }: PaginationLinkProps) {
@@ -50,8 +52,12 @@ function PaginationLink({
     <Button
       variant={isActive ? "outline" : "ghost"}
       size={size}
-      className={cn(className)}
+      className={cn(
+        className,
+        disabled && "pointer-events-none cursor-not-allowed opacity-80"
+      )}
       nativeButton={false}
+      disabled={disabled}
       render={
         <a
           aria-current={isActive ? "page" : undefined}
