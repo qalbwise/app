@@ -14,7 +14,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { api, queryKeys } from "@/lib/api";
-import { LoginSheet } from "@/modules/auth/components/login-sheet";
+import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
 import { SearchLoading } from "@/modules/search/components/search-loading";
@@ -33,9 +33,7 @@ export const Route = createFileRoute("/search/$slug")({
 const STEP_MESSAGES: Record<string, string> = {
   searching_quran: "Searching the Quran…",
   fetching_metadata: "Gathering verse details…",
-  ranking: "Preparing your results…",
-  pending: "Preparing your search…",
-  processing: "Searching the Quran…",
+  saving: "Saving your results…",
 };
 
 const VERSES_PER_PAGE = 1;
@@ -192,7 +190,7 @@ function SearchPage() {
   return (
     <>
       {isLoading ? (
-        <section className="relative mt-8">
+        <section className="relative mt-[20svh]">
           <SearchLoading query={topic} />
           <p className="mt-4 text-center text-muted-foreground text-sm">
             {stepMessage}
@@ -303,7 +301,7 @@ function SearchPage() {
         </>
       )}
 
-      <LoginSheet
+      <LoginDrawer
         open={loginSheetOpen}
         onOpenChange={setLoginSheetOpen}
         promptContext="Save this verse"

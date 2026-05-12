@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
-import { LoginSheet } from "@/modules/auth/components/login-sheet";
+import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useMe } from "@/modules/auth/data/queries";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 
@@ -48,7 +48,7 @@ export function Header() {
         </nav>
       </header>
 
-      <LoginSheet
+      <LoginDrawer
         open={loginSheetOpen}
         onOpenChange={setLoginSheetOpen}
         onSuccess={() => {
