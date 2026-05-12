@@ -27,7 +27,6 @@ const TOPIC_CHIPS = [
 
 function Home() {
   const [topic, setTopic] = useState("");
-  const [searchError, setSearchError] = useState<string | null>(null);
   const navigate = useNavigate();
   const createSearch = useCreateSearch();
   const network = useNetworkState();
@@ -42,10 +41,8 @@ function Home() {
       return;
     }
 
-    setSearchError(null);
-
     if (containsOffensiveContent(trimmed)) {
-      toast.error(
+      toast.warning(
         "Search contains inappropriate language. Please try another topic."
       );
       return;
@@ -61,18 +58,15 @@ function Home() {
         }
         navigate({ to: "/search/$slug", params: { slug: result.slug } });
       } else {
-        setSearchError("Could not start search. Please try again.");
+        toast.error("Could not start search. Please try again.");
       }
     } catch {
-      setSearchError(
-        "Search failed. Please check your connection and try again."
-      );
+      toast.error("Search failed. Please check your connection and try again.");
     }
   }
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSearchError(null);
     handleSearch(topic);
   }
 
@@ -104,7 +98,6 @@ function Home() {
               value={topic}
               onChange={(event) => {
                 setTopic(event.target.value);
-                setSearchError(null);
               }}
             />
             <InputGroupAddon align="inline-end">
@@ -130,7 +123,7 @@ function Home() {
                 className="text-sm"
                 onClick={() => {
                   setTopic(chipTopic);
-                  setSearchError(null);
+                  toast.dismiss();
                 }}
               >
                 {chipTopic}
@@ -138,10 +131,6 @@ function Home() {
             </li>
           ))}
         </ul>
-
-        {searchError && (
-          <p className="text-center text-destructive text-sm">{searchError}</p>
-        )}
       </section>
 
       {/* TODO: Create a static list of verses and randomize it */}
