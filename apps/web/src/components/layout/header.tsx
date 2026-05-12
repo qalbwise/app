@@ -8,32 +8,22 @@ import { useMe } from "@/modules/auth/data/queries";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 
 export function Header() {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
-  const me = useMe();
+  useMe();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-
-  const user = me.data;
 
   function handleSignOut() {
     logout();
     queryClient.invalidateQueries({ queryKey: queryKeys.me });
     queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
     navigate({ to: "/" });
-    setMobileOpen(false);
   }
 
   function openSignIn() {
     setLoginSheetOpen(true);
-    setMobileOpen(false);
-  }
-
-  function openRegister() {
-    setLoginSheetOpen(true);
-    setMobileOpen(false);
   }
 
   return (
@@ -52,7 +42,9 @@ export function Header() {
             </span>
           </Link>
 
-          <Button>{isLoggedIn ? "Sign out" : "Get started"}</Button>
+          <Button onClick={isLoggedIn ? handleSignOut : openSignIn}>
+            {isLoggedIn ? "Sign out" : "Get started"}
+          </Button>
         </nav>
       </header>
 

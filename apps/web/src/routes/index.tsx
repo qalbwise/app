@@ -53,36 +53,20 @@ function Home() {
 
     try {
       const result = await createSearch.mutateAsync({ topic: trimmed });
-      const slug = (result as { data?: { slug?: string } }).data?.slug;
-      const cached = Boolean(
-        (result as { data?: { cached?: boolean } }).data?.cached
-      );
-      if (slug) {
-        if (cached) {
-          sessionStorage.setItem(`search-cache-hit-${slug}`, "1");
+      if (result.slug) {
+        if (result.cached) {
+          sessionStorage.setItem(`search-cache-hit-${result.slug}`, "1");
         } else {
-          sessionStorage.removeItem(`search-cache-hit-${slug}`);
+          sessionStorage.removeItem(`search-cache-hit-${result.slug}`);
         }
-        navigate({ to: "/search/$slug", params: { slug } });
+        navigate({ to: "/search/$slug", params: { slug: result.slug } });
       } else {
         setSearchError("Could not start search. Please try again.");
       }
-    } catch (error) {
-      if ((error as any)?.response?.status === 400) {
-        toast.error(
-          (error as any)?.response?.data?.detail ||
-            "Search contains inappropriate language."
-        );
-      } else if ((error as any)?.response?.status === 429) {
-        const retryAfter = (error as any)?.response?.headers?.["retry-after"];
-        toast.error(
-          `Rate limit exceeded. Try again in ${retryAfter || "a few"} minutes.`
-        );
-      } else {
-        setSearchError(
-          "Search failed. Please check your connection and try again."
-        );
-      }
+    } catch {
+      setSearchError(
+        "Search failed. Please check your connection and try again."
+      );
     }
   }
 
@@ -93,37 +77,42 @@ function Home() {
   }
 
   const isLoading = createSearch.isPending;
-  const hasOffensiveContent = containsOffensiveContent(topic);
   const isDisabled = isLoading || !online;
 
   return (
     <>
       <section className="flex flex-col items-center gap-4 text-pretty text-center sm:mt-19 md:mt-23 lg:mt-31">
         <h1 className="text-3xl sm:text-4xl md:text-5xl">
-          What is in your <span className="dark:text-gold">qalb</span> today?
+          What is in your <span className="text-primary">qalb</span> today?
         </h1>
         <p className="max-w-xl font-light">
           Discover what the Quran, sunnahs & tafsir relates to what your qalb
           currently feels.{" "}
-          <span className="dark:text-gold">
+          <span className="text-primary">
             Grief, fear, ambition, gratitude.
           </span>
         </p>
       </section>
 
       <section className="mt-12 space-y-4">
-        <form className="flex w-full justify-center">
+        <form className="flex w-full justify-center" onSubmit={handleSubmit}>
           <InputGroup className="h-18 w-full rounded-full px-4 py-6 md:w-175">
             <InputGroupInput
               placeholder="Type anything on your mind..."
               className="rounded-4xl placeholder:text-sm"
               autoComplete="off"
+              value={topic}
+              onChange={(event) => {
+                setTopic(event.target.value);
+                setSearchError(null);
+              }}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
                 type="submit"
                 variant="default"
                 className="size-9.5 rounded-full text-sm md:w-26.5"
+                disabled={isDisabled}
               >
                 <Search />
                 <span className="hidden md:inline">Search</span>
@@ -133,14 +122,26 @@ function Home() {
         </form>
 
         <ul className="flex flex-wrap justify-center gap-2 lg:gap-4">
-          {TOPIC_CHIPS.map((topic) => (
-            <li key={topic} className="inline-block">
-              <Button variant="outline" className="text-sm">
-                {topic}
+          {TOPIC_CHIPS.map((chipTopic) => (
+            <li key={chipTopic} className="inline-block">
+              <Button
+                type="button"
+                variant="outline"
+                className="text-sm"
+                onClick={() => {
+                  setTopic(chipTopic);
+                  setSearchError(null);
+                }}
+              >
+                {chipTopic}
               </Button>
             </li>
           ))}
         </ul>
+
+        {searchError && (
+          <p className="text-center text-destructive text-sm">{searchError}</p>
+        )}
       </section>
 
       {/* TODO: Create a static list of verses and randomize it */}

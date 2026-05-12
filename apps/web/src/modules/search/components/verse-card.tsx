@@ -1,6 +1,11 @@
 import type { components } from "@repo/core";
+import { BookOpenCheck, Settings, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Dots } from "@/components/loading-ui/dots";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
 import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
@@ -16,8 +21,6 @@ interface VerseCardProps {
   /** Called when user taps "Save verse" while unauthenticated */
   onSaveRequest?: (ayahKey: string) => void;
 }
-
-const RANK_OPACITIES = [1, 1, 1, 1, 1] as const;
 
 /** English locale; MCP/API may still store `/ur/` or other paths in `url`. */
 function quranComEnUrl(ayahKey: string): string {
@@ -36,17 +39,13 @@ export const VerseCard = ({
   slug,
   onSaveRequest,
 }: VerseCardProps) => {
-  const [expanded, setExpanded] = useState(false);
-  const [showTafsir, setShowTafsir] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
 
-  const cardOpacity = RANK_OPACITIES[rank] ?? 0.46;
   const isLoggedIn = Boolean(localStorage.getItem("access_token"));
 
-  const versePage = useVersePage(slug, rank + 1, showTafsir);
-
+  const versePage = useVersePage(slug, rank + 1, true);
   const createBookmark = useCreateBookmark();
 
   const loadedVerse = versePage.data?.verse;
@@ -55,16 +54,12 @@ export const VerseCard = ({
   const tafsirText = loadedVerse?.tafsir_excerpt ?? verse.tafsir_excerpt;
   const tafsirAuthor = loadedVerse?.tafsir_author ?? verse.tafsir_author;
 
-  const explainVerse = useExplainVerse(slug, rank + 1, expanded && !whyText);
-  const isLoadingWhyText = expanded && !whyText && explainVerse.isPending;
+  const explainVerse = useExplainVerse(slug, rank + 1, true);
 
   useEffect(() => {
-    if (
-      explainVerse.isSuccess &&
-      explainVerse.data &&
-      typeof explainVerse.data.verse.why_this_verse === "string"
-    ) {
-      setFetchedWhyText(explainVerse.data.verse.why_this_verse);
+    const explanation = explainVerse.data?.why_this_verse;
+    if (explainVerse.isSuccess && typeof explanation === "string") {
+      setFetchedWhyText(explanation);
     }
   }, [explainVerse.isSuccess, explainVerse.data]);
 
@@ -112,186 +107,107 @@ export const VerseCard = ({
     }
   }
 
-  function toggleExpand() {
-    setExpanded((v) => !v);
-    if (!expanded) setShowTafsir(false);
-  }
-
   return (
-    <article
-      className="card-surface overflow-hidden transition-all duration-200"
-      style={{ opacity: cardOpacity }}
-    >
-      <div className="p-6">
-        {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="font-semibold text-[13px] text-foreground">
-            {verse.surah_name}
-          </span>
-          <span className="rounded-full border border-[rgba(78,50,23,0.1)] bg-(--clr-warm-stone) px-2 py-0.5 font-medium text-[12px] text-muted-foreground">
+    <Card className="max-h-[60svh] overflow-y-auto py-8 font-sans sm:px-7">
+      {/* Header */}
+      <CardHeader className="flex flex-col items-center gap-4 italic">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <h1 className="font-medium text-xl">{verse.surah_name}</h1>
+
+          <span className="rounded-3xl border border-border bg-secondary px-3 py-1 font-medium">
             {verse.ayah_key}
           </span>
         </div>
 
-        {/* ── Arabic text ─────────────────────────────────── */}
-        <div className="arabic-text mb-4">{verse.arabic_text}</div>
+        <a
+          href={quranComEnUrl(verse.ayah_key)}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="text-center text-secondary-foreground underline transition-all hover:text-muted-foreground"
+        >
+          quran.com reference
+        </a>
+      </CardHeader>
 
-        {/* ── Translation ─────────────────────────────────── */}
-        <p className="mb-5 text-[15px] text-secondary-foreground not-italic leading-relaxed">
-          {verse.translation}
-        </p>
+      <CardContent className="space-y-8 pt-4">
+        <Separator />
 
-        {/* ── Action row ──────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-2">
-          <ActionChip
-            active={expanded}
-            onClick={toggleExpand}
-            label={expanded ? "Why this verse ↑" : "Why this verse ↓"}
-          />
-          <ActionChip
-            active={showTafsir}
-            onClick={() => {
-              setShowTafsir((v) => !v);
-              if (!expanded) setExpanded(true);
-            }}
-            label="Read tafsir"
-          />
-          {/* Share */}
-          <button
-            type="button"
-            onClick={handleShare}
-            className={cn(
-              "rounded-full px-3 py-1 font-medium text-[12px] transition-all",
-              copied
-                ? "bg-(--clr-warm-stone-solid) text-foreground"
-                : "bg-transparent text-muted-foreground"
-            )}
-          >
-            {copied ? "Copied!" : "Share"}
-          </button>
-          {/* quran.com */}
-          <a
-            href={quranComEnUrl(verse.ayah_key)}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-full border border-border px-3 py-1 font-medium text-[12px] text-muted-foreground no-underline transition-colors hover:text-secondary-foreground"
-          >
-            quran.com ↗
-          </a>
+        {/* Verse content */}
+        <div className="flex flex-col items-stretch gap-4 text-center">
+          <span className="text-[32px]">{verse.arabic_text}</span>
+          <span>{verse.translation}</span>
 
-          {/* Save — pushed to far right */}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={createBookmark.isPending}
-            className={cn(
-              "ml-auto rounded-full px-3 py-1 font-medium text-[12px] transition-all disabled:opacity-40",
-              saved
-                ? "cursor-default border border-[rgba(78,50,23,0.2)] bg-(--clr-warm-stone) text-foreground"
-                : "cursor-pointer border border-border bg-transparent text-secondary-foreground hover:border-foreground hover:text-foreground"
-            )}
-          >
-            {saved
-              ? "✓ Saved"
-              : createBookmark.isPending
-                ? "Saving…"
-                : "Save verse"}
-          </button>
-        </div>
-      </div>
-
-      {/* ── Expanded section ───────────────────────────────── */}
-      {expanded && (
-        <div className="border-black/6 border-t px-6 py-5">
-          {/* Why this verse */}
-          <div className="mb-5">
-            <p className="mb-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-widest">
-              Why this verse
-            </p>
-            {isLoadingWhyText ? (
-              <LoadingDots />
-            ) : whyText ? (
-              <p className="text-[14px] text-secondary-foreground leading-relaxed">
-                {whyText}
-              </p>
-            ) : (
-              <p className="text-(--clr-placeholder) text-[14px]">
-                Explanation not available for this verse.
-              </p>
-            )}
+          {/* Action buttons */}
+          <div className="flex flex-col flex-wrap justify-center gap-3 sm:flex-row">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleShare}
+              className={cn(copied && "bg-secondary text-foreground")}
+            >
+              {copied ? "Copied!" : "Share"}
+              <Share2 className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleSave}
+              disabled={createBookmark.isPending}
+              className={cn(saved && "bg-secondary text-foreground")}
+            >
+              {saved
+                ? "✓ Saved"
+                : createBookmark.isPending
+                  ? "Saving…"
+                  : "Save Verse"}
+              <BookOpenCheck className="size-4" />
+            </Button>
+            <Button variant="outline" size="lg">
+              Settings
+              <Settings className="size-4" />
+            </Button>
           </div>
+        </div>
 
-          {/* Tafsir */}
-          {showTafsir && (
-            <div className="border-black/6 border-t pt-5">
-              <p className="mb-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-widest">
-                Tafsir
-                {tafsirAuthor && (
-                  <span className="ml-1.5 text-(--clr-placeholder) normal-case">
-                    · {tafsirAuthor}
-                  </span>
-                )}
-              </p>
-              {versePage.isPending ? (
-                <LoadingDots />
-              ) : tafsirText ? (
-                <p className="text-[14px] text-secondary-foreground leading-relaxed">
-                  {tafsirText}
-                </p>
-              ) : (
-                <p className="text-(--clr-placeholder) text-[14px]">
-                  Tafsir not available for this verse.
-                </p>
-              )}
-            </div>
-          )}
+        <Separator />
 
-          {/* Login nudge for unauthenticated users */}
-          {!isLoggedIn && (
-            <div className="mt-5 rounded-xl bg-[rgba(245,242,239,0.6)] px-4 py-3">
-              <p className="text-[13px] text-muted-foreground">
-                Create a free account to build your personal Quran journal.
-              </p>
-            </div>
+        {/* Why this verse */}
+        <div className="space-y-1 text-xs lg:text-sm">
+          <h2 className="font-medium text-muted-foreground">Why this verse</h2>
+          {explainVerse.isPending ? (
+            <Dots className="size-6 py-1 text-muted-foreground" />
+          ) : whyText ? (
+            <p className="leading-relaxed">{whyText}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Explanation not available for this verse.
+            </p>
           )}
         </div>
-      )}
-    </article>
+
+        <Separator />
+
+        {/* Tafsir */}
+        <div className="space-y-1 text-xs lg:text-sm">
+          <h2 className="font-medium text-muted-foreground">
+            Tafsir
+            {tafsirAuthor && (
+              <span className="ml-2 text-muted-foreground">
+                · {tafsirAuthor}
+              </span>
+            )}
+          </h2>
+          {versePage.isPending ? (
+            <Dots className="size-6 py-1 text-muted-foreground" />
+          ) : tafsirText ? (
+            <p className="leading-6 tracking-[0.18px]">{tafsirText}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Tafsir not available for this verse.
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
-
-const ActionChip = ({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`rounded-full border px-3 py-1 font-medium text-[12px] transition-all ${
-      active
-        ? "border-black/15 bg-(--clr-warm-stone-solid) text-foreground"
-        : "border-border bg-transparent text-secondary-foreground"
-    }`}
-  >
-    {label}
-  </button>
-);
-
-const LoadingDots = () => (
-  <div className="flex items-center gap-1 py-1">
-    {[0, 1, 2].map((i) => (
-      <div
-        key={i}
-        className="h-1.5 w-1.5 rounded-full bg-(--clr-subtle)"
-        style={{
-          animation: `skeleton-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-        }}
-      />
-    ))}
-  </div>
-);
