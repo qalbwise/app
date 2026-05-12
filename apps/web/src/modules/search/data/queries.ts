@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/lib/api";
 
 type SearchResponse = components["schemas"]["SearchResponse"];
-type VersePageResponse = components["schemas"]["VersePageResponse"];
+export type VersePageResponse = components["schemas"]["VersePageResponse"];
+export type ExplainVerseResponse = {
+  why_this_verse?: string | null;
+};
 
 const POLL_TIMEOUT_MS = 3 * 60 * 1000; // stop polling after 3 minutes
 
@@ -42,12 +45,12 @@ export function useVersePage(slug: string, page: number, enabled = true) {
 }
 
 export function useExplainVerse(slug: string, page: number, enabled = true) {
-  return useQuery<VersePageResponse>({
+  return useQuery<ExplainVerseResponse>({
     queryKey: queryKeys.search.explainVerse(slug, page),
     queryFn: async () => {
       const res = await api.search.explainVerse(slug, page);
       if (res.error) throw new Error("Failed to explain verse");
-      return res.data as VersePageResponse;
+      return res.data as ExplainVerseResponse;
     },
     enabled,
   });
