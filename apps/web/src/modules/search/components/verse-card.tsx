@@ -1,13 +1,16 @@
 import type { components } from "@repo/core";
-import { BookOpenCheck, Settings, Share2 } from "lucide-react";
+import { BookOpenCheck, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCopyToClipboard } from "react-use";
 import { toast } from "sonner";
 import { Dots } from "@/components/loading-ui/dots";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
+import { ReadingSettingsSidebar } from "@/modules/preferences/components/reading-settings-sidebar";
 import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
 
 type VerseResult = components["schemas"]["VerseResult"];
@@ -42,8 +45,9 @@ export const VerseCard = ({
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
+  const [copyToClipboardState, copyToClipboard] = useCopyToClipboard();
 
-  const isLoggedIn = Boolean(localStorage.getItem("access_token"));
+  const { isLoggedIn } = useAuth();
 
   const versePage = useVersePage(slug, rank + 1, true);
   const createBookmark = useCreateBookmark();
@@ -88,23 +92,20 @@ export const VerseCard = ({
     }
   }
 
-  async function handleShare() {
+  function handleShare() {
     const text = `"${verse.translation}" — ${verse.surah_name} (${verse.ayah_key}) via Qalbwise`;
     if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ text, url: window.location.href });
-        return;
-      } catch {
+      navigator.share({ text, url: window.location.href }).catch(() => {
         /* user cancelled — fall through to clipboard */
-      }
+      });
+      return;
     }
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard unavailable */
+    copyToClipboard(text);
+    if (copyToClipboardState.error) {
+      return;
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -162,10 +163,7 @@ export const VerseCard = ({
                   : "Save Verse"}
               <BookOpenCheck className="size-4" />
             </Button>
-            <Button variant="outline" size="lg">
-              Settings
-              <Settings className="size-4" />
-            </Button>
+            <ReadingSettingsSidebar />
           </div>
         </div>
 
