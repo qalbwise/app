@@ -32,7 +32,16 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
+      '@fontsource-variable/noto-naskh-arabic':
+        specifier: ^5.2.11
+        version: 5.2.11
       '@fontsource-variable/plus-jakarta-sans':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/amiri':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/scheherazade-new':
         specifier: ^5.2.8
         version: 5.2.8
       '@react-oauth/google':
@@ -1045,8 +1054,17 @@ packages:
   '@fontsource-variable/inter@5.2.8':
     resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
 
+  '@fontsource-variable/noto-naskh-arabic@5.2.11':
+    resolution: {integrity: sha512-vqPRmiiI2RBYJahKyJUbeSWO36VpawWbUite+D67a1pGA7z6vAcbzQo+CeRIfat/u5Pi5SEcvANFdRgLyNPfGw==}
+
   '@fontsource-variable/plus-jakarta-sans@5.2.8':
     resolution: {integrity: sha512-iQecBizIdZxezODNHzOn4SvvRMrZL/S8k4MEXGDynCmUrImVW0VmX+tIAMqnADwH4haXlHSXqMgU6+kcfBQJdw==}
+
+  '@fontsource/amiri@5.2.8':
+    resolution: {integrity: sha512-HT/wBlEC/ummjXWg5yH+V0Tzw1vITtI9UM8mwxhwOkNZWD2zuie5vXpAVSCZORArT/LUQ4NP0fRcjiElUwI/8A==}
+
+  '@fontsource/scheherazade-new@5.2.8':
+    resolution: {integrity: sha512-4OdkcXYa6fISYox9HdsAJT+MxLh4yrMw94pR77j/C48qnJm4DSOl5H/6fHz25pmZQ4iYQBjfLVMthnCgM+6tWQ==}
 
   '@hono/node-server@1.19.13':
     resolution: {integrity: sha512-TsQLe4i2gvoTtrHje625ngThGBySOgSK3Xo2XRYOdqGN1teR8+I7vchQC46uLJi8OF62YTYA3AhSpumtkhsaKQ==}
@@ -5109,7 +5127,13 @@ snapshots:
 
   '@fontsource-variable/inter@5.2.8': {}
 
+  '@fontsource-variable/noto-naskh-arabic@5.2.11': {}
+
   '@fontsource-variable/plus-jakarta-sans@5.2.8': {}
+
+  '@fontsource/amiri@5.2.8': {}
+
+  '@fontsource/scheherazade-new@5.2.8': {}
 
   '@hono/node-server@1.19.13(hono@4.12.12)':
     dependencies:
