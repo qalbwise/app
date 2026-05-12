@@ -29,6 +29,7 @@ function Dots({
       >
         {Array.from({ length: dots }, (_, index) => (
           <span
+            // biome-ignore lint/suspicious/noArrayIndexKey: `dots` is a static array and will not change
             key={index}
             data-slot="dot"
             aria-hidden="true"
