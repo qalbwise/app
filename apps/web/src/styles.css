@@ -23,11 +23,16 @@
   --color-gravel: #777169;
   --color-cinder: #575348;
   --color-charcoal: #333;
-  --color-obsidian: #000000;
-  --color-signal-blue: #0447ff;
+  --color-obsidian: #161616;
   --color-ember: #ff4704;
-  --color-voice-spectrum: #3d75d8;
-  --color-gold: #c59717;
+  --color-nugget: #c59717;
+  --color-nugget-400: #e6cb29;
+  --color-nugget-200: #f4ee94;
+
+  /* Background patterns */
+  --color-pattern-top: #e0e0e0;
+  --color-pattern-bottom: #fafafa;
+  --color-pattern-x: #fafafa;
 
   /* Shadows — sub-0.1 opacity, ElevenLabs signature */
   --shadow-inset: rgba(0, 0, 0, 0.075) 0px 0px 0px 0.5px inset;
@@ -40,7 +45,7 @@
   --shadow-soft: rgba(0, 0, 0, 0.04) 0px 4px 4px;
   --shadow-edge: rgba(0, 0, 0, 0.08) 0px 0px 0px 0.5px;
 
-  --background: var(--color-eggshell); /* page background */
+  --background: var(--color-white); /* page background */
   --foreground: var(--color-charcoal); /* default text */
   --card: var(--color-eggshell);
   --card-foreground: var(--color-cinder);
@@ -52,63 +57,67 @@
   --secondary-foreground: var(--color-cinder);
   --muted: var(--color-chalk);
   --muted-foreground: var(--color-gravel);
-  --accent: var(--color-voice-spectrum);
+  --accent: var(--color-nugget-200);
   --accent-foreground: var(--color-eggshell);
   --destructive: var(--color-ember);
   --destructive-foreground: var(--color-eggshell);
   --border: var(--color-chalk);
   --input: var(--color-chalk);
-  --ring: var(--color-signal-blue);
-  --chart-1: var(--color-signal-blue);
-  --chart-2: var(--color-voice-spectrum);
+  --ring: var(--color-nugget-400);
+  --chart-1: var(--color-nugget-400);
+  --chart-2: var(--color-nugget-200);
   --chart-3: var(--color-ember);
   --chart-4: var(--color-gravel);
   --chart-5: var(--color-slate);
   --radius: 0.625rem;
   --sidebar: var(--color-powder);
   --sidebar-foreground: var(--color-cinder);
-  --sidebar-primary: var(--color-signal-blue);
+  --sidebar-primary: var(--color-nugget-400);
   --sidebar-primary-foreground: var(--color-eggshell);
   --sidebar-accent: var(--color-chalk);
   --sidebar-accent-foreground: var(--color-cinder);
   --sidebar-border: var(--color-chalk);
-  --sidebar-ring: var(--color-signal-blue);
+  --sidebar-ring: var(--color-nugget-400);
 }
 
 .dark {
+  /* Background patterns */
+  --color-pattern-top: #0c0c0c;
+  --color-pattern-bottom: #141414;
+  --color-pattern-x: #141414;
+
   --background: var(--color-obsidian); /* true black canvas */
   --foreground: var(--color-chalk); /* near-white text */
   --card: #0d0c0b; /* just off-black, slightly warm */
   --card-foreground: var(--color-chalk);
-
   --popover: #141210;
   --popover-foreground: var(--color-chalk);
-  --primary: var(--color-gold);
+  --primary: var(--color-nugget);
   --primary-foreground: var(--color-eggshell);
   --secondary: #1c1a18;
   --secondary-foreground: var(--color-chalk);
   --muted: #1c1a18;
   --muted-foreground: var(--color-slate);
-  --accent: var(--color-voice-spectrum);
+  --accent: var(--color-nugget-200);
   --accent-foreground: var(--color-eggshell);
   --destructive: var(--color-ember);
   --destructive-foreground: var(--color-eggshell);
   --border: #2a2723;
   --input: #2a2723;
-  --ring: var(--color-signal-blue);
-  --chart-1: var(--color-signal-blue);
-  --chart-2: var(--color-voice-spectrum);
+  --ring: var(--color-nugget-400);
+  --chart-1: var(--color-nugget-400);
+  --chart-2: var(--color-nugget-200);
   --chart-3: var(--color-ember);
   --chart-4: var(--color-fog);
   --chart-5: var(--color-slate);
   --sidebar: #0d0c0b;
   --sidebar-foreground: var(--color-chalk);
-  --sidebar-primary: var(--color-signal-blue);
+  --sidebar-primary: var(--color-nugget-400);
   --sidebar-primary-foreground: var(--color-eggshell);
   --sidebar-accent: #1c1a18;
   --sidebar-accent-foreground: var(--color-chalk);
   --sidebar-border: #2a2723;
-  --sidebar-ring: var(--color-signal-blue);
+  --sidebar-ring: var(--color-nugget-400);
 }
 
 @theme inline {
@@ -143,6 +152,9 @@
 @layer base {
   * {
     @apply border-border outline-ring/50 box-border;
+  }
+  *::selection {
+    @apply bg-amber-200 text-[var(--color-obsidian)];
   }
   body {
     @apply bg-background text-foreground m-0 antialiased font-display;
