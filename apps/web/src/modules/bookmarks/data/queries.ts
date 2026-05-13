@@ -1,15 +1,10 @@
 import type { components } from "@repo/core";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalStorage } from "react-use";
 import { api, queryKeys } from "@/lib/api";
+import { useIsLoggedIn } from "@/modules/auth/stores/auth-store";
 
 type BookmarkListResponse = components["schemas"]["BookmarkListResponse"];
 type NoteListResponse = components["schemas"]["NoteListResponse"];
-
-function useIsLoggedIn() {
-  const [accessToken] = useLocalStorage("access_token");
-  return Boolean(accessToken);
-}
 
 export function useBookmarks() {
   const isLoggedIn = useIsLoggedIn();
