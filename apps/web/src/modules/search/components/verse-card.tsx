@@ -194,7 +194,7 @@ export const VerseCard = ({
         <Separator />
 
         {/* Why this verse */}
-        <div className="space-y-1 text-xs lg:text-sm">
+        <div className="space-y-1 text-sm">
           <h2 className="font-medium text-muted-foreground">Why this verse</h2>
           {explainVerse.isPending ? (
             <Dots className="size-6 py-1 text-muted-foreground" />
@@ -210,7 +210,7 @@ export const VerseCard = ({
         <Separator />
 
         {/* Tafsir */}
-        <div className="space-y-1 text-xs lg:text-sm">
+        <div className="space-y-1 text-sm">
           <h2 className="font-medium text-muted-foreground">
             Tafsir
             {tafsirAuthor && (
