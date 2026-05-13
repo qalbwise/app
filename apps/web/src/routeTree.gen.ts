@@ -9,13 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as JournalRouteImport } from './routes/journal'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SearchSlugRouteImport } from './routes/search.$slug'
 
-const JournalRoute = JournalRouteImport.update({
-  id: '/journal',
-  path: '/journal',
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,41 +31,41 @@ const SearchSlugRoute = SearchSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/journal': typeof JournalRoute
+  '/bookmarks': typeof BookmarksRoute
   '/search/$slug': typeof SearchSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/journal': typeof JournalRoute
+  '/bookmarks': typeof BookmarksRoute
   '/search/$slug': typeof SearchSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/journal': typeof JournalRoute
+  '/bookmarks': typeof BookmarksRoute
   '/search/$slug': typeof SearchSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/journal' | '/search/$slug'
+  fullPaths: '/' | '/bookmarks' | '/search/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/journal' | '/search/$slug'
-  id: '__root__' | '/' | '/journal' | '/search/$slug'
+  to: '/' | '/bookmarks' | '/search/$slug'
+  id: '__root__' | '/' | '/bookmarks' | '/search/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  JournalRoute: typeof JournalRoute
+  BookmarksRoute: typeof BookmarksRoute
   SearchSlugRoute: typeof SearchSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/journal': {
-      id: '/journal'
-      path: '/journal'
-      fullPath: '/journal'
-      preLoaderRoute: typeof JournalRouteImport
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,7 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  JournalRoute: JournalRoute,
+  BookmarksRoute: BookmarksRoute,
   SearchSlugRoute: SearchSlugRoute,
 }
 export const routeTree = rootRouteImport
