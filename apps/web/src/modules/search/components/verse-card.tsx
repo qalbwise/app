@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
+import { useBookmarks } from "@/modules/bookmarks/data/queries";
 import { ReadingSettingsSidebar } from "@/modules/preferences/components/reading-settings-sidebar";
 import { ARABIC_FONT_STACK } from "@/modules/preferences/lib/arabic-font-stacks";
 import { useFontPreferencesStore } from "@/modules/preferences/stores/font-preferences-store";
@@ -38,12 +39,12 @@ function quranComEnUrl(ayahKey: string): string {
   return `https://quran.com/en/${surah}/${ayah}`;
 }
 
-export const VerseCard = ({
+export function VerseCard({
   verse,
   rank,
   slug,
   onSaveRequest,
-}: VerseCardProps) => {
+}: VerseCardProps) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export const VerseCard = ({
   const arabicFontSize = 16 + arabicSizeStep * 2;
 
   const versePage = useVersePage(slug, rank + 1, true);
+  const bookmarks = useBookmarks();
   const createBookmark = useCreateBookmark();
 
   const loadedVerse = versePage.data?.verse;
@@ -67,6 +69,15 @@ export const VerseCard = ({
   const tafsirAuthor = loadedVerse?.tafsir_author ?? verse.tafsir_author;
 
   const explainVerse = useExplainVerse(slug, rank + 1, true);
+  const isAlreadyBookmarked =
+    isLoggedIn &&
+    (saved ||
+      Boolean(
+        bookmarks.data?.bookmarks.some(
+          (bookmark) => bookmark.ayah_key === verse.ayah_key
+        )
+      ));
+  const isCheckingBookmark = isLoggedIn && bookmarks.isPending;
 
   useEffect(() => {
     const explanation = explainVerse.data?.why_this_verse;
@@ -80,7 +91,9 @@ export const VerseCard = ({
       onSaveRequest?.(verse.ayah_key);
       return;
     }
-    if (saved || createBookmark.isPending) return;
+    if (isAlreadyBookmarked || isCheckingBookmark || createBookmark.isPending) {
+      return;
+    }
 
     if (!navigator.onLine) {
       toast.error("Sync when back online");
@@ -177,14 +190,22 @@ export const VerseCard = ({
               variant="outline"
               size="lg"
               onClick={handleSave}
-              disabled={createBookmark.isPending}
-              className={cn(saved && "bg-secondary text-foreground")}
+              disabled={
+                isAlreadyBookmarked ||
+                isCheckingBookmark ||
+                createBookmark.isPending
+              }
+              className={cn(
+                isAlreadyBookmarked && "bg-secondary text-foreground"
+              )}
             >
-              {saved
-                ? "✓ Saved"
+              {isAlreadyBookmarked
+                ? "Saved"
                 : createBookmark.isPending
                   ? "Saving…"
-                  : "Save Verse"}
+                  : isCheckingBookmark
+                    ? "Checking…"
+                    : "Save Verse"}
               <BookOpenCheck className="size-4" />
             </Button>
             <ReadingSettingsSidebar />
@@ -232,4 +253,4 @@ export const VerseCard = ({
       </CardContent>
     </Card>
   );
-};
+}
