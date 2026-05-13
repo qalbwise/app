@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
 import { ReadingSettingsSidebar } from "@/modules/preferences/components/reading-settings-sidebar";
+import { ARABIC_FONT_STACK } from "@/modules/preferences/lib/arabic-font-stacks";
+import { useFontPreferencesStore } from "@/modules/preferences/stores/font-preferences-store";
 import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
 
 type VerseResult = components["schemas"]["VerseResult"];
@@ -48,6 +50,12 @@ export const VerseCard = ({
   const [copyToClipboardState, copyToClipboard] = useCopyToClipboard();
 
   const { isLoggedIn } = useAuth();
+
+  const serif = useFontPreferencesStore((s) => s.serif);
+  const arabicFont = useFontPreferencesStore((s) => s.arabicFont);
+  const arabicSizeStep = useFontPreferencesStore((s) => s.arabicSizeStep);
+  const arabicFontFamily = ARABIC_FONT_STACK[arabicFont];
+  const arabicFontSize = 16 + arabicSizeStep * 2;
 
   const versePage = useVersePage(slug, rank + 1, true);
   const createBookmark = useCreateBookmark();
@@ -109,7 +117,12 @@ export const VerseCard = ({
   }
 
   return (
-    <Card className="max-h-[60svh] overflow-y-auto py-8 font-sans sm:px-7">
+    <Card
+      className={cn(
+        "max-h-[60svh] overflow-y-auto py-8 sm:px-7",
+        serif ? "font-serif" : "font-sans"
+      )}
+    >
       {/* Header */}
       <CardHeader className="flex flex-col items-center gap-4 italic">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
@@ -135,8 +148,19 @@ export const VerseCard = ({
 
         {/* Verse content */}
         <div className="flex flex-col items-stretch gap-4 text-center">
-          <span className="text-[32px]">{verse.arabic_text}</span>
-          <span>{verse.translation}</span>
+          <span
+            className="text-right"
+            style={{
+              fontFamily: arabicFontFamily,
+              fontSize: `${arabicFontSize}px`,
+              lineHeight: 1.9,
+            }}
+          >
+            {verse.arabic_text}
+          </span>
+          <span className={serif ? "font-serif" : "font-sans"}>
+            {verse.translation}
+          </span>
 
           {/* Action buttons */}
           <div className="flex flex-col flex-wrap justify-center gap-3 sm:flex-row">
