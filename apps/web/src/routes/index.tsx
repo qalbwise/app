@@ -41,6 +41,11 @@ function Home() {
       return;
     }
 
+    if (trimmed.length < 3) {
+      toast.warning("Search must be at least 3 characters");
+      return;
+    }
+
     if (containsOffensiveContent(trimmed)) {
       toast.warning(
         "Search contains inappropriate language. Please try another topic."
@@ -99,6 +104,7 @@ function Home() {
               onChange={(event) => {
                 setTopic(event.target.value);
               }}
+              maxLength={70}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
