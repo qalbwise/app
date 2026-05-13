@@ -10,7 +10,7 @@ export function SearchHeader({ totalResults }: SearchHeaderProps) {
   return (
     <div className="relative flex flex-col gap-y-2 md:flex-row md:justify-center">
       <Button
-        className="left-0 self-start md:absolute"
+        className="left-0 self-start hover:bg-secondary md:absolute"
         variant="outline"
         size="sm"
         nativeButton={false}

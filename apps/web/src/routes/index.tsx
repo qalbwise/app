@@ -90,7 +90,7 @@ function Home() {
 
       <section className="mt-12 space-y-4">
         <form className="flex w-full justify-center" onSubmit={handleSubmit}>
-          <InputGroup className="h-18 w-full rounded-full px-4 py-6 md:w-175">
+          <InputGroup className="h-18 w-full rounded-full bg-background px-4 py-6 md:w-175">
             <InputGroupInput
               placeholder="Type anything on your mind..."
               className="rounded-4xl placeholder:text-sm"
