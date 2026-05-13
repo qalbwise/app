@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { MotionConfig } from "motion/react";
 
@@ -24,6 +24,7 @@ function RootComponent() {
 
   const content = (
     <>
+      <HeadContent />
       <QueryClientProvider client={queryClient}>
         <MotionConfig reducedMotion="user">
           <RootLayout>
@@ -54,4 +55,7 @@ function RootComponent() {
 
 export const Route = createRootRoute({
   component: RootComponent,
+  head: () => ({
+    meta: [{ title: "Qalbwise" }],
+  }),
 });

@@ -21,6 +21,9 @@ import { useVerseDetails } from "@/modules/search/hooks/use-verse-details";
 
 export const Route = createFileRoute("/search/$slug")({
   component: SearchPage,
+  head: ({ params }) => ({
+    meta: [{ title: `Search: ${decodeURIComponent(params.slug)} | Qalbwise` }],
+  }),
 });
 
 type VerseResult = components["schemas"]["VerseResult"];
