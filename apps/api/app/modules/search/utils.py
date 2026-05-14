@@ -1,34 +1,93 @@
 import re
 
-FORBIDDEN_SEARCH_WORDS = {
+BASE_WORDS = {
+    # English
     "fuck",
     "fucked",
     "fucking",
-    "f*ck",
-    "f**k",
-    "fck",
+    "fuckin",
+    "fucker",
+    "motherfucker",
+    "fucktard",
     "nigga",
     "nigger",
-    "n1gga",
-    "n1gg4",
-    "ngga",
     "bastard",
-    "b4stard",
     "bastrd",
     "dick",
-    "d1ck",
-    "d!ck",
-    "dck",
+    "dickhead",
+    "dickwad",
     "bitch",
-    "b1tch",
-    "b!tch",
+    "bitching",
+    "bitchass",
     "asshole",
-    "a$$hole",
-    "@sshole",
+    "asswipe",
     "shit",
-    "sh1t",
-    "sh!t",
+    "shithead",
+    "bullshit",
+    "cunt",
+    "slut",
+    "whore",
+    "pussy",
+    "douchebag",
+    "jackass",
+    "dumbass",
+    "cock",
+    "cocksucker",
+    "twat",
+    "prick",
+    "wanker",
+    "arse",
+    "scumbag",
+    "goddamn",
+    "piss",
+    "crap",
+    # Indonesian
+    "anjing",
+    "babi",
+    "bangsat",
+    "bajingan",
+    "brengsek",
+    "goblok",
+    "tolol",
+    "bego",
+    "bedebah",
+    "bejad",
+    "kontol",
+    "memek",
+    "puki",
+    "pukimak",
+    "ngentot",
+    "asu",
+    "jancuk",
+    "jancok",
+    "kampret",
+    "keparat",
+    "sialan",
+    "sial",
+    "tai",
+    "ngocok",
+    "pepek",
+    "pantek",
+    "jalang",
+    "lonte",
+    "perek",
+    "sundal",
+    "banci",
+    "bencong",
+    "monyet",
+    "setan",
+    "kolor",
+    "kimak",
+    "sange",
+    "tempik",
+    "jablay",
+    "kampungan",
+    "dodol",
+    "udik",
+    "kacung",
 }
+
+FORBIDDEN_SEARCH_WORDS = frozenset(BASE_WORDS)
 
 
 def is_leet_speak_variant(word: str, forbidden_word: str) -> bool:
@@ -43,8 +102,21 @@ def is_leet_speak_variant(word: str, forbidden_word: str) -> bool:
         .replace("4", "a")
         .replace("5", "s")
         .replace("7", "t")
+        .replace("8", "b")
+        .replace("|", "i")
     )
     return normalized == forbidden_word.lower()
+
+
+def contains_offensive_content(text: str) -> bool:
+    words = text.lower().split()
+    for word in words:
+        if word in FORBIDDEN_SEARCH_WORDS:
+            return True
+        for forbidden in FORBIDDEN_SEARCH_WORDS:
+            if is_leet_speak_variant(word, forbidden):
+                return True
+    return False
 
 
 def normalize_query(raw: str) -> str:

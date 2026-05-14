@@ -9,8 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.models.search import Topic, UserSearch
 from app.modules.search.tasks import run_search
 from app.modules.search.utils import (
-    FORBIDDEN_SEARCH_WORDS,
-    is_leet_speak_variant,
+    contains_offensive_content,
     normalize_query,
     slugify_query,
 )
@@ -37,21 +36,11 @@ async def ensure_unique_slug(db: AsyncSession, canonical_query: str) -> str:
 
 
 async def validate_search_input(topic: str) -> None:
-    topic_lower = topic.lower().strip()
-    words = topic_lower.split()
-    error_detail = "Search contains inappropriate language. Please try another topic."
-
-    for word in words:
-        if word in FORBIDDEN_SEARCH_WORDS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail
-            )
-
-        for forbidden_word in FORBIDDEN_SEARCH_WORDS:
-            if is_leet_speak_variant(word, forbidden_word):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail
-                )
+    if contains_offensive_content(topic):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search contains inappropriate language. Please try another topic.",
+        )
 
 
 async def create_search(
