@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useRef } from "react";
 import { useNetworkState } from "react-use";
 import { toast } from "sonner";
 
@@ -11,9 +11,9 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { containsOffensiveContent } from "@/lib/forbidden-words";
 import { getRandomVerse } from "@/lib/utils";
 import { useCreateSearch } from "@/modules/search/data/mutations";
+import { containsOffensiveContent } from "@/modules/search/lib/forbidden-words";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -25,12 +25,13 @@ const TOPIC_CHIPS = [
   "Fear of Failure",
   "Patience",
 ] as const;
+const verse = getRandomVerse();
 
 function Home() {
-  const [topic, setTopic] = useState("");
   const navigate = useNavigate();
   const createSearch = useCreateSearch();
   const network = useNetworkState();
+  const inputRef = useRef<HTMLInputElement>(null);
   const online = network.online ?? true;
 
   async function handleSearch(searchTopic: string) {
@@ -43,10 +44,13 @@ function Home() {
     }
 
     if (trimmed.length < 3) {
-      toast.warning("Search must be at least 3 characters");
+      toast.error("Search must be at least 3 characters");
       return;
     }
-
+    if (trimmed.length > 70) {
+      toast.error("Search must be less than 70 characters");
+      return;
+    }
     if (containsOffensiveContent(trimmed)) {
       toast.warning(
         "Search contains inappropriate language. Please try another topic."
@@ -73,12 +77,11 @@ function Home() {
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    handleSearch(topic);
+    handleSearch(inputRef.current?.value ?? "");
   }
 
   const isLoading = createSearch.isPending;
   const isDisabled = isLoading || !online;
-  const verse = getRandomVerse();
 
   return (
     <>
@@ -99,13 +102,11 @@ function Home() {
         <form className="flex w-full justify-center" onSubmit={handleSubmit}>
           <InputGroup className="h-18 w-full rounded-full bg-background px-4 py-6 md:w-175">
             <InputGroupInput
+              ref={inputRef}
               placeholder="Type anything on your mind..."
               className="rounded-4xl placeholder:text-sm"
               autoComplete="off"
-              value={topic}
-              onChange={(event) => {
-                setTopic(event.target.value);
-              }}
+              defaultValue=""
               maxLength={70}
             />
             <InputGroupAddon align="inline-end">
@@ -130,7 +131,9 @@ function Home() {
                 variant="outline"
                 className="text-sm"
                 onClick={() => {
-                  setTopic(chipTopic);
+                  if (inputRef.current) {
+                    inputRef.current.value = chipTopic;
+                  }
                   toast.dismiss();
                 }}
               >
