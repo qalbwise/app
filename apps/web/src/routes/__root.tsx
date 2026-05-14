@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { MotionConfig } from "motion/react";
+import { ThemeProvider } from "next-themes";
 
 import "../styles.css";
 import { RootLayout } from "@/components/layout/root-layout";
@@ -26,11 +27,13 @@ function RootComponent() {
     <>
       <HeadContent />
       <QueryClientProvider client={queryClient}>
-        <MotionConfig reducedMotion="user">
-          <RootLayout>
-            <Outlet />
-          </RootLayout>
-        </MotionConfig>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <MotionConfig reducedMotion="user">
+            <RootLayout>
+              <Outlet />
+            </RootLayout>
+          </MotionConfig>
+        </ThemeProvider>
       </QueryClientProvider>
       <TanStackDevtools
         config={{ position: "bottom-right" }}

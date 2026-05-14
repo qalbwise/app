@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ThemeSwitcher } from "@/components/common/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
@@ -42,9 +43,24 @@ export function Header() {
             </span>
           </Link>
 
-          <Button onClick={isLoggedIn ? handleSignOut : openSignIn}>
-            {isLoggedIn ? "Sign out" : "Get started"}
-          </Button>
+          <ul className="flex items-center gap-2">
+            <li>
+              <ThemeSwitcher />
+            </li>
+            <li>
+              <Button
+                variant="ghost"
+                className="hover:bg-secondary"
+                render={<Link to="/bookmarks">Bookmarks</Link>}
+              />
+            </li>
+
+            <li>
+              <Button onClick={isLoggedIn ? handleSignOut : openSignIn}>
+                {isLoggedIn ? "Sign out" : "Get started"}
+              </Button>
+            </li>
+          </ul>
         </nav>
       </header>
 
