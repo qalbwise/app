@@ -2,6 +2,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
@@ -56,9 +67,28 @@ export function Header() {
             </li>
 
             <li>
-              <Button onClick={isLoggedIn ? handleSignOut : openSignIn}>
-                {isLoggedIn ? "Sign out" : "Get started"}
-              </Button>
+              {isLoggedIn ? (
+                <AlertDialog>
+                  <AlertDialogTrigger render={<Button>Sign out</Button>} />
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Sign out</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to sign out? Your bookmarks will
+                        be saved.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSignOut}>
+                        Sign out
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
+                <Button onClick={openSignIn}>Get started</Button>
+              )}
             </li>
           </ul>
         </nav>
