@@ -15,7 +15,6 @@ class BookmarkCreate(BaseModel):
 
 class BookmarkResponse(BaseModel):
     id: UUID
-    user_id: UUID
     ayah_key: str
     surah_name: str
     arabic_text: str
@@ -39,7 +38,6 @@ class NoteCreate(BaseModel):
 
 class NoteResponse(BaseModel):
     id: UUID
-    user_id: UUID
     topic: str
     content: str
     verses: list[dict] | None = None
