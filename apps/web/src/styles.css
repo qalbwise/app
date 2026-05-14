@@ -109,8 +109,8 @@
   --accent-foreground: var(--color-nugget-200);
   --destructive: var(--color-ember);
   --destructive-foreground: var(--color-eggshell);
-  --border: #2a2723;
-  --input: #2a2723;
+  --border: var(--color-gravel);
+  --input: var(--color-neutral-800);
   --ring: var(--color-nugget-700);
   --chart-1: var(--color-nugget-500);
   --chart-2: var(--color-nugget-200);
