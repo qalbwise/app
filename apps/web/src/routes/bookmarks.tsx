@@ -1,9 +1,10 @@
 import type { components } from "@repo/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { Bookmark as BookmarkIcon } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Bookmark as BookmarkIcon, ChevronLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+
 import { Dots } from "@/components/loading-ui/dots";
 import {
   AlertDialog,
@@ -91,7 +92,20 @@ function BookmarksPage() {
       className="flex flex-col gap-6"
     >
       <header className="flex flex-col gap-2">
-        <h1 className="font-bold text-2xl">Your Bookmarks</h1>
+        <Button
+          className="self-start hover:bg-secondary"
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={
+            <Link to="/">
+              <ChevronLeft />
+              New Search
+            </Link>
+          }
+        />
+
+        <h1 className="mt-2 font-bold text-2xl">Your Bookmarks</h1>
         <p className="text-muted-foreground">
           Your saved Quranic verses from searches.
         </p>
