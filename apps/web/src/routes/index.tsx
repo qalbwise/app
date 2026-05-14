@@ -12,6 +12,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { containsOffensiveContent } from "@/lib/forbidden-words";
+import { getRandomVerse } from "@/lib/utils";
 import { useCreateSearch } from "@/modules/search/data/mutations";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -77,6 +78,7 @@ function Home() {
 
   const isLoading = createSearch.isPending;
   const isDisabled = isLoading || !online;
+  const verse = getRandomVerse();
 
   return (
     <>
@@ -139,10 +141,9 @@ function Home() {
         </ul>
       </section>
 
-      {/* TODO: Create a static list of verses and randomize it */}
       <section className="mt-12 text-balance text-center font-sans text-muted-foreground text-sm">
-        <p>"There truly is a reminder in this for whoever has a heart."</p>
-        <p className="mt-2 italic">~ Quran 50:37</p>
+        <p>"{verse.text}"</p>
+        <p className="mt-2 italic">~ Quran {verse.reference}</p>
       </section>
     </>
   );
