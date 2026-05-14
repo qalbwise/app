@@ -24,9 +24,17 @@
   --color-charcoal: #333;
   --color-obsidian: #161616;
   --color-ember: #ff4704;
-  --color-nugget: #c59717;
-  --color-nugget-400: #e6cb29;
+  --color-nugget-50: #fcfbea;
+  --color-nugget-100: #f9f8c8;
   --color-nugget-200: #f4ee94;
+  --color-nugget-300: #edde57;
+  --color-nugget-400: #e6cb29;
+  --color-nugget-500: #d6b41c;
+  --color-nugget-600: #c59717;
+  --color-nugget-700: #936715;
+  --color-nugget-800: #7a5219;
+  --color-nugget-900: #69441a;
+  --color-nugget-950: #3d240b;
 
   /* Background patterns */
   --color-pattern-top: #e0e0e0;
@@ -48,7 +56,7 @@
   --foreground: var(--color-charcoal); /* default text */
   --card: var(--color-eggshell);
   --card-foreground: var(--color-cinder);
-  --popover: var(--color-powder);
+  --popover: var(--color-eggshell);
   --popover-foreground: var(--color-cinder);
   --primary: var(--color-charcoal);
   --primary-foreground: var(--color-eggshell);
@@ -56,8 +64,8 @@
   --secondary-foreground: var(--color-cinder);
   --muted: var(--color-chalk);
   --muted-foreground: var(--color-gravel);
-  --accent: var(--color-nugget-200);
-  --accent-foreground: var(--color-eggshell);
+  --accent: var(--color-nugget-100);
+  --accent-foreground: var(--color-charcoal);
   --destructive: var(--color-ember);
   --destructive-foreground: var(--color-eggshell);
   --border: var(--color-chalk);
@@ -91,20 +99,20 @@
   --card-foreground: var(--color-chalk);
   --popover: #141210;
   --popover-foreground: var(--color-chalk);
-  --primary: var(--color-nugget);
+  --primary: var(--color-nugget-600);
   --primary-foreground: var(--color-eggshell);
-  --secondary: #1c1a18;
+  --secondary: var(--color-cinder);
   --secondary-foreground: var(--color-chalk);
-  --muted: #1c1a18;
+  --muted: var(--color-cinder);
   --muted-foreground: var(--color-slate);
-  --accent: var(--color-nugget-200);
-  --accent-foreground: var(--color-eggshell);
+  --accent: var(--color-charcoal);
+  --accent-foreground: var(--color-nugget-200);
   --destructive: var(--color-ember);
   --destructive-foreground: var(--color-eggshell);
   --border: #2a2723;
   --input: #2a2723;
-  --ring: var(--color-nugget-400);
-  --chart-1: var(--color-nugget-400);
+  --ring: var(--color-nugget-700);
+  --chart-1: var(--color-nugget-500);
   --chart-2: var(--color-nugget-200);
   --chart-3: var(--color-ember);
   --chart-4: var(--color-fog);
@@ -113,7 +121,7 @@
   --sidebar-foreground: var(--color-chalk);
   --sidebar-primary: var(--color-nugget-400);
   --sidebar-primary-foreground: var(--color-eggshell);
-  --sidebar-accent: #1c1a18;
+  --sidebar-accent: var(--color-cinder);
   --sidebar-accent-foreground: var(--color-chalk);
   --sidebar-border: #2a2723;
   --sidebar-ring: var(--color-nugget-400);
@@ -146,6 +154,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-nugget-50: var(--color-nugget-50);
+  --color-nugget-100: var(--color-nugget-100);
+  --color-nugget-200: var(--color-nugget-200);
+  --color-nugget-300: var(--color-nugget-300);
+  --color-nugget-400: var(--color-nugget-400);
+  --color-nugget-500: var(--color-nugget-500);
+  --color-nugget-600: var(--color-nugget-600);
+  --color-nugget-700: var(--color-nugget-700);
+  --color-nugget-800: var(--color-nugget-800);
+  --color-nugget-900: var(--color-nugget-900);
+  --color-nugget-950: var(--color-nugget-950);
 }
 
 @layer base {
