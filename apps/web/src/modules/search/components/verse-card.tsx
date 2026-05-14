@@ -1,11 +1,20 @@
 import type { components } from "@repo/core";
+import { BookOpenCheck, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCopyToClipboard } from "react-use";
 import { toast } from "sonner";
-import { useCreateBookmark } from "@/modules/bookmarks/queries/use-bookmarks";
-import {
-  useExplainVerse,
-  useVersePage,
-} from "@/modules/search/queries/use-search";
+import { Dots } from "@/components/loading-ui/dots";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/modules/auth/hooks/use-auth";
+import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
+import { useBookmarks } from "@/modules/bookmarks/data/queries";
+import { ReadingSettingsSidebar } from "@/modules/preferences/components/reading-settings-sidebar";
+import { ARABIC_FONT_STACK } from "@/modules/preferences/lib/arabic-font-stacks";
+import { useFontPreferencesStore } from "@/modules/preferences/stores/font-preferences-store";
+import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
 
 type VerseResult = components["schemas"]["VerseResult"];
 
@@ -19,8 +28,6 @@ interface VerseCardProps {
   onSaveRequest?: (ayahKey: string) => void;
 }
 
-const RANK_OPACITIES = [1, 1, 1, 1, 1] as const;
-
 /** English locale; MCP/API may still store `/ur/` or other paths in `url`. */
 function quranComEnUrl(ayahKey: string): string {
   const raw = ayahKey.trim();
@@ -32,42 +39,50 @@ function quranComEnUrl(ayahKey: string): string {
   return `https://quran.com/en/${surah}/${ayah}`;
 }
 
-export const VerseCard = ({
+export function VerseCard({
   verse,
   rank,
   slug,
   onSaveRequest,
-}: VerseCardProps) => {
-  const [expanded, setExpanded] = useState(false);
-  const [showTafsir, setShowTafsir] = useState(false);
+}: VerseCardProps) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fetchedWhyText, setFetchedWhyText] = useState<string | null>(null);
+  const [copyToClipboardState, copyToClipboard] = useCopyToClipboard();
 
-  const cardOpacity = RANK_OPACITIES[rank] ?? 0.46;
-  const isLoggedIn = Boolean(localStorage.getItem("access_token"));
+  const { isLoggedIn } = useAuth();
 
-  const versePage = useVersePage(slug, rank + 1, showTafsir);
+  const serif = useFontPreferencesStore((s) => s.serif);
+  const arabicFont = useFontPreferencesStore((s) => s.arabicFont);
+  const arabicSizeStep = useFontPreferencesStore((s) => s.arabicSizeStep);
+  const arabicFontFamily = ARABIC_FONT_STACK[arabicFont];
+  const arabicFontSize = 16 + arabicSizeStep * 2;
 
+  const versePage = useVersePage(slug, rank + 1, true);
+  const bookmarks = useBookmarks();
   const createBookmark = useCreateBookmark();
 
-  const loadedVerse = versePage.data?.data?.verse;
+  const loadedVerse = versePage.data?.verse;
   const whyText =
     verse.why_this_verse ?? loadedVerse?.why_this_verse ?? fetchedWhyText;
   const tafsirText = loadedVerse?.tafsir_excerpt ?? verse.tafsir_excerpt;
   const tafsirAuthor = loadedVerse?.tafsir_author ?? verse.tafsir_author;
 
-  const explainVerse = useExplainVerse(slug, rank + 1, expanded && !whyText);
-  const isLoadingWhyText = expanded && !whyText && explainVerse.isPending;
+  const explainVerse = useExplainVerse(slug, rank + 1, true);
+  const isAlreadyBookmarked =
+    isLoggedIn &&
+    (saved ||
+      Boolean(
+        bookmarks.data?.bookmarks.some(
+          (bookmark) => bookmark.ayah_key === verse.ayah_key
+        )
+      ));
+  const isCheckingBookmark = isLoggedIn && bookmarks.isPending;
 
   useEffect(() => {
-    if (
-      explainVerse.isSuccess &&
-      explainVerse.data &&
-      explainVerse.data.data &&
-      typeof explainVerse.data.data.why_this_verse === "string"
-    ) {
-      setFetchedWhyText(explainVerse.data.data.why_this_verse);
+    const explanation = explainVerse.data?.why_this_verse;
+    if (explainVerse.isSuccess && typeof explanation === "string") {
+      setFetchedWhyText(explanation);
     }
   }, [explainVerse.isSuccess, explainVerse.data]);
 
@@ -76,7 +91,9 @@ export const VerseCard = ({
       onSaveRequest?.(verse.ayah_key);
       return;
     }
-    if (saved || createBookmark.isPending) return;
+    if (isAlreadyBookmarked || isCheckingBookmark || createBookmark.isPending) {
+      return;
+    }
 
     if (!navigator.onLine) {
       toast.error("Sync when back online");
@@ -96,276 +113,144 @@ export const VerseCard = ({
     }
   }
 
-  async function handleShare() {
+  function handleShare() {
     const text = `"${verse.translation}" — ${verse.surah_name} (${verse.ayah_key}) via Qalbwise`;
     if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ text, url: window.location.href });
-        return;
-      } catch {
+      navigator.share({ text, url: window.location.href }).catch(() => {
         /* user cancelled — fall through to clipboard */
-      }
+      });
+      return;
     }
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard unavailable */
+    copyToClipboard(text);
+    if (copyToClipboardState.error) {
+      return;
     }
-  }
-
-  function toggleExpand() {
-    setExpanded((v) => !v);
-    if (!expanded) setShowTafsir(false);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
-    <article
-      className="card-surface overflow-hidden transition-all duration-200"
-      style={{ opacity: cardOpacity }}
+    <Card
+      className={cn(
+        "max-h-[60svh] overflow-y-auto py-8 sm:px-7",
+        serif ? "font-serif" : "font-sans"
+      )}
     >
-      <div className="p-6">
-        {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-[13px] font-semibold" style={{ color: "#000" }}>
-            {verse.surah_name}
-          </span>
-          <span
-            className="text-[12px] font-medium"
-            style={{
-              color: "#777169",
-              background: "rgba(245,242,239,0.8)",
-              padding: "2px 8px",
-              borderRadius: "9999px",
-              border: "1px solid rgba(78,50,23,0.1)",
-            }}
-          >
+      {/* Header */}
+      <CardHeader className="flex flex-col items-center gap-4 italic">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <h1 className="font-medium text-xl">{verse.surah_name}</h1>
+
+          <span className="rounded-3xl border border-border bg-secondary px-3 py-1 font-medium">
             {verse.ayah_key}
           </span>
         </div>
 
-        {/* ── Arabic text ─────────────────────────────────── */}
-        <div className="arabic-text mb-4">{verse.arabic_text}</div>
-
-        {/* ── Translation ─────────────────────────────────── */}
-        <p
-          className="mb-5 text-[15px] leading-relaxed not-italic"
-          style={{
-            color: "#4e4e4e",
-            letterSpacing: "0.15px",
-          }}
+        <a
+          href={quranComEnUrl(verse.ayah_key)}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="text-center text-secondary-foreground underline transition-all hover:text-muted-foreground"
         >
-          {verse.translation}
-        </p>
+          quran.com reference
+        </a>
+      </CardHeader>
 
-        {/* ── Action row ──────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-2">
-          <ActionChip
-            active={expanded}
-            onClick={toggleExpand}
-            label={expanded ? "Why this verse ↑" : "Why this verse ↓"}
-          />
-          <ActionChip
-            active={showTafsir}
-            onClick={() => {
-              setShowTafsir((v) => !v);
-              if (!expanded) setExpanded(true);
-            }}
-            label="Read tafsir"
-          />
-          {/* Share */}
-          <button
-            type="button"
-            onClick={handleShare}
-            className="font-medium text-[12px] transition-all"
+      <CardContent className="space-y-8 pt-4">
+        <Separator />
+
+        {/* Verse content */}
+        <div className="flex flex-col items-stretch gap-4 text-center">
+          <span
+            className="text-right"
             style={{
-              padding: "5px 12px",
-              borderRadius: "9999px",
-              border: "1px solid #e5e5e5",
-              color: copied ? "#000" : "#777169",
-              background: copied ? "#f5f2ef" : "transparent",
-              cursor: "pointer",
+              fontFamily: arabicFontFamily,
+              fontSize: `${arabicFontSize}px`,
+              lineHeight: 1.9,
             }}
           >
-            {copied ? "Copied!" : "Share"}
-          </button>
-          {/* quran.com */}
-          <a
-            href={quranComEnUrl(verse.ayah_key)}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-[12px] no-underline transition-colors"
-            style={{
-              color: "#777169",
-              padding: "5px 12px",
-              border: "1px solid #e5e5e5",
-              borderRadius: "9999px",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#4e4e4e")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#777169")}
-          >
-            quran.com ↗
-          </a>
+            {verse.arabic_text}
+          </span>
+          <span className={serif ? "font-serif" : "font-sans"}>
+            {verse.translation}
+          </span>
 
-          {/* Save — pushed to far right */}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={createBookmark.isPending}
-            className="ml-auto font-medium text-[12px] transition-all disabled:opacity-40"
-            style={{
-              padding: "5px 12px",
-              border: `1px solid ${saved ? "rgba(78,50,23,0.2)" : "#e5e5e5"}`,
-              borderRadius: "9999px",
-              color: saved ? "#000" : "#4e4e4e",
-              background: saved ? "rgba(245,242,239,0.8)" : "transparent",
-              cursor: saved ? "default" : "pointer",
-            }}
-            onMouseEnter={(e) => {
-              if (!saved) {
-                e.currentTarget.style.borderColor = "#000";
-                e.currentTarget.style.color = "#000";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!saved) {
-                e.currentTarget.style.borderColor = "#e5e5e5";
-                e.currentTarget.style.color = "#4e4e4e";
-              }
-            }}
-          >
-            {saved
-              ? "✓ Saved"
-              : createBookmark.isPending
-                ? "Saving…"
-                : "Save verse"}
-          </button>
-        </div>
-      </div>
-
-      {/* ── Expanded section ───────────────────────────────── */}
-      {expanded && (
-        <div
-          className="border-t px-6 py-5"
-          style={{ borderColor: "rgba(0,0,0,0.06)" }}
-        >
-          {/* Why this verse */}
-          <div className="mb-5">
-            <p
-              className="mb-2 font-semibold text-[11px] uppercase tracking-widest"
-              style={{ color: "#777169" }}
+          {/* Action buttons */}
+          <div className="flex flex-col flex-wrap justify-center gap-3 sm:flex-row">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleShare}
+              className={cn(copied && "bg-secondary text-foreground")}
             >
-              Why this verse
-            </p>
-            {isLoadingWhyText ? (
-              <LoadingDots />
-            ) : whyText ? (
-              <p
-                className="text-[14px] leading-relaxed"
-                style={{ color: "#4e4e4e", letterSpacing: "0.14px" }}
-              >
-                {whyText}
-              </p>
-            ) : (
-              <p className="text-[14px]" style={{ color: "#b0ada8" }}>
-                Explanation not available for this verse.
-              </p>
-            )}
-          </div>
-
-          {/* Tafsir */}
-          {showTafsir && (
-            <div
-              className="border-t pt-5"
-              style={{ borderColor: "rgba(0,0,0,0.06)" }}
-            >
-              <p
-                className="mb-2 font-semibold text-[11px] uppercase tracking-widest"
-                style={{ color: "#777169" }}
-              >
-                Tafsir
-                {tafsirAuthor && (
-                  <span
-                    className="ml-1.5 normal-case"
-                    style={{ color: "#b0ada8" }}
-                  >
-                    · {tafsirAuthor}
-                  </span>
-                )}
-              </p>
-              {versePage.isPending ? (
-                <LoadingDots />
-              ) : tafsirText ? (
-                <p
-                  className="text-[14px] leading-relaxed"
-                  style={{ color: "#4e4e4e", letterSpacing: "0.14px" }}
-                >
-                  {tafsirText}
-                </p>
-              ) : (
-                <p className="text-[14px]" style={{ color: "#b0ada8" }}>
-                  Tafsir not available for this verse.
-                </p>
+              {copied ? "Copied!" : "Share"}
+              <Share2 className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleSave}
+              disabled={
+                isAlreadyBookmarked ||
+                isCheckingBookmark ||
+                createBookmark.isPending
+              }
+              className={cn(
+                isAlreadyBookmarked && "bg-secondary text-foreground"
               )}
-            </div>
-          )}
-
-          {/* Login nudge for unauthenticated users */}
-          {!isLoggedIn && (
-            <div
-              className="mt-5 rounded-xl px-4 py-3"
-              style={{ background: "rgba(245,242,239,0.6)" }}
             >
-              <p className="text-[13px]" style={{ color: "#777169" }}>
-                Create a free account to build your personal Quran journal.
-              </p>
-            </div>
+              {isAlreadyBookmarked
+                ? "Saved"
+                : createBookmark.isPending
+                  ? "Saving…"
+                  : isCheckingBookmark
+                    ? "Checking…"
+                    : "Save Verse"}
+              <BookOpenCheck className="size-4" />
+            </Button>
+            <ReadingSettingsSidebar />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Why this verse */}
+        <div className="space-y-1 text-sm">
+          <h2 className="font-medium text-muted-foreground">Why this verse</h2>
+          {explainVerse.isPending ? (
+            <Dots className="size-6 py-1 text-muted-foreground" />
+          ) : whyText ? (
+            <p className="leading-relaxed">{whyText}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Explanation not available for this verse.
+            </p>
           )}
         </div>
-      )}
-    </article>
+
+        <Separator />
+
+        {/* Tafsir */}
+        <div className="space-y-1 text-sm">
+          <h2 className="font-medium text-muted-foreground">
+            Tafsir
+            {tafsirAuthor && (
+              <span className="ml-2 text-muted-foreground">
+                · {tafsirAuthor}
+              </span>
+            )}
+          </h2>
+          {versePage.isPending ? (
+            <Dots className="size-6 py-1 text-muted-foreground" />
+          ) : tafsirText ? (
+            <p className="leading-6 tracking-[0.18px]">{tafsirText}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Tafsir not available for this verse.
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-const ActionChip = ({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="font-medium text-[12px] transition-all"
-    style={{
-      padding: "5px 12px",
-      borderRadius: "9999px",
-      border: "1px solid",
-      borderColor: active ? "rgba(0,0,0,0.15)" : "#e5e5e5",
-      background: active ? "#f5f2ef" : "transparent",
-      color: active ? "#000" : "#4e4e4e",
-      cursor: "pointer",
-    }}
-  >
-    {label}
-  </button>
-);
-
-const LoadingDots = () => (
-  <div className="flex items-center gap-1 py-1">
-    {[0, 1, 2].map((i) => (
-      <div
-        key={i}
-        className="h-1.5 w-1.5 rounded-full"
-        style={{
-          background: "#c8c4bf",
-          animation: `skeleton-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-        }}
-      />
-    ))}
-  </div>
-);
+}

@@ -1,33 +1,36 @@
-export const Footer = () => {
-  const year = new Date().getFullYear();
+import { GithubDark } from "@/components/ui/svgs/githubDark";
+import { GithubLight } from "@/components/ui/svgs/githubLight";
 
+const year = new Date().getFullYear();
+
+export function Footer() {
   return (
-    <footer
-      className="py-10 px-4"
-      style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}
-    >
-      <div className="page-wrap flex flex-col items-center justify-between gap-3 sm:flex-row">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[14px]" style={{ color: "#777169" }}>
-            © {year} Qalbwise
-          </span>
-          <span className="text-[14px]" style={{ color: "#e5e5e5" }}>
-            ·
-          </span>
-          <span className="text-[14px]" style={{ color: "#777169" }}>
-            Built for the Quran Foundation Hackathon
-          </span>
-        </div>
+    <footer className="main-wrap flex flex-wrap justify-between gap-x-6 gap-y-4 border-foreground/5 border-t bg-background/95 py-5 text-muted-foreground text-sm backdrop-blur-sm">
+      <p className="order-1 md:order-0">&copy; {year} Qalbwise</p>
+
+      <p className="order-2 md:order-1">
+        Built for the{" "}
         <a
-          href="https://github.com/qalbwise/app"
+          href="https://launch.provisioncapital.com/quran-hackathon"
           target="_blank"
           rel="noreferrer"
-          className="text-[13px] no-underline transition-colors hover:text-black"
-          style={{ color: "#777169" }}
+          className="transition-all hover:text-foreground hover:underline"
         >
-          GitHub
-        </a>
-      </div>
+          Quran Foundation
+        </a>{" "}
+        Hackathon
+      </p>
+
+      <a
+        href="https://github.com/qalbwise/app"
+        target="_blank"
+        rel="noreferrer"
+        className="order-0 flex items-center gap-1 transition-all hover:text-foreground hover:underline md:order-2"
+      >
+        <GithubLight className="block size-4 dark:hidden" />
+        <GithubDark className="hidden size-4 dark:block" />
+        GitHub
+      </a>
     </footer>
   );
-};
+}

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMe } from "@/modules/auth/queries/use-me";
+import { useMe } from "@/modules/auth/data/queries";
 import { useFontPreferencesStore } from "@/modules/preferences/stores/font-preferences-store";
 
 /** When `/auth/me` succeeds, apply server preferences (source of truth for logged-in users). */
@@ -8,7 +8,7 @@ export function usePreferencesHydration() {
   const hydrateFromServer = useFontPreferencesStore((s) => s.hydrateFromServer);
 
   useEffect(() => {
-    const prefs = me.data?.data?.preferences;
+    const prefs = me.data?.preferences;
     if (prefs && me.isSuccess) {
       hydrateFromServer(prefs);
     }

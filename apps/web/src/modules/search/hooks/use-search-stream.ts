@@ -27,7 +27,8 @@ export interface SearchStreamState {
  */
 export function useSearchStream(
   slug: string,
-  enabled = true
+  enabled = true,
+  onComplete?: () => void
 ): SearchStreamState {
   const [state, setState] = useState<SearchStreamState>({
     status: "idle",
@@ -38,6 +39,8 @@ export function useSearchStream(
 
   const esRef = useRef<EventSource | null>(null);
   const doneRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (!slug || !enabled) {
@@ -81,6 +84,9 @@ export function useSearchStream(
         if (event.status === "complete" || event.status === "failed") {
           doneRef.current = true;
           es.close();
+          if (event.status === "complete" && onCompleteRef.current) {
+            onCompleteRef.current();
+          }
         }
       } catch {
         /* ignore JSON parse errors */

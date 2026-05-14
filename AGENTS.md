@@ -34,9 +34,11 @@ apps/web/src/
 ├── components/layout/        # Reusable layout components
 ├── modules/{feature}/
 │   ├── components/           # Feature UI components
-│   ├── hooks/                # Feature-specific hooks
+│   ├── hooks/                # Feature-specific hooks (non-query)
 │   ├── stores/               # Feature-specific stores using Zustand
-│   └── queries/              # Feature-specific TanStack Query hooks
+│   └── data/
+│       ├── queries.ts        # useQuery hooks for server state
+│       └── mutations.ts      # useMutation hooks for server state
 ├── routes/                   # TanStack file-based routes
 └── lib/
     ├── utils.ts              # Shared utility functions
@@ -98,7 +100,8 @@ packages/core/src/
 - Follow the established pattern of separating concerns for non-feature-specific components:
   - UI components in `components/ui/`
   - Layout components in `components/layout/`
-- Use `function fn()` syntax for normal functions and `const Component = () => {}` syntax for React components (not routes components)
+  - Other components in `components/common/`
+- Use `function fn()` syntax for normal functions and for React components
 
 ### Shared (`packages/core`)
 
@@ -143,9 +146,10 @@ packages/core/src/
 
 **Frontend**:
 
-11. Create `apps/web/src/modules/{feature}/hooks/use-{feature}.ts` — TanStack Query hooks
-12. Create `apps/web/src/modules/{feature}/components/` — feature-specific components
-13. Create `apps/web/src/routes/{feature}.tsx` — route file
+11. Create `apps/web/src/modules/{feature}/data/queries.ts` — useQuery hooks for fetching server state
+12. Create `apps/web/src/modules/{feature}/data/mutations.ts` — useMutation hooks for mutations
+13. Create `apps/web/src/modules/{feature}/components/` — feature-specific components
+14. Create `apps/web/src/routes/{feature}.tsx` — route file
 
 ### Backend async DB pattern
 
@@ -189,30 +193,44 @@ class UserResponse(BaseModel):
 ### Frontend API hook pattern
 
 ```ts
-// apps/web/src/modules/users/hooks/useMe.ts
+// apps/web/src/modules/auth/data/queries.ts
 import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/lib/api";
+import { toast } from "sonner";
 
-export const useMe = () =>
-  useQuery({
-    queryKey: [queryKeys.me],
-    queryFn: () => api.users.me(),
+export function useMe() {
+  return useQuery<MeResponse, Error>({
+    queryKey: queryKeys.me,
+    queryFn: () => {
+      const res = api.users.me();
+      if (res.error) throw new Error("Failed to fetch profile");
+      return res.data;
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
+}
 
-// apps/web/src/modules/auth/hooks/useLogin.ts
+// apps/web/src/modules/auth/data/mutations.ts
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
-export const useLogin = () =>
-  useMutation({
-    mutationFn: (body: { email: string; password: string }) =>
+export function useLogin() {
+  return useMutation<LoginResponse, Error, LoginRequest>({
+    mutationFn: (body) =>
       api.auth.login({ body }),
     onSuccess: ({ data }) => {
       if (!data) return;
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("refresh_token", data.refresh_token);
+      // Success login logic here
+      toast.success("Logged in successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
+}
 ```
 
 ### Adding a new API module to `@repo/core`

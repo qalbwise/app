@@ -15,7 +15,6 @@
       "!**/*.node_modules/**/*",
       "!apps/web/dist",
       "!apps/web/src/routeTree.gen.ts",
-      "!apps/web/src/styles.css",
       "!packages/core/src/schema.d.ts"
     ]
   },
@@ -59,7 +58,7 @@
       "nursery": {
         "useSortedClasses": {
           "level": "warn",
-          "fix": "none",
+          "fix": "unsafe",
           "options": {
             "attributes": ["classList"],
             "functions": ["clsx", "cn", "cx", "cva", "tv", "tw"]

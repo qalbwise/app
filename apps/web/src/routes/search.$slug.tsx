@@ -1,262 +1,178 @@
 import type { components } from "@repo/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { useNetworkState } from "react-use";
-import { toast } from "sonner";
-import { LoginSheet } from "@/modules/auth/components/login-sheet";
-import { SearchFontControls } from "@/modules/preferences/components/search-font-controls";
-import { VerseCard } from "@/modules/search/components/verse-card";
-import { useSearchStream } from "@/modules/search/hooks/use-search-stream";
-import { useSearchBySlug } from "@/modules/search/queries/use-search";
-
-type VerseResult = components["schemas"]["VerseResult"];
+import { motion } from "motion/react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { queryKeys } from "@/lib/api";
+import { duration, easing } from "@/lib/motions";
+import { LoginDrawer } from "@/modules/auth/components/login-drawer";
+import { useAuth } from "@/modules/auth/hooks/use-auth";
+import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
+import {
+  SearchHeader,
+  SearchTopicDisplay,
+} from "@/modules/search/components/search-header";
+import { SearchLoading } from "@/modules/search/components/search-loading";
+import { SearchPagination } from "@/modules/search/components/search-pagination";
+import { SearchResultsList } from "@/modules/search/components/search-results-list";
+import { useOfflineToast } from "@/modules/search/hooks/use-offline-toast";
+import { useSearchPagination } from "@/modules/search/hooks/use-search-pagination";
+import { useSearchState } from "@/modules/search/hooks/use-search-state";
+import { useVerseDetails } from "@/modules/search/hooks/use-verse-details";
 
 export const Route = createFileRoute("/search/$slug")({
   component: SearchPage,
+  head: ({ params }) => ({
+    meta: [{ title: `Search: ${decodeURIComponent(params.slug)} | Qalbwise` }],
+  }),
 });
 
-const STEP_MESSAGES: Record<string, string> = {
-  searching_quran: "Searching the Quran…",
-  fetching_metadata: "Gathering verse details…",
-  ranking: "Preparing your results…",
-  pending: "Preparing your search…",
-  processing: "Searching the Quran…",
-};
+type VerseResult = components["schemas"]["VerseResult"];
 
 function SearchPage() {
   const { slug } = Route.useParams();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [pendingSaveAyah, setPendingSaveAyah] = useState<string | null>(null);
-  const offlineToastShownRef = useRef(false);
-  const network = useNetworkState();
-  const online = network.online ?? true;
-  const wasCacheHit =
-    typeof sessionStorage !== "undefined" &&
-    sessionStorage.getItem(`search-cache-hit-${slug}`) === "1";
 
-  /* Primary: SSE real-time stream */
-  const stream = useSearchStream(slug, !wasCacheHit);
+  const auth = useAuth();
+  const createBookmark = useCreateBookmark();
+  const queryClient = useQueryClient();
 
-  /*
-   * Fallback polling:
-   * - Only enabled when SSE connection is lost (not running alongside a healthy stream)
-   * - Stops once complete/failed
-   */
-  const isStreamDone =
-    stream.status === "complete" || stream.status === "failed";
-  const pollEnabled =
-    wasCacheHit ||
-    stream.connectionLost ||
-    (stream.status === "idle" && !isStreamDone);
-  const query = useSearchBySlug(slug, pollEnabled);
+  const { topic, verseResults, isLoading, isDefinitelyFailed, stepMessage } =
+    useSearchState({ slug });
 
-  /* Source of truth: prefer SSE results when complete, else polling data */
-  const searchData = query.data?.data;
-  const topic = searchData?.topic ?? "";
+  useVerseDetails(slug, verseResults);
+  useOfflineToast({ slug, query: { isSuccess: true } });
 
-  const currentStatus =
-    stream.status !== "idle" && stream.status !== "pending"
-      ? stream.status
-      : (searchData?.status ?? "pending");
-
-  /* Prefer SSE payload; if complete but stream omitted results, use GET body */
-  const results =
-    stream.results && stream.results.length > 0
-      ? stream.results
-      : (searchData?.results ?? null);
-
-  /* Connection lost + polling error = definitive failure */
-  const isDefinitelyFailed =
-    currentStatus === "failed" || (stream.connectionLost && query.isError);
-
-  const isLoading =
-    !isDefinitelyFailed &&
-    currentStatus !== "complete" &&
-    currentStatus !== "failed";
-
-  const stepMessage =
-    STEP_MESSAGES[stream.step ?? currentStatus] ?? "Searching…";
-
-  /* One-time toast per slug when offline with cached results */
-  useEffect(() => {
-    const sessionKey = `offline-toast-${slug}`;
-    if (online) {
-      offlineToastShownRef.current = false;
-      return;
-    }
-    if (
-      query.isSuccess &&
-      !offlineToastShownRef.current &&
-      !sessionStorage.getItem(sessionKey)
-    ) {
-      offlineToastShownRef.current = true;
-      sessionStorage.setItem(sessionKey, "1");
-      toast.message("You're offline — viewing cached results");
-    }
-  }, [online, query.isSuccess, slug]);
+  const {
+    totalPages,
+    normalizedCurrentPage,
+    pageStart,
+    visibleResults,
+    goToPage,
+  } = useSearchPagination({ results: verseResults });
 
   function handleSaveVerse(ayahKey: string) {
-    const isLoggedIn = Boolean(localStorage.getItem("access_token"));
+    const isLoggedIn = auth.isLoggedIn || Boolean(auth.accessToken);
     if (!isLoggedIn) {
       setPendingSaveAyah(ayahKey);
       setLoginSheetOpen(true);
     }
-    /* If logged in, VerseCard handles the save action directly */
+  }
+
+  async function handleLoginSuccess() {
+    queryClient.invalidateQueries({ queryKey: queryKeys.me });
+    setLoginSheetOpen(false);
+
+    if (!pendingSaveAyah) return;
+
+    const verse = verseResults.find(
+      (item): item is VerseResult => item.ayah_key === pendingSaveAyah
+    );
+    setPendingSaveAyah(null);
+
+    if (!verse) return;
+
+    await createBookmark.mutateAsync({
+      ayah_key: verse.ayah_key,
+      surah_name: verse.surah_name,
+      arabic_text: verse.arabic_text,
+      translation: verse.translation,
+    });
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px-80px)] bg-white px-4 py-14">
-      <div className="page-wrap max-w-2xl">
-        {/* Back link */}
-        <Link
-          to="/"
-          className="mb-8 inline-flex items-center gap-1.5 text-[14px] no-underline transition-colors hover:text-black"
-          style={{ color: "#777169" }}
+    <>
+      {isLoading ? (
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.normal, ease: easing.out }}
+          className="relative mt-[20svh]"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            aria-hidden="true"
+          <SearchLoading query={topic} />
+          <p className="mt-4 text-center text-muted-foreground text-sm">
+            {stepMessage}
+          </p>
+        </motion.section>
+      ) : (
+        <section className="flex flex-col gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: duration.normal, ease: easing.out }}
           >
-            <path
-              d="M8.5 2.5L4 7l4.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          New search
-        </Link>
+            <SearchHeader totalResults={verseResults.length} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: duration.normal,
+              ease: easing.out,
+              delay: 0.08,
+            }}
+            className="flex justify-center"
+          >
+            <SearchTopicDisplay topic={topic} />
+          </motion.div>
+        </section>
+      )}
 
-        {/* Topic heading */}
-        {topic ? (
-          <h1 className="display-heading mb-2">{topic}</h1>
-        ) : (
-          <div
-            className="skeleton-pulse mb-2 h-9 w-64 rounded-lg"
-            aria-hidden="true"
+      {isDefinitelyFailed && (
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: duration.normal, ease: easing.out }}
+          className="relative mt-8 text-center"
+        >
+          <p className="text-muted-foreground">
+            We could not complete this search. Please try again.
+          </p>
+          <Button
+            className="mt-4"
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/">Retry Search</Link>}
           />
-        )}
+        </motion.section>
+      )}
 
-        {/* Status / count line */}
-        {isLoading ? (
-          <p className="caption mb-4 fade-up">{stepMessage}</p>
-        ) : (
-          results && (
-            <p className="caption mb-4">
-              {results.length} {results.length === 1 ? "verse" : "verses"} found
-            </p>
-          )
-        )}
+      {!isLoading && !isDefinitelyFailed && verseResults.length > 0 && (
+        <>
+          <SearchResultsList
+            visibleResults={visibleResults}
+            slug={slug}
+            pageStart={pageStart}
+            onSaveRequest={handleSaveVerse}
+          />
 
-        <div className="mb-3 flex justify-end">
-          <SearchFontControls />
-        </div>
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: 0.2,
+              duration: duration.fast,
+              ease: easing.out,
+            }}
+            className="mt-8"
+          >
+            <SearchPagination
+              totalPages={totalPages}
+              currentPage={normalizedCurrentPage}
+              onPageChange={goToPage}
+            />
+          </motion.section>
+        </>
+      )}
 
-        {/* Content */}
-        <div className="flex flex-col gap-4">
-          {isLoading ? (
-            <>
-              <SkeletonCard />
-              <SkeletonCard delay={80} />
-              <SkeletonCard delay={160} />
-            </>
-          ) : isDefinitelyFailed ||
-            currentStatus === "failed" ||
-            query.isError ? (
-            <div className="card-surface p-10 text-center">
-              <p className="mb-4 text-[15px]" style={{ color: "#4e4e4e" }}>
-                Search failed. Please try a different topic.
-              </p>
-              <Link
-                to="/"
-                className="pill-btn-black inline-flex no-underline"
-                style={{ height: "40px", padding: "0 20px" }}
-              >
-                Try again
-              </Link>
-            </div>
-          ) : !results || results.length === 0 ? (
-            <div className="card-surface p-10 text-center">
-              <p
-                className="mb-2 font-medium text-[15px]"
-                style={{ color: "#4e4e4e" }}
-              >
-                No verses found
-              </p>
-              <p className="mb-6 text-[14px]" style={{ color: "#777169" }}>
-                Try rephrasing your topic in different words.
-              </p>
-              <Link
-                to="/"
-                className="pill-btn-black inline-flex no-underline"
-                style={{ height: "40px", padding: "0 20px" }}
-              >
-                Search again
-              </Link>
-            </div>
-          ) : (
-            (results as VerseResult[]).map(
-              (verse: VerseResult, index: number) => (
-                <div
-                  key={verse.ayah_key}
-                  className="fade-up"
-                  style={{ animationDelay: `${index * 60}ms` }}
-                >
-                  <VerseCard
-                    verse={verse}
-                    rank={index}
-                    slug={slug}
-                    onSaveRequest={handleSaveVerse}
-                  />
-                </div>
-              )
-            )
-          )}
-        </div>
-      </div>
-
-      {/* Login bottom sheet */}
-      <LoginSheet
+      <LoginDrawer
         open={loginSheetOpen}
         onOpenChange={setLoginSheetOpen}
-        promptContext="Save your verse"
-        onSuccess={() => {
-          setLoginSheetOpen(false);
-          if (pendingSaveAyah) {
-            /* After login, user can re-tap save */
-            setPendingSaveAyah(null);
-          }
-        }}
+        promptContext="Save this verse"
+        onSuccess={handleLoginSuccess}
       />
-    </div>
+    </>
   );
 }
-
-const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
-  <div
-    className="card-surface p-6"
-    style={{ animationDelay: `${delay}ms` }}
-    aria-hidden="true"
-  >
-    {/* Header row */}
-    <div className="mb-4 flex items-center gap-2">
-      <span className="skeleton-pulse h-3 w-28 rounded" />
-      <span className="skeleton-pulse h-3 w-10 rounded" />
-    </div>
-    {/* Arabic block */}
-    <div className="skeleton-pulse mb-4 h-14 w-full rounded-xl" />
-    {/* Translation lines */}
-    <div className="skeleton-pulse mb-2 h-4 w-full rounded" />
-    <div className="skeleton-pulse mb-5 h-4 w-4/5 rounded" />
-    {/* Action row */}
-    <div className="flex gap-2">
-      <span className="skeleton-pulse h-7 w-28 rounded-full" />
-      <span className="skeleton-pulse h-7 w-24 rounded-full" />
-      <span className="skeleton-pulse h-7 w-20 rounded-full" />
-    </div>
-  </div>
-);

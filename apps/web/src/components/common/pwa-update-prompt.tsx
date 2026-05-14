@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
  * PWA update banner — Motion for React (gestures + AnimatePresence) with
  * reduced-motion support: https://motion.dev/docs/react
  */
-export const PwaUpdatePrompt = () => {
+export function PwaUpdatePrompt() {
   const [visible, setVisible] = useState(false);
   const reloadingRef = useRef(false);
   const pollIntervalRef = useRef<number | null>(null);
@@ -77,24 +77,7 @@ export const PwaUpdatePrompt = () => {
           animate={{ y: 0, opacity: 1, x: "-50%" }}
           exit={{ y: 100, opacity: 0, x: "-50%" }}
           transition={panelTransition}
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            left: "50%",
-            zIndex: 9999,
-            background: "#fff",
-            border: "1px solid rgba(0,0,0,0.1)",
-            boxShadow:
-              "0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)",
-            borderRadius: "9999px",
-            padding: "10px 18px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            fontSize: "14px",
-            color: "#4e4e4e",
-            whiteSpace: "nowrap",
-          }}
+          className="fixed bottom-6 left-1/2 z-9999 flex items-center gap-3 whitespace-nowrap rounded-full border border-black/10 bg-background px-4.5 py-2.5 text-[14px] text-secondary-foreground shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06)]"
         >
           <span>A new version is available.</span>
           <motion.button
@@ -103,17 +86,7 @@ export const PwaUpdatePrompt = () => {
             whileHover={prefersReducedMotion ? undefined : { scale: 1.04 }}
             whileTap={{ scale: prefersReducedMotion ? 1 : 0.96 }}
             transition={{ type: "spring", stiffness: 500, damping: 28 }}
-            style={{
-              background: "#000",
-              color: "#fff",
-              border: "none",
-              borderRadius: "9999px",
-              padding: "5px 14px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-              letterSpacing: "0.01em",
-            }}
+            className="rounded-full bg-foreground px-3.5 py-1 font-semibold text-[13px] text-primary-foreground tracking-[0.01em]"
           >
             Update
           </motion.button>
@@ -122,15 +95,7 @@ export const PwaUpdatePrompt = () => {
             onClick={() => setVisible(false)}
             aria-label="Dismiss update prompt"
             whileTap={{ scale: prefersReducedMotion ? 1 : 0.92 }}
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: "4px",
-              cursor: "pointer",
-              color: "#b0ada8",
-              lineHeight: 1,
-              fontSize: "16px",
-            }}
+            className="border-none bg-transparent p-1 text-(--clr-placeholder) text-[16px] leading-none"
           >
             ✕
           </motion.button>
@@ -138,4 +103,4 @@ export const PwaUpdatePrompt = () => {
       )}
     </AnimatePresence>
   );
-};
+}
