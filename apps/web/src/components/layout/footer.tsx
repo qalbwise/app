@@ -1,3 +1,6 @@
+import { GithubDark } from "@/components/ui/svgs/githubDark";
+import { GithubLight } from "@/components/ui/svgs/githubLight";
+
 const year = new Date().getFullYear();
 
 export function Footer() {
@@ -22,8 +25,10 @@ export function Footer() {
         href="https://github.com/qalbwise/app"
         target="_blank"
         rel="noreferrer"
-        className="order-0 transition-all hover:text-foreground hover:underline md:order-2"
+        className="order-0 flex items-center gap-1 transition-all hover:text-foreground hover:underline md:order-2"
       >
+        <GithubLight className="block size-4 dark:hidden" />
+        <GithubDark className="hidden size-4 dark:block" />
         GitHub
       </a>
     </footer>
