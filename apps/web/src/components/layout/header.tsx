@@ -62,6 +62,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 className="hover:bg-secondary"
+                nativeButton={false}
                 render={<Link to="/bookmarks">Bookmarks</Link>}
               />
             </li>
