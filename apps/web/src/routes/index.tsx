@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
+import { motion } from "motion/react";
 import { useRef } from "react";
 import { useNetworkState } from "react-use";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { duration, easing, variants } from "@/lib/motions";
 import { getRandomVerse } from "@/lib/utils";
 import { useCreateSearch } from "@/modules/search/data/mutations";
 import { containsOffensiveContent } from "@/modules/search/lib/forbidden-words";
@@ -34,8 +36,8 @@ function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const online = network.online ?? true;
 
-  async function handleSearch(searchTopic: string) {
-    const trimmed = searchTopic.trim();
+  async function handleSearch(raw: string) {
+    const trimmed = raw.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
     if (!trimmed) return;
 
     if (!online) {
@@ -85,20 +87,36 @@ function Home() {
 
   return (
     <>
-      <section className="flex flex-col items-center gap-4 text-pretty text-center sm:mt-19 md:mt-23 lg:mt-31">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl">
+      <motion.section
+        variants={variants.staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="mt-[5svh] flex flex-col items-center gap-4 text-pretty text-center sm:mt-[10svh] md:mt-[16svh] lg:mt-[20svh]"
+      >
+        <motion.h1
+          variants={variants.staggerItem}
+          className="text-3xl sm:text-4xl md:text-5xl"
+        >
           What is in your <span className="text-primary">qalb</span> today?
-        </h1>
-        <p className="max-w-xl font-light">
+        </motion.h1>
+        <motion.p
+          variants={variants.staggerItem}
+          className="max-w-xl font-light"
+        >
           Discover what the Quran, sunnahs & tafsir relates to what your qalb
           currently feels.{" "}
           <span className="text-primary">
             Grief, fear, ambition, gratitude.
           </span>
-        </p>
-      </section>
+        </motion.p>
+      </motion.section>
 
-      <section className="mt-12 space-y-4">
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: duration.normal, ease: easing.out }}
+        className="mt-12 space-y-4"
+      >
         <form className="flex w-full justify-center" onSubmit={handleSubmit}>
           <InputGroup className="h-18 w-full rounded-full bg-background px-4 py-6 md:w-175">
             <InputGroupInput
@@ -108,6 +126,15 @@ function Home() {
               autoComplete="off"
               defaultValue=""
               maxLength={70}
+              onChange={(e) => {
+                const sanitized = e.target.value.replace(
+                  /[^\p{L}\p{N}\s]/gu,
+                  ""
+                );
+                if (sanitized !== e.target.value) {
+                  e.target.value = sanitized;
+                }
+              }}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
@@ -123,9 +150,18 @@ function Home() {
           </InputGroup>
         </form>
 
-        <ul className="flex flex-wrap justify-center gap-2 lg:gap-4">
+        <motion.ul
+          variants={variants.staggerContainerSlow}
+          initial="initial"
+          animate="animate"
+          className="flex flex-wrap justify-center gap-2 lg:gap-4"
+        >
           {TOPIC_CHIPS.map((chipTopic) => (
-            <li key={chipTopic} className="inline-block">
+            <motion.li
+              key={chipTopic}
+              variants={variants.staggerItem}
+              className="inline-block"
+            >
               <Button
                 type="button"
                 variant="outline"
@@ -139,15 +175,20 @@ function Home() {
               >
                 {chipTopic}
               </Button>
-            </li>
+            </motion.li>
           ))}
-        </ul>
-      </section>
+        </motion.ul>
+      </motion.section>
 
-      <section className="mt-12 text-balance text-center font-sans text-muted-foreground text-sm">
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: duration.slow, ease: easing.out }}
+        className="mt-12 text-balance text-center font-sans text-muted-foreground text-sm"
+      >
         <p>"{verse.text}"</p>
         <p className="mt-2 italic">~ Quran {verse.reference}</p>
-      </section>
+      </motion.section>
     </>
   );
 }

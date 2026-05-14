@@ -1,9 +1,11 @@
 import type { components } from "@repo/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
+import { duration, easing } from "@/lib/motions";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useCreateBookmark } from "@/modules/bookmarks/data/mutations";
@@ -83,21 +85,48 @@ function SearchPage() {
   return (
     <>
       {isLoading ? (
-        <section className="relative mt-[20svh]">
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.normal, ease: easing.out }}
+          className="relative mt-[20svh]"
+        >
           <SearchLoading query={topic} />
           <p className="mt-4 text-center text-muted-foreground text-sm">
             {stepMessage}
           </p>
-        </section>
+        </motion.section>
       ) : (
         <section className="flex flex-col gap-4">
-          <SearchHeader totalResults={verseResults.length} />
-          <SearchTopicDisplay topic={topic} />
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: duration.normal, ease: easing.out }}
+          >
+            <SearchHeader totalResults={verseResults.length} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: duration.normal,
+              ease: easing.out,
+              delay: 0.08,
+            }}
+            className="flex justify-center"
+          >
+            <SearchTopicDisplay topic={topic} />
+          </motion.div>
         </section>
       )}
 
       {isDefinitelyFailed && (
-        <section className="relative mt-8 text-center">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: duration.normal, ease: easing.out }}
+          className="relative mt-8 text-center"
+        >
           <p className="text-muted-foreground">
             We could not complete this search. Please try again.
           </p>
@@ -107,7 +136,7 @@ function SearchPage() {
             nativeButton={false}
             render={<Link to="/">Retry Search</Link>}
           />
-        </section>
+        </motion.section>
       )}
 
       {!isLoading && !isDefinitelyFailed && verseResults.length > 0 && (
@@ -119,13 +148,22 @@ function SearchPage() {
             onSaveRequest={handleSaveVerse}
           />
 
-          <section className="mt-8">
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: 0.2,
+              duration: duration.fast,
+              ease: easing.out,
+            }}
+            className="mt-8"
+          >
             <SearchPagination
               totalPages={totalPages}
               currentPage={normalizedCurrentPage}
               onPageChange={goToPage}
             />
-          </section>
+          </motion.section>
         </>
       )}
 

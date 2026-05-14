@@ -2,7 +2,9 @@ import type { components } from "@repo/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Bookmark as BookmarkIcon } from "lucide-react";
+import { motion } from "motion/react";
 import { useState } from "react";
+import { Dots } from "@/components/loading-ui/dots";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
+import { duration, easing, variants } from "@/lib/motions";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useDeleteBookmark } from "@/modules/bookmarks/data/mutations";
@@ -52,7 +55,12 @@ function BookmarksPage() {
 
   if (!isLoggedIn) {
     return (
-      <section className="mt-[20svh] flex flex-col items-center justify-center gap-4 text-center">
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: duration.normal, ease: easing.out }}
+        className="mt-[20svh] flex flex-col items-center justify-center gap-4 text-center"
+      >
         <BookmarkIcon className="size-12 text-muted-foreground" />
         <h2 className="font-semibold text-xl">
           Sign in to view your saved verses
@@ -68,7 +76,7 @@ function BookmarksPage() {
           promptContext="View your bookmarks"
           onSuccess={handleLoginSuccess}
         />
-      </section>
+      </motion.section>
     );
   }
 
@@ -76,7 +84,12 @@ function BookmarksPage() {
   const isError = bookmarks.isError;
 
   return (
-    <section className="flex flex-col gap-6">
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: duration.normal, ease: easing.out }}
+      className="flex flex-col gap-6"
+    >
       <header className="flex flex-col gap-2">
         <h1 className="font-bold text-2xl">Your Bookmarks</h1>
         <p className="text-muted-foreground">
@@ -85,8 +98,9 @@ function BookmarksPage() {
       </header>
 
       {isLoading && (
-        <div className="flex justify-center py-12">
-          <p className="text-muted-foreground">Loading...</p>
+        <div className="flex items-center justify-center gap-4 py-12 text-muted-foreground">
+          <Dots className="size-10" />
+          <p>Loading...</p>
         </div>
       )}
 
@@ -105,7 +119,7 @@ function BookmarksPage() {
           isDeleting={deleteBookmark.isPending}
         />
       )}
-    </section>
+    </motion.section>
   );
 }
 
@@ -120,20 +134,31 @@ function BookmarksList({
 }) {
   if (bookmarks.length === 0) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: duration.normal, ease: easing.out }}
+        className="py-12 text-center text-muted-foreground"
+      >
         <p>No bookmarks yet.</p>
         <p className="mt-1 text-sm">
           Save verses from your searches to see them here.
         </p>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <ul className="space-y-4">
+    <motion.ul
+      variants={variants.staggerContainer}
+      initial="initial"
+      animate="animate"
+      className="space-y-4"
+    >
       {bookmarks.map((bookmark) => (
-        <li
+        <motion.li
           key={bookmark.id}
+          variants={variants.staggerItem}
           className="flex flex-col gap-3 rounded-lg border bg-card p-4"
         >
           <div className="flex items-start justify-between">
@@ -184,13 +209,24 @@ function BookmarksList({
           <p className="text-muted-foreground text-sm">
             {bookmark.translation}
           </p>
+          <p className="text-muted-foreground text-xs">
+            Saved on:{" "}
+            <span className="font-medium">
+              {new Date(bookmark.created_at).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+                timeZone: "UTC",
+                hour12: false,
+              })}
+            </span>
+          </p>
           {bookmark.note && (
             <p className="border-primary border-l-2 pl-3 text-sm italic">
               {bookmark.note}
             </p>
           )}
-        </li>
+        </motion.li>
       ))}
-    </ul>
+    </motion.ul>
   );
 }
