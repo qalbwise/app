@@ -1,9 +1,6 @@
 const BASE_WORDS = [
   // English
   "fuck",
-  "f*ck",
-  "fu*k",
-  "f**k",
   "fucked",
   "fucking",
   "fuckin",
@@ -107,12 +104,7 @@ export function isLeetSpeakVariant(
     .replace(/7/g, "t")
     .replace(/8/g, "b")
     .replace(/\|/g, "i");
-
-  if (normalized === forbiddenWord.toLowerCase()) return true;
-
-  const pattern = forbiddenWord.split("").join("\\W*");
-  const regex = new RegExp(`^${pattern}$`, "i");
-  return regex.test(normalized);
+  return normalized === forbiddenWord.toLowerCase();
 }
 
 export function containsOffensiveContent(text: string): boolean {
