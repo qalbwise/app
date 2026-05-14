@@ -19,7 +19,7 @@ export function ThemeSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon-lg">
             <SunMoon />
           </Button>
         }

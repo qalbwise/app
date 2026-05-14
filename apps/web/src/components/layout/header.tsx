@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { MenuIcon } from "lucide-react";
 import { useState } from "react";
+
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 import {
   AlertDialog,
@@ -14,10 +16,34 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { queryKeys } from "@/lib/api";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useMe } from "@/modules/auth/data/queries";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
+
+function SignOutDialogContent({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Sign out</AlertDialogTitle>
+        <AlertDialogDescription>
+          Are you sure you want to sign out? Your bookmarks will be saved.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogAction onClick={onSignOut}>Sign out</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  );
+}
 
 export function Header() {
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
@@ -37,6 +63,35 @@ export function Header() {
   function openSignIn() {
     setLoginSheetOpen(true);
   }
+
+  const hamburgerTrigger = (
+    <Button variant="outline" size="icon-lg" aria-label="Menu">
+      <MenuIcon />
+    </Button>
+  );
+
+  const mobileDropdown = (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={hamburgerTrigger} />
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/bookmarks">Bookmarks</Link>}
+          />
+          {isLoggedIn ? (
+            <AlertDialogTrigger
+              render={<DropdownMenuItem>Sign out</DropdownMenuItem>}
+            />
+          ) : (
+            <DropdownMenuItem onClick={openSignIn}>
+              Get started
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <>
@@ -58,7 +113,19 @@ export function Header() {
             <li>
               <ThemeSwitcher />
             </li>
-            <li>
+
+            <li className="sm:hidden">
+              {isLoggedIn ? (
+                <AlertDialog>
+                  {mobileDropdown}
+                  <SignOutDialogContent onSignOut={handleSignOut} />
+                </AlertDialog>
+              ) : (
+                mobileDropdown
+              )}
+            </li>
+
+            <li className="hidden sm:block">
               <Button
                 variant="ghost"
                 className="hover:bg-secondary"
@@ -67,25 +134,11 @@ export function Header() {
               />
             </li>
 
-            <li>
+            <li className="hidden sm:block">
               {isLoggedIn ? (
                 <AlertDialog>
                   <AlertDialogTrigger render={<Button>Sign out</Button>} />
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Sign out</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to sign out? Your bookmarks will
-                        be saved.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSignOut}>
-                        Sign out
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
+                  <SignOutDialogContent onSignOut={handleSignOut} />
                 </AlertDialog>
               ) : (
                 <Button onClick={openSignIn}>Get started</Button>
