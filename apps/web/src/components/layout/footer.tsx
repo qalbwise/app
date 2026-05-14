@@ -1,8 +1,8 @@
 const year = new Date().getFullYear();
 
-export const Footer = () => {
+export function Footer() {
   return (
-    <footer className="main-wrap flex flex-wrap justify-between gap-x-6 gap-y-4 border-black/5 border-t bg-white/95 py-5 text-muted-foreground text-sm backdrop-blur-sm">
+    <footer className="main-wrap flex flex-wrap justify-between gap-x-6 gap-y-4 border-foreground/5 border-t bg-background/95 py-5 text-muted-foreground text-sm backdrop-blur-sm">
       <p className="order-1 md:order-0">&copy; {year} Qalbwise</p>
 
       <p className="order-2 md:order-1">
@@ -28,4 +28,4 @@ export const Footer = () => {
       </a>
     </footer>
   );
-};
+}

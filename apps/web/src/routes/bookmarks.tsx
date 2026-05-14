@@ -155,10 +155,12 @@ function BookmarksList({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Bookmark</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    Delete {bookmark.surah_name} {bookmark.ayah_key}
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this bookmark? This action
-                    cannot be undone.
+                    Are you sure you want to delete this from your bookmarks?
+                    action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

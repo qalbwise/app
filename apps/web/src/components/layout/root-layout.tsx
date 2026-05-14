@@ -24,7 +24,7 @@ const backgroundLayers = [
     id: "pattern-bottom",
     color: "var(--color-pattern-bottom)",
     image: patternBottom,
-    position: "center 480px",
+    position: "center bottom",
     repeat: "repeat-x",
     size: "auto",
   },
@@ -100,8 +100,7 @@ export const RootLayout = ({ children }: { children: React.ReactNode }) => {
         >
           {children}
         </main>
-        {/* TODO: add `richColors` prop after implemented the theme switcher to the app */}
-        <Toaster position="bottom-center" />
+        <Toaster position="bottom-center" richColors />
         <Footer />
       </div>
     </div>
