@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -95,7 +95,7 @@ async def update_note(
 
     if content:
         note.content = content
-    note.updated_at = datetime.utcnow()
+    note.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(note)
     return note

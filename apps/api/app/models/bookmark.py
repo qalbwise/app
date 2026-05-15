@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -23,7 +23,7 @@ class Bookmark(Base):
     translation: Mapped[str] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     extra_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(UTC))
 
 
 class Note(Base):
@@ -38,7 +38,7 @@ class Note(Base):
     topic: Mapped[str] = mapped_column(String(255))
     content: Mapped[str] = mapped_column(Text)
     verses: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC)
     )
