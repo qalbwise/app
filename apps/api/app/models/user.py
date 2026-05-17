@@ -27,3 +27,6 @@ class User(Base):
         default=lambda: datetime.now(UTC).replace(tzinfo=None),
         onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
     )
+    qf_sub: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
+    qf_refresh_token: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    qf_id_token: Mapped[str | None] = mapped_column(String(2048), nullable=True)
