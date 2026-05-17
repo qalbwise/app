@@ -12,10 +12,10 @@ export const api = createApiWithModules({
 
     if (
       typeof window !== "undefined" &&
-      !window.location.pathname.startsWith("/login")
+      !window.location.pathname.startsWith("/")
     ) {
-      console.warn("Redirecting to /login");
-      window.location.href = "/login";
+      console.warn("Redirecting to /");
+      window.location.href = "/";
     }
   },
 });

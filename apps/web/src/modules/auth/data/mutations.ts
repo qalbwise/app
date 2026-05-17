@@ -28,3 +28,23 @@ export function useLogin() {
     },
   });
 }
+
+export function useQfExchange() {
+  const setTokens = useAuthStore((state) => state.setTokens);
+
+  return useMutation<TokenResponse, Error, { session_code: string }>({
+    mutationFn: async (data) => {
+      const res = await api.auth.qfExchange(data);
+      if (res.error) throw new Error("Login failed");
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      setTokens(data.access_token, data.refresh_token);
+      toast.success("Logged in successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+}

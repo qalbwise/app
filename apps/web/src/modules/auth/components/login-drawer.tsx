@@ -1,5 +1,5 @@
 import { type TokenResponse, useGoogleLogin } from "@react-oauth/google";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,8 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Google } from "@/components/ui/svgs/google";
+import { QuranIcon } from "@/components/ui/svgs/quran";
+import { api } from "@/lib/api";
 import { useLogin } from "@/modules/auth/data/mutations";
 
 interface LoginSheetProps {
@@ -21,23 +23,23 @@ interface LoginSheetProps {
 }
 
 const hasGoogleClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+const hasQfClientId = Boolean(import.meta.env.VITE_QF_CLIENT_ID);
 
 export function LoginDrawer(props: LoginSheetProps) {
-  if (hasGoogleClientId) {
-    return <LoginDrawerGoogle {...props} />;
+  if (hasGoogleClientId || hasQfClientId) {
+    return <LoginDrawerContent {...props} />;
   }
   return <LoginDrawerDevPlaceholder {...props} />;
 }
 
-/** Renders under `GoogleOAuthProvider` when `VITE_GOOGLE_CLIENT_ID` is set. */
-function LoginDrawerGoogle({
+function LoginDrawerContent({
   open,
   onOpenChange,
   promptContext,
   onSuccess,
 }: LoginSheetProps) {
   const login = useLogin();
-  const hasError = login.isError;
+  const [qfLoading, setQfLoading] = useState(false);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse: TokenResponse) => {
@@ -60,6 +62,22 @@ function LoginDrawerGoogle({
     flow: "implicit",
   });
 
+  const handleQfLogin = useCallback(async () => {
+    setQfLoading(true);
+    try {
+      const res = await api.auth.qfAuthorize();
+      if (res.error || !res.data) {
+        toast.error("Failed to initiate Quran Foundation login");
+        setQfLoading(false);
+        return;
+      }
+      window.location.href = res.data.auth_url;
+    } catch {
+      toast.error("Failed to initiate login");
+      setQfLoading(false);
+    }
+  }, []);
+
   const handleOpenChange = useCallback(
     (v: boolean) => {
       if (!v) {
@@ -77,6 +95,8 @@ function LoginDrawerGoogle({
       ? "Sign in to continue save your favorite Quranic verses and stories. Free forever."
       : "Sign in to your Qalbwise account, so you can save your favorite Quranic verses and stories.";
 
+  const hasError = login.isError;
+
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
       <DrawerContent>
@@ -86,10 +106,25 @@ function LoginDrawerGoogle({
         </DrawerHeader>
 
         <DrawerFooter className="mx-auto w-full max-w-md">
-          <Button variant="outline" size="lg" onClick={() => googleLogin()}>
-            <Google />
-            Continue with Google
-          </Button>
+          {hasGoogleClientId && (
+            <Button variant="outline" size="lg" onClick={() => googleLogin()}>
+              <Google />
+              Continue with Google
+            </Button>
+          )}
+
+          {hasQfClientId && (
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleQfLogin}
+              disabled={qfLoading}
+            >
+              <QuranIcon className="size-5 shrink-0" />
+              Continue with Quran Foundation
+            </Button>
+          )}
+
           {hasError && (
             <p className="text-center text-destructive">
               Sign-in failed. Please try again.
@@ -106,7 +141,7 @@ function LoginDrawerDevPlaceholder({
   onOpenChange,
   promptContext,
 }: LoginSheetProps) {
-  const title = promptContext ?? "Google Sign-In Not Configured";
+  const title = promptContext ?? "Sign-In Not Configured";
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
@@ -114,7 +149,7 @@ function LoginDrawerDevPlaceholder({
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>
-            Google Sign-In is not configured for this environment.
+            No sign-in methods are configured for this environment.
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="flex-row">
@@ -122,15 +157,13 @@ function LoginDrawerDevPlaceholder({
           <code className="rounded bg-muted px-1.5 py-0.5 text-sm">
             VITE_GOOGLE_CLIENT_ID
           </code>{" "}
-          to{" "}
+          or{" "}
           <code className="rounded bg-muted px-1.5 py-0.5 text-sm">
-            apps/web/.env
+            VITE_QF_CLIENT_ID
           </code>{" "}
-          (see{" "}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-sm">
-            .env.example
-          </code>
-          ), then restart the dev server.
+          to your{" "}
+          <code className="rounded bg-muted px-1.5 py-0.5 text-sm">.env</code>{" "}
+          file, then restart the dev server.
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
