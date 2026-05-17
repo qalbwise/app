@@ -311,7 +311,7 @@ def run_search(self, topic_id: str):
                             db.add_all(rows)
                             topic.status = "complete"
                             topic.step = None
-                            topic.completed_at = datetime.now(UTC)
+                            topic.completed_at = datetime.now(UTC).replace(tzinfo=None)
                             await db.commit()
 
             except Exception as exc:

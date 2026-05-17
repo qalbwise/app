@@ -95,7 +95,7 @@ async def update_note(
 
     if content:
         note.content = content
-    note.updated_at = datetime.now(UTC)
+    note.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await db.commit()
     await db.refresh(note)
     return note
