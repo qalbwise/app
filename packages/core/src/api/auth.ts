@@ -10,4 +10,11 @@ export const createAuthApi = (client: Client) => ({
 
   refresh: (body: { refresh_token: string }) =>
     client.POST("/auth/refresh", { body }),
+
+  qfAuthorize: () => client.POST("/auth/qf/authorize"),
+
+  qfExchange: (body: { session_code: string }) =>
+    client.POST("/auth/qf/exchange", { body }),
+
+  qfGetUser: () => client.GET("/auth/qf/user"),
 });
