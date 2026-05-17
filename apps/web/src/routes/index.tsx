@@ -60,20 +60,16 @@ function Home() {
       return;
     }
 
-    try {
-      const result = await createSearch.mutateAsync({ topic: trimmed });
-      if (result.slug) {
-        if (result.cached) {
-          sessionStorage.setItem(`search-cache-hit-${result.slug}`, "1");
-        } else {
-          sessionStorage.removeItem(`search-cache-hit-${result.slug}`);
-        }
-        navigate({ to: "/search/$slug", params: { slug: result.slug } });
+    const result = await createSearch.mutateAsync({ topic: trimmed });
+    if (result.slug) {
+      if (result.cached) {
+        sessionStorage.setItem(`search-cache-hit-${result.slug}`, "1");
       } else {
-        toast.error("Could not start search. Please try again.");
+        sessionStorage.removeItem(`search-cache-hit-${result.slug}`);
       }
-    } catch {
-      toast.error("Search failed. Please check your connection and try again.");
+      navigate({ to: "/search/$slug", params: { slug: result.slug } });
+    } else {
+      toast.error("Could not start search. Please try again.");
     }
   }
 

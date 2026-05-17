@@ -9,7 +9,10 @@ export function useCreateSearch() {
   return useMutation<SearchCreateResponse, Error, { topic: string }>({
     mutationFn: async (data) => {
       const res = await api.search.create(data);
-      if (res.error) throw new Error("Failed to create search");
+      if (res.error)
+        throw new Error(
+          "Search failed. Please check your connection and try again."
+        );
       return res.data;
     },
     onError: (error) => {

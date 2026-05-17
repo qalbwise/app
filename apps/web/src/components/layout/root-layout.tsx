@@ -3,7 +3,9 @@ import { useEffect } from "react";
 import patternBottom from "@/assets/pattern-bottom.svg";
 import patternTop from "@/assets/pattern-top.svg";
 import patternX from "@/assets/pattern-x.svg";
+import { OfflineIndicator } from "@/components/common/offline-indicator";
 import { PatternLayer } from "@/components/common/pattern-layer";
+import { PwaUpdatePrompt } from "@/components/common/pwa-update-prompt";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { Toaster } from "@/components/ui/sonner";
@@ -46,7 +48,7 @@ const backgroundLayers = [
   },
 ] as const;
 
-export const RootLayout = ({ children }: { children: React.ReactNode }) => {
+export function RootLayout({ children }: { children: React.ReactNode }) {
   usePreferencesHydration();
   const arabicFont = useFontPreferencesStore((s) => s.arabicFont);
   const arabicSizeStep = useFontPreferencesStore((s) => s.arabicSizeStep);
@@ -93,6 +95,7 @@ export const RootLayout = ({ children }: { children: React.ReactNode }) => {
       ))}
 
       <div className="relative z-1 flex min-h-svh flex-col">
+        <OfflineIndicator />
         <Header />
         <main
           id="main-content"
@@ -101,8 +104,9 @@ export const RootLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </main>
         <Toaster position="bottom-center" richColors />
+        <PwaUpdatePrompt />
         <Footer />
       </div>
     </div>
   );
-};
+}
