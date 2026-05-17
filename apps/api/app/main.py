@@ -12,6 +12,7 @@ from app.api.auth.router import router as auth_router
 from app.api.bookmarks.router import router as bookmarks_router
 from app.api.search.router import router as search_router
 from app.api.users.router import router as users_router
+from app.core.redis import close_redis
 from app.core.settings import get_settings
 
 
@@ -19,17 +20,22 @@ from app.core.settings import get_settings
 async def lifespan(app: FastAPI):
     logger.info("Starting up the API...")
     yield
-    logger.info("API shutting down")
+    logger.info("Shutting down...")
+    await close_redis()
+    logger.info("API shut down")
 
 
 app = FastAPI(lifespan=lifespan, title="Qalbwise API")
 
+settings = get_settings()
+
 limiter = Limiter(
     key_func=get_remote_address,
-    storage_uri=get_settings().REDIS_URL,
+    storage_uri=settings.REDIS_URL,
     default_limits=["100/minute"],
 )
 app.state.limiter = limiter
+app.state.frontend_url = settings.FRONTEND_URL
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 origins = [
@@ -65,8 +71,6 @@ app.include_router(bookmarks_router)
 @app.get("/scalar", include_in_schema=False)
 async def scalar():
     return get_scalar_api_reference(
-        # Your OpenAPI document
         openapi_url=app.openapi_url,
-        # Avoid CORS issues (optional)
         scalar_proxy_url="https://proxy.scalar.com",
     )
