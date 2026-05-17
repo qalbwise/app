@@ -200,7 +200,7 @@
   font-stretch: normal;
   line-height: 2;
   color: var(--color-gray-800);
-  background: var(--clr-warm-stone);
+  background: var(--color-background);
   border-radius: 12px;
   padding: 16px 20px;
   text-align: right;

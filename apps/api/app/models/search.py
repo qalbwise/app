@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -20,7 +20,9 @@ class Topic(Base):
     search_count: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     step: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     results: Mapped[list["TopicResult"]] = relationship(
@@ -72,6 +74,8 @@ class UserSearch(Base):
         UUID(as_uuid=True), ForeignKey("topics.id", ondelete="CASCADE"), index=True
     )
     user_query: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
 
     topic: Mapped[Topic] = relationship(back_populates="user_searches")
