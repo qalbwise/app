@@ -22,7 +22,7 @@ interface LoginSheetProps {
   onSuccess?: () => void;
 }
 
-const hasGoogleClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+const hasGoogleClientId = false; // temporarily disabled — re-enable by setting back to Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 const hasQfClientId = Boolean(import.meta.env.VITE_QF_CLIENT_ID);
 
 export function LoginDrawer(props: LoginSheetProps) {
