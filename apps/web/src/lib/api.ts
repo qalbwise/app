@@ -10,13 +10,7 @@ export const api = createApiWithModules({
     console.warn("Token refresh failed in api.ts");
     console.warn("Current pathname:", window.location.pathname);
 
-    if (
-      typeof window !== "undefined" &&
-      !window.location.pathname.startsWith("/")
-    ) {
-      console.warn("Redirecting to /");
-      window.location.href = "/";
-    }
+    window.location.reload();
   },
 });
 
