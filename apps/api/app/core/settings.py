@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GOOGLE_CLIENT_ID: str | None = None
 
+    QF_CLIENT_ID: str = ""
+    QF_CLIENT_SECRET: str = ""
+    QF_AUTH_BASE_URL: str = "https://prelive-oauth2.quran.foundation"
+    QF_API_BASE_URL: str = "https://apis-prelive.quran.foundation"
+    FRONTEND_URL: str = "http://localhost:3000"
+
     model_config = SettingsConfigDict(env_file=str(ROOT_DIR / ".env"), extra="ignore")
 
 
