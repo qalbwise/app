@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     QF_CLIENT_SECRET: str = ""
     QF_AUTH_BASE_URL: str = "https://prelive-oauth2.quran.foundation"
     QF_API_BASE_URL: str = "https://apis-prelive.quran.foundation"
+    QF_REDIRECT_URI: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file=str(ROOT_DIR / ".env"), extra="ignore")

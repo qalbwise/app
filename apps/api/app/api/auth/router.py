@@ -138,7 +138,7 @@ async def qf_authorize(request: Request):
     state = qf_service.random_string(16)
     nonce = qf_service.random_string(16)
 
-    callback_url = str(
+    callback_url = settings.QF_REDIRECT_URI or str(
         URL.replace(
             request.url,
             path=request.app.url_path_for("qf_callback"),
