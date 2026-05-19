@@ -3,44 +3,20 @@ name: Pull Request Checks
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - '.prototools'
-      - 'biome.json'
-      - 'lefthook.yml'
-      - 'commitlint.config.ts'
+    paths:
+      - '.github/workflows/pull-request-checks.yml'
+      - 'apps/web/**'
+      - 'packages/core/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '!**/*.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      web: ${{ steps.check.outputs.web }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      - id: check
-        run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
-          echo "changed_dirs<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          WEB=false
-
-          if echo "$CHANGED" | grep -q "^apps/web/"; then
-            WEB=true
-          fi
-
-          echo "web=$WEB" >> $GITHUB_OUTPUT
-
   build:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

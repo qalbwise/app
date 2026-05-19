@@ -3,12 +3,18 @@ name: Deploy
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - '.prototools'
-      - 'biome.json'
-      - 'lefthook.yml'
-      - 'commitlint.config.ts'
+    paths:
+      - '.github/workflows/deploy.yml'
+      - 'apps/**'
+      - 'docker-compose.yml'
+      - 'packages/core/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '!**/*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -17,12 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # required to diff against the previous commit
+          fetch-depth: 0
 
       - name: Check directory changes
         id: check_changes
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
           echo "changed_dirs<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
