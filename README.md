@@ -16,10 +16,11 @@
 
 - [FastAPI](https://fastapi.tiangolo.com) — API framework
 - [Alembic](https://alembic.sqlalchemy.org) — database migrations
-- [Celery](https://docs.celeryq.dev) + Redis — background task queue
+- [Celery](https://docs.celeryq.dev) + [Redis](https://redis.io) — background tasks queue
 - [Ruff](https://docs.astral.sh/ruff) — linter & formatter
 - [Loguru](https://loguru.readthedocs.io) — logging
 - [Scalar](https://scalar.com) — API docs
+- [Quran Foundation OAuth2](https://api-docs.quran.foundation) — user authentication via OAuth 2.0 Authorization Code + PKCE
 
 **Shared** (`packages/core`)
 
@@ -196,19 +197,26 @@ Always import new models in `alembic/env.py` for autogenerate to detect them.
 
 Create a `.env` file in the project root with the following variables:
 
-| Variable            | Description                      |
-| ------------------- | -------------------------------- |
-| `VITE_API_URL`      | Backend API base URL             |
-| `DATABASE_URL`      | PostgreSQL connection string     |
-| `REDIS_URL`         | Redis connection string          |
-| `SECRET_KEY`        | Application secret key           |
-| `POSTGRES_USER`     | DB user (used by Docker Compose) |
-| `POSTGRES_PASSWORD` | DB password                      |
-| `POSTGRES_DB`       | DB name                          |
-| `OPENAI_API_KEY`    | OpenAI API key                   |
-| `OPENAI_BASE_URL`   | OpenAI-compatible base URL      |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend) |
-| `GOOGLE_CLIENT_ID`  | Google OAuth client ID (backend) |
+| Variable                | Description                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`          | Backend API base URL                                                                               |
+| `DATABASE_URL`          | PostgreSQL connection string                                                                       |
+| `REDIS_URL`             | Redis connection string                                                                            |
+| `SECRET_KEY`            | Application secret key                                                                             |
+| `POSTGRES_USER`         | DB user (used by Docker Compose)                                                                   |
+| `POSTGRES_PASSWORD`     | DB password                                                                                        |
+| `POSTGRES_DB`           | DB name                                                                                            |
+| `OPENAI_API_KEY`        | OpenAI API key                                                                                     |
+| `OPENAI_BASE_URL`       | OpenAI-compatible base URL                                                                         |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend)                                                                  |
+| `GOOGLE_CLIENT_ID`      | Google OAuth client ID (backend)                                                                   |
+| `VITE_QF_CLIENT_ID`     | Quran Foundation client ID (frontend, feature flag)                                                |
+| `QF_CLIENT_ID`          | Quran Foundation OAuth2 client ID                                                                  |
+| `QF_CLIENT_SECRET`      | Quran Foundation OAuth2 client secret (server-side only)                                           |
+| `QF_AUTH_BASE_URL`      | QF OAuth2 base URL (`https://oauth2.quran.foundation` / `https://prelive-oauth2.quran.foundation`) |
+| `QF_API_BASE_URL`       | QF User API base URL (`https://apis.quran.foundation` / `https://apis-prelive.quran.foundation`)   |
+| `QF_REDIRECT_URI`       | Callback URL registered with QF (e.g. `https://api.qalbwise.app/auth/qf/callback`)                 |
+| `FRONTEND_URL`          | Frontend origin for OAuth callback redirect                                                        |
 
 Both the API and frontend load environment variables from the root `.env` file:
 - API: `apps/api/app/core/settings.py` loads from `ROOT_DIR / ".env"`
@@ -233,6 +241,10 @@ git commit -m "chore: bump dependencies"
 ```
 
 The `pre-commit` hook automatically runs Biome (JS/TS) and Ruff (Python) on staged files. The `commit-msg` hook validates the commit message format.
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 Qalbwise
 
 ## Boilerplate Inspirations
 
