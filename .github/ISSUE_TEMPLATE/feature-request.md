@@ -1,0 +1,43 @@
+name: Feature Request
+description: Suggest an idea for this project
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What pain point or limitation does this address?
+      placeholder: It's frustrating when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: What would you like to see happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any workarounds or alternative approaches?
+
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected Areas
+      description: Which parts of the codebase would this touch?
+      options:
+        - label: Web (frontend)
+        - label: API (backend)
+        - label: Core (shared package)
+        - label: Infrastructure
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Mockups, references, or anything else.

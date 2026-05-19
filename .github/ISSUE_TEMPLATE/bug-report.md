@@ -1,0 +1,65 @@
+name: Bug Report
+description: Report a bug to help us improve
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app is affected?
+      options:
+        - Web (frontend)
+        - API (backend)
+        - Core (shared package)
+        - Infrastructure (Docker, CI, deploy)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: The commit hash or tag where the bug occurs.
+      placeholder: e.g., abc1234 or v1.0.0
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshots, logs, or anything else that might help.
