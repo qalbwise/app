@@ -11,23 +11,4 @@ export const createBookmarksApi = (client: Client) => ({
     client.DELETE("/bookmarks/{bookmark_id}", {
       params: { path: { bookmark_id: id } },
     }),
-
-  createNote: (body: {
-    topic: string;
-    content: string;
-    verses?: Record<string, unknown>[];
-  }) => client.POST("/notes", { body }),
-
-  listNotes: () => client.GET("/notes"),
-
-  updateNote: (id: string, content: string) =>
-    client.PATCH("/notes/{note_id}", {
-      params: { path: { note_id: id } },
-      body: content,
-    }),
-
-  deleteNote: (id: string) =>
-    client.DELETE("/notes/{note_id}", {
-      params: { path: { note_id: id } },
-    }),
 });

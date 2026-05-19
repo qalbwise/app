@@ -10,7 +10,7 @@ export function useNotes() {
   return useQuery<NoteListResponse>({
     queryKey: queryKeys.notes.all,
     queryFn: async () => {
-      const res = await api.bookmarks.listNotes();
+      const res = await api.notes.list();
       if (res.error) throw new Error("Failed to fetch notes");
       return res.data;
     },

@@ -1,5 +1,6 @@
 import { createAuthApi } from "./api/auth";
 import { createBookmarksApi } from "./api/bookmarks";
+import { createNotesApi } from "./api/notes";
 import { createSearchApi } from "./api/search";
 import { createUsersApi } from "./api/users";
 import { createApi } from "./client";
@@ -18,6 +19,7 @@ export const createApiWithModules = (
     auth: createAuthApi(client),
     search: createSearchApi(client),
     bookmarks: createBookmarksApi(client),
+    notes: createNotesApi(client),
     users: createUsersApi(client),
   };
 };

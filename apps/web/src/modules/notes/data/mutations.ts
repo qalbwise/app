@@ -10,10 +10,7 @@ export function useCreateNote() {
   const queryClient = useQueryClient();
   return useMutation<NoteResponse, Error, NoteCreate>({
     mutationFn: async (body) => {
-      const res = await api.bookmarks.createNote({
-        ...body,
-        verses: body.verses ?? undefined,
-      });
+      const res = await api.notes.create(body);
       if (res.error) throw new Error("Failed to create note");
       return res.data;
     },
@@ -30,7 +27,7 @@ export function useDeleteNote() {
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      await api.bookmarks.deleteNote(id);
+      await api.notes.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notes.all });

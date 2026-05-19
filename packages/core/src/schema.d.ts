@@ -372,6 +372,8 @@ export interface components {
             type: string;
             /** Surah Number */
             surah_number: number;
+            /** Surah Name */
+            surah_name: string;
             /** Verse Number */
             verse_number: number;
             /** Group */
@@ -390,6 +392,16 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Arabic Text
+             * @default
+             */
+            arabic_text: string;
+            /**
+             * Translation
+             * @default
+             */
+            translation: string;
         };
         /** GoogleAccessTokenRequest */
         GoogleAccessTokenRequest: {

@@ -257,6 +257,7 @@ async def login_or_create_user(
 
 
 _CONTENT_TOKEN_KEY = "qf_content_token"
+_CHAPTERS_CACHE_KEY = "qf_chapters"
 
 
 async def get_content_api_token() -> str | None:
@@ -293,6 +294,39 @@ async def get_content_api_token() -> str | None:
             return access_token
     except httpx.HTTPError as e:
         logger.error("QF content API token request failed: {}", e)
+        return None
+
+
+async def fetch_chapters(language: str = "en") -> dict[int, str] | None:
+    redis_conn = await get_redis()
+    cached = await redis_conn.get(_CHAPTERS_CACHE_KEY)
+    if cached:
+        raw = cached.decode() if isinstance(cached, bytes) else cached
+        return json.loads(raw)
+
+    token = await get_content_api_token()
+    if not token:
+        return None
+
+    cfg = _get_qf_config()
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{cfg['api_base_url']}/content/api/v4/chapters",
+                params={"language": language},
+                headers={
+                    "x-auth-token": token,
+                    "x-client-id": cfg["client_id"],
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        chapters = {ch["id"]: ch["name_simple"] for ch in data.get("chapters", [])}
+        await redis_conn.setex(_CHAPTERS_CACHE_KEY, 86400, json.dumps(chapters))
+        return chapters
+    except httpx.HTTPError as e:
+        logger.error("QF chapters fetch failed: {}", e)
         return None
 
 
