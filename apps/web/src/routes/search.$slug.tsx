@@ -92,7 +92,10 @@ function SearchPage() {
           className="relative mt-[20svh]"
         >
           <SearchLoading query={topic} />
-          <p className="mt-4 text-center text-muted-foreground text-sm">
+          <p
+            aria-live="polite"
+            className="mt-4 text-center text-muted-foreground text-sm"
+          >
             {stepMessage}
           </p>
         </motion.section>

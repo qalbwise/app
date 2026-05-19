@@ -91,6 +91,7 @@ function PrivacyPage() {
           href="https://github.com/qalbwise/app"
           target="_blank"
           rel="noreferrer"
+          aria-label="GitHub repository (opens in new tab)"
         >
           GitHub repository
         </a>{" "}
@@ -112,6 +113,7 @@ function PrivacyPage() {
           href="https://github.com/qalbwise/app"
           target="_blank"
           rel="noreferrer"
+          aria-label="GitHub repository (opens in new tab)"
         >
           GitHub repository
         </a>

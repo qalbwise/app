@@ -97,7 +97,7 @@ export function PwaUpdatePrompt() {
             aria-label="Dismiss update prompt"
             whileTap={{ scale: 0.97 }}
             transition={{ duration: duration.instant, ease: easing.out }}
-            className="border-none bg-transparent p-1 text-[16px] text-secondary-foreground leading-none"
+            className="border-none bg-transparent p-1 text-[16px] text-secondary-foreground leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             ✕
           </motion.button>

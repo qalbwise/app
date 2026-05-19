@@ -24,7 +24,12 @@ function TermsPage() {
         Qalbwise is a Quranic search and reflection tool that allows you to
         search verses, bookmark passages, take notes, and personalize your
         reading experience. The app connects to the{" "}
-        <a href="https://quran.foundation" target="_blank" rel="noreferrer">
+        <a
+          href="https://quran.foundation"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Quran Foundation (opens in new tab)"
+        >
           Quran Foundation
         </a>{" "}
         User APIs for authentication and data sync.
@@ -67,6 +72,7 @@ function TermsPage() {
           href="https://github.com/qalbwise/app"
           target="_blank"
           rel="noreferrer"
+          aria-label="GitHub (opens in new tab)"
         >
           GitHub
         </a>
@@ -111,6 +117,7 @@ function TermsPage() {
           href="https://github.com/qalbwise/app"
           target="_blank"
           rel="noreferrer"
+          aria-label="GitHub repository (opens in new tab)"
         >
           GitHub repository
         </a>

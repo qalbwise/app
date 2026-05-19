@@ -121,6 +121,7 @@ function Home() {
               className="rounded-4xl placeholder:text-sm"
               autoComplete="off"
               defaultValue=""
+              aria-label="Topic to search for"
               maxLength={70}
               onChange={(e) => {
                 const sanitized = e.target.value.replace(
@@ -138,6 +139,7 @@ function Home() {
                 variant="default"
                 className="size-9.5 rounded-full text-sm md:w-26.5"
                 disabled={isDisabled}
+                aria-label="Search"
               >
                 <Search />
                 <span className="hidden md:inline">Search</span>

@@ -31,7 +31,9 @@ function QfCallbackPage() {
 
   return (
     <div className="flex items-center justify-center py-20">
-      <p className="text-muted-foreground">Signing you in...</p>
+      <p aria-live="polite" className="text-muted-foreground">
+        Signing you in...
+      </p>
     </div>
   );
 }

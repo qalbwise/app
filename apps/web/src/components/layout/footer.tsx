@@ -14,7 +14,7 @@ export function Footer() {
           Built for the{" "}
           <a
             href="https://launch.provisioncapital.com/quran-hackathon"
-            aria-label="Quran Foundation Hackathon"
+            aria-label="Quran Foundation Hackathon (opens in new tab)"
             target="_blank"
             rel="noreferrer"
             className="transition-all hover:text-foreground hover:underline"
@@ -42,7 +42,7 @@ export function Footer() {
           </Link>
           <a
             href="https://github.com/qalbwise/app"
-            aria-label="GitHub repository"
+            aria-label="GitHub repository (opens in new tab)"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1 transition-all hover:text-foreground hover:underline"
@@ -55,7 +55,7 @@ export function Footer() {
 
         <a
           href="https://uptime.qalbwise.app/status/qalbwise"
-          aria-label="Uptime status"
+          aria-label="Uptime status (opens in new tab)"
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1 transition-all hover:text-foreground hover:underline"

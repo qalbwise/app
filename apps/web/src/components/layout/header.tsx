@@ -102,6 +102,7 @@ export function Header() {
               Qalbwise
             </span>
             <span
+              aria-hidden="true"
               className="font-normal text-[13px] text-muted-foreground"
               style={{ fontFamily: "var(--font-arabic)" }}
             >

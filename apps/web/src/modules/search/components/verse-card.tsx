@@ -139,7 +139,7 @@ export function VerseCard({
       {/* Header */}
       <CardHeader className="flex flex-col items-center gap-4 italic">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <h1 className="font-medium text-xl">{verse.surah_name}</h1>
+          <h2 className="font-medium text-xl">{verse.surah_name}</h2>
 
           <span className="rounded-3xl border border-border bg-secondary px-3 py-1 font-medium">
             {verse.ayah_key}
@@ -162,6 +162,7 @@ export function VerseCard({
         {/* Verse content */}
         <div className="flex flex-col items-stretch gap-4 text-center">
           <span
+            lang="ar"
             className="text-right"
             style={{
               fontFamily: arabicFontFamily,

@@ -126,7 +126,7 @@ function LoginDrawerContent({
           )}
 
           {hasError && (
-            <p className="text-center text-destructive">
+            <p role="alert" className="text-center text-destructive">
               Sign-in failed. Please try again.
             </p>
           )}

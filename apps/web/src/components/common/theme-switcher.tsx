@@ -19,7 +19,7 @@ export function ThemeSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="icon-lg">
+          <Button variant="outline" size="icon-lg" aria-label="Switch theme">
             <SunMoon />
           </Button>
         }

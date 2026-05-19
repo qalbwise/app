@@ -6,6 +6,7 @@ import patternX from "@/assets/pattern-x.svg";
 import { OfflineIndicator } from "@/components/common/offline-indicator";
 import { PatternLayer } from "@/components/common/pattern-layer";
 import { PwaUpdatePrompt } from "@/components/common/pwa-update-prompt";
+import { SkipToContent } from "@/components/common/skip-to-content";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { Toaster } from "@/components/ui/sonner";
@@ -79,6 +80,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative flex min-h-svh flex-col">
+      <SkipToContent />
       {backgroundLayers.map((layer) => (
         <PatternLayer
           key={layer.id}
