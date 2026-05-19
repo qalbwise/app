@@ -10,7 +10,7 @@
 - [Vite](https://vitejs.dev) — build tool
 - [Tailwind CSS v4](https://tailwindcss.com) — styling
 - [shadcn/ui](https://ui.shadcn.com) — component library
-- [TanStack](https://tanstack.com) — Router, Query, Table
+- [TanStack](https://tanstack.com) — Router, Query
 
 **Backend** (`apps/api`)
 
@@ -224,29 +224,17 @@ Both the API and frontend load environment variables from the root `.env` file:
 
 Docker Compose reads from the root `.env` automatically.
 
-## Git Workflow
-
-This project enforces [Conventional Commits](https://www.conventionalcommits.org):
-
-```
-<type>(<optional scope>): <description>
-```
-
-Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `chore` `revert` `ci`
-
-```bash
-git commit -m "feat(web/auth): add JWT refresh token"
-git commit -m "fix(api/users): resolve null pointer in user endpoint"
-git commit -m "chore: bump dependencies"
-```
-
-The `pre-commit` hook automatically runs Biome (JS/TS) and Ruff (Python) on staged files. The `commit-msg` hook validates the commit message format.
-
-## License
-
-[MIT](LICENSE) — Copyright (c) 2026 Qalbwise
-
 ## Boilerplate Inspirations
 
 - [indrazm/moonrepo-kickstart](https://github.com/indrazm/moonrepo-kickstart)
 - [zero-one-group/monorepo](https://github.com/zero-one-group/monorepo)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide — coding standards, development workflow, commit conventions, PR process, and everything you need to contribute effectively.
+
+Quick reference: this project enforces [Conventional Commits](https://www.conventionalcommits.org) with `type(scope): description`. The `pre-commit` hook automatically lints and formats staged files; the `commit-msg` hook validates the message format.
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 Qalbwise
