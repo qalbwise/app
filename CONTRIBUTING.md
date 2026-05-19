@@ -10,19 +10,17 @@ This project adheres to the [Contributor Covenant](https://www.contributor-coven
 
 ---
 
-## Getting Started
+## General Workflow
 
-1. Install [Proto](https://moonrepo.dev/docs/proto/install) — it manages Node.js, pnpm, Python, and Moon via `.prototools`
-2. Clone the repo: `git clone git@github.com:qalbwise/app.git qalbwise`
-3. Install dependencies:
-   - `pnpm install` — JavaScript
-   - `uv sync --project apps/api` — Python
-   - `pnpm prepare` — Git hooks
-4. Create a `.env` file from `.env.example`
-5. Start infrastructure: `docker compose up -d`
-6. Start dev servers: `moon run web:dev` and `moon run api:dev`
+1. Fork the repository ([Fork](https://github.com/qalbwise/app/fork)).
+2. Clone your fork (`git clone git@github.com:your-username/qalbwise.git`).
+3. Add the upstream remote (`git remote add upstream git@github.com:qalbwise/app.git`).
+4. Create a new branch (`git checkout -b short-topic`).
+5. Make your changes.
+6. Run `moon run :lint && moon run :check && moon run web:typecheck && moon run core:typecheck` and fix anything that fails before opening a PR.
+7. Open a pull request against this repository.
 
-See [AGENTS.md](AGENTS.md) for all commands, environment variables, and project structure.
+See the [README](README.md) for setup and running instructions, and [AGENTS.md](AGENTS.md) for technical patterns and conventions.
 
 ---
 
