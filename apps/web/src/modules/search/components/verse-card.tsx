@@ -1,5 +1,5 @@
 import type { components } from "@repo/core";
-import { BookOpenCheck, Cloud, Share2 } from "lucide-react";
+import { BookOpenCheck, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "react-use";
 import { toast } from "sonner";
@@ -14,8 +14,6 @@ import { useBookmarks } from "@/modules/bookmarks/data/queries";
 import { ReadingSettingsSidebar } from "@/modules/preferences/components/reading-settings-sidebar";
 import { ARABIC_FONT_STACK } from "@/modules/preferences/lib/arabic-font-stacks";
 import { useFontPreferencesStore } from "@/modules/preferences/stores/font-preferences-store";
-import { useCreateQfBookmark } from "@/modules/qf-bookmarks/data/mutations";
-import { useQfBookmarks } from "@/modules/qf-bookmarks/data/queries";
 import { useExplainVerse, useVersePage } from "@/modules/search/data/queries";
 
 type VerseResult = components["schemas"]["VerseResult"];
@@ -63,8 +61,6 @@ export function VerseCard({
   const versePage = useVersePage(slug, rank + 1, true);
   const bookmarks = useBookmarks();
   const createBookmark = useCreateBookmark();
-  const qfBookmarks = useQfBookmarks();
-  const createQfBookmark = useCreateQfBookmark();
 
   const loadedVerse = versePage.data?.verse;
   const whyText =
@@ -82,14 +78,6 @@ export function VerseCard({
         )
       ));
   const isCheckingBookmark = isLoggedIn && bookmarks.isPending;
-  const isAlreadyQfBookmarked =
-    isLoggedIn &&
-    Boolean(
-      qfBookmarks.data?.bookmarks.some(
-        (bookmark) => bookmark.ayah_key === verse.ayah_key
-      )
-    );
-  const isCheckingQfBookmark = isLoggedIn && qfBookmarks.isPending;
 
   useEffect(() => {
     const explanation = explainVerse.data?.why_this_verse;
@@ -113,40 +101,10 @@ export function VerseCard({
     }
 
     try {
-      await createBookmark.mutateAsync({
-        ayah_key: verse.ayah_key,
-        surah_name: verse.surah_name,
-        arabic_text: verse.arabic_text,
-        translation: verse.translation,
-      });
+      await createBookmark.mutateAsync({ ayah_key: verse.ayah_key });
       setSaved(true);
     } catch {
       /* silently ignore duplicate / network errors for now */
-    }
-  }
-
-  async function handleQfSave() {
-    if (!isLoggedIn) {
-      onSaveRequest?.(verse.ayah_key);
-      return;
-    }
-    if (
-      isAlreadyQfBookmarked ||
-      isCheckingQfBookmark ||
-      createQfBookmark.isPending
-    ) {
-      return;
-    }
-
-    if (!navigator.onLine) {
-      toast.error("Sync when back online");
-      return;
-    }
-
-    try {
-      await createQfBookmark.mutateAsync({ ayah_key: verse.ayah_key });
-    } catch {
-      /* mutation hook surfaces the error toast */
     }
   }
 
@@ -243,30 +201,8 @@ export function VerseCard({
                   ? "Saving…"
                   : isCheckingBookmark
                     ? "Checking…"
-                    : "Save Verse"}
+                    : "Bookmark"}
               <BookOpenCheck className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleQfSave}
-              disabled={
-                isAlreadyQfBookmarked ||
-                isCheckingQfBookmark ||
-                createQfBookmark.isPending
-              }
-              className={cn(
-                isAlreadyQfBookmarked && "bg-secondary text-foreground"
-              )}
-            >
-              {isAlreadyQfBookmarked
-                ? "Saved to QF"
-                : createQfBookmark.isPending
-                  ? "Saving…"
-                  : isCheckingQfBookmark
-                    ? "Checking…"
-                    : "Save to QF"}
-              <Cloud className="size-4" />
             </Button>
             <ReadingSettingsSidebar />
           </div>

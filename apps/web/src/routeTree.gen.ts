@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as QfCallbackRouteImport } from './routes/qf-callback'
-import { Route as QfBookmarksRouteImport } from './routes/qf-bookmarks'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,11 +24,6 @@ const TermsRoute = TermsRouteImport.update({
 const QfCallbackRoute = QfCallbackRouteImport.update({
   id: '/qf-callback',
   path: '/qf-callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QfBookmarksRoute = QfBookmarksRouteImport.update({
-  id: '/qf-bookmarks',
-  path: '/qf-bookmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -57,7 +51,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bookmarks': typeof BookmarksRoute
   '/privacy': typeof PrivacyRoute
-  '/qf-bookmarks': typeof QfBookmarksRoute
   '/qf-callback': typeof QfCallbackRoute
   '/terms': typeof TermsRoute
   '/search/$slug': typeof SearchSlugRoute
@@ -66,7 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bookmarks': typeof BookmarksRoute
   '/privacy': typeof PrivacyRoute
-  '/qf-bookmarks': typeof QfBookmarksRoute
   '/qf-callback': typeof QfCallbackRoute
   '/terms': typeof TermsRoute
   '/search/$slug': typeof SearchSlugRoute
@@ -76,7 +68,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/bookmarks': typeof BookmarksRoute
   '/privacy': typeof PrivacyRoute
-  '/qf-bookmarks': typeof QfBookmarksRoute
   '/qf-callback': typeof QfCallbackRoute
   '/terms': typeof TermsRoute
   '/search/$slug': typeof SearchSlugRoute
@@ -87,7 +78,6 @@ export interface FileRouteTypes {
     | '/'
     | '/bookmarks'
     | '/privacy'
-    | '/qf-bookmarks'
     | '/qf-callback'
     | '/terms'
     | '/search/$slug'
@@ -96,7 +86,6 @@ export interface FileRouteTypes {
     | '/'
     | '/bookmarks'
     | '/privacy'
-    | '/qf-bookmarks'
     | '/qf-callback'
     | '/terms'
     | '/search/$slug'
@@ -105,7 +94,6 @@ export interface FileRouteTypes {
     | '/'
     | '/bookmarks'
     | '/privacy'
-    | '/qf-bookmarks'
     | '/qf-callback'
     | '/terms'
     | '/search/$slug'
@@ -115,7 +103,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BookmarksRoute: typeof BookmarksRoute
   PrivacyRoute: typeof PrivacyRoute
-  QfBookmarksRoute: typeof QfBookmarksRoute
   QfCallbackRoute: typeof QfCallbackRoute
   TermsRoute: typeof TermsRoute
   SearchSlugRoute: typeof SearchSlugRoute
@@ -135,13 +122,6 @@ declare module '@tanstack/react-router' {
       path: '/qf-callback'
       fullPath: '/qf-callback'
       preLoaderRoute: typeof QfCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/qf-bookmarks': {
-      id: '/qf-bookmarks'
-      path: '/qf-bookmarks'
-      fullPath: '/qf-bookmarks'
-      preLoaderRoute: typeof QfBookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -179,7 +159,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BookmarksRoute: BookmarksRoute,
   PrivacyRoute: PrivacyRoute,
-  QfBookmarksRoute: QfBookmarksRoute,
   QfCallbackRoute: QfCallbackRoute,
   TermsRoute: TermsRoute,
   SearchSlugRoute: SearchSlugRoute,

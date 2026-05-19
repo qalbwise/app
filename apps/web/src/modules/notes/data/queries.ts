@@ -3,15 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/lib/api";
 import { useIsLoggedIn } from "@/modules/auth/stores/auth-store";
 
-type QfBookmarkListResponse = components["schemas"]["QfBookmarkListResponse"];
+type NoteListResponse = components["schemas"]["NoteListResponse"];
 
-export function useQfBookmarks() {
+export function useNotes() {
   const isLoggedIn = useIsLoggedIn();
-  return useQuery<QfBookmarkListResponse>({
-    queryKey: queryKeys.qfBookmarks.all,
+  return useQuery<NoteListResponse>({
+    queryKey: queryKeys.notes.all,
     queryFn: async () => {
-      const res = await api.qfBookmarks.list();
-      if (res.error) throw new Error("Failed to fetch QF bookmarks");
+      const res = await api.bookmarks.listNotes();
+      if (res.error) throw new Error("Failed to fetch notes");
       return res.data;
     },
     enabled: isLoggedIn,

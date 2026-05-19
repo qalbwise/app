@@ -3,16 +3,9 @@ import { createApi } from "@/client";
 type Client = ReturnType<typeof createApi>;
 
 export const createBookmarksApi = (client: Client) => ({
-  create: (body: {
-    ayah_key: string;
-    surah_name: string;
-    arabic_text: string;
-    translation: string;
-    note?: string;
-    extra_data?: Record<string, unknown>;
-  }) => client.POST("/bookmarks", { body }),
-
   list: () => client.GET("/bookmarks"),
+
+  create: (body: { ayah_key: string }) => client.POST("/bookmarks", { body }),
 
   delete: (id: string) =>
     client.DELETE("/bookmarks/{bookmark_id}", {
@@ -23,18 +16,18 @@ export const createBookmarksApi = (client: Client) => ({
     topic: string;
     content: string;
     verses?: Record<string, unknown>[];
-  }) => client.POST("/bookmarks/notes", { body }),
+  }) => client.POST("/notes", { body }),
 
-  listNotes: () => client.GET("/bookmarks/notes"),
+  listNotes: () => client.GET("/notes"),
 
   updateNote: (id: string, content: string) =>
-    client.PATCH("/bookmarks/notes/{note_id}", {
+    client.PATCH("/notes/{note_id}", {
       params: { path: { note_id: id } },
       body: content,
     }),
 
   deleteNote: (id: string) =>
-    client.DELETE("/bookmarks/notes/{note_id}", {
+    client.DELETE("/notes/{note_id}", {
       params: { path: { note_id: id } },
     }),
 });

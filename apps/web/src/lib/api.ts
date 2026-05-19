@@ -26,9 +26,6 @@ export const queryKeys = {
   bookmarks: {
     all: ["bookmarks"] as const,
   },
-  qfBookmarks: {
-    all: ["qf-bookmarks"] as const,
-  },
   notes: {
     all: ["notes"] as const,
   },

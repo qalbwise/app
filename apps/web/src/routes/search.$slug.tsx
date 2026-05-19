@@ -1,4 +1,3 @@
-import type { components } from "@repo/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
@@ -27,8 +26,6 @@ export const Route = createFileRoute("/search/$slug")({
     meta: [{ title: `Search: ${decodeURIComponent(params.slug)} | Qalbwise` }],
   }),
 });
-
-type VerseResult = components["schemas"]["VerseResult"];
 
 function SearchPage() {
   const { slug } = Route.useParams();
@@ -63,23 +60,14 @@ function SearchPage() {
 
   async function handleLoginSuccess() {
     queryClient.invalidateQueries({ queryKey: queryKeys.me });
+    queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
     setLoginSheetOpen(false);
 
     if (!pendingSaveAyah) return;
 
-    const verse = verseResults.find(
-      (item): item is VerseResult => item.ayah_key === pendingSaveAyah
-    );
     setPendingSaveAyah(null);
 
-    if (!verse) return;
-
-    await createBookmark.mutateAsync({
-      ayah_key: verse.ayah_key,
-      surah_name: verse.surah_name,
-      arabic_text: verse.arabic_text,
-      translation: verse.translation,
-    });
+    await createBookmark.mutateAsync({ ayah_key: pendingSaveAyah });
   }
 
   return (

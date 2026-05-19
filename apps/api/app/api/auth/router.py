@@ -145,7 +145,7 @@ async def qf_authorize(request: Request):
         )
     )
 
-    scope = "openid offline_access user collection"
+    scope = "openid offline_access user collection bookmark"
 
     oauth_data = {
         "code_verifier": code_verifier,

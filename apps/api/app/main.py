@@ -10,7 +10,7 @@ from slowapi.util import get_remote_address
 
 from app.api.auth.router import router as auth_router
 from app.api.bookmarks.router import router as bookmarks_router
-from app.api.qf_bookmarks.router import router as qf_bookmarks_router
+from app.api.notes.router import router as notes_router
 from app.api.search.router import router as search_router
 from app.api.users.router import router as users_router
 from app.core.redis import close_redis
@@ -66,8 +66,8 @@ async def health():
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(search_router)
+app.include_router(notes_router)
 app.include_router(bookmarks_router)
-app.include_router(qf_bookmarks_router)
 
 
 @app.get("/scalar", include_in_schema=False)

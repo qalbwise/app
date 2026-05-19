@@ -1,6 +1,5 @@
 import { createAuthApi } from "./api/auth";
 import { createBookmarksApi } from "./api/bookmarks";
-import { createQfBookmarksApi } from "./api/qf-bookmarks";
 import { createSearchApi } from "./api/search";
 import { createUsersApi } from "./api/users";
 import { createApi } from "./client";
@@ -19,7 +18,6 @@ export const createApiWithModules = (
     auth: createAuthApi(client),
     search: createSearchApi(client),
     bookmarks: createBookmarksApi(client),
-    qfBookmarks: createQfBookmarksApi(client),
     users: createUsersApi(client),
   };
 };
