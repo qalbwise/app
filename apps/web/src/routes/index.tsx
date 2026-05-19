@@ -91,7 +91,7 @@ function Home() {
       >
         <motion.h1
           variants={variants.staggerItem}
-          className="text-3xl sm:text-4xl md:text-5xl"
+          className="font-medium text-3xl sm:text-4xl md:text-5xl"
         >
           What is in your <span className="text-primary">qalb</span> today?
         </motion.h1>
