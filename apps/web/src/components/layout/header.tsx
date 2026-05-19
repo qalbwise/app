@@ -79,6 +79,10 @@ export function Header() {
             nativeButton={false}
             render={<Link to="/bookmarks">Bookmarks</Link>}
           />
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/qf-bookmarks">QF Bookmarks</Link>}
+          />
           {isLoggedIn ? (
             <AlertDialogTrigger
               render={<DropdownMenuItem>Sign out</DropdownMenuItem>}
@@ -132,6 +136,14 @@ export function Header() {
                 className="hover:bg-secondary"
                 nativeButton={false}
                 render={<Link to="/bookmarks">Bookmarks</Link>}
+              />
+            </li>
+            <li className="hidden sm:block">
+              <Button
+                variant="ghost"
+                className="hover:bg-secondary"
+                nativeButton={false}
+                render={<Link to="/qf-bookmarks">QF Bookmarks</Link>}
               />
             </li>
 

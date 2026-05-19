@@ -152,12 +152,22 @@ async def refresh_qf_access_token(
         return None
 
 
-async def call_qf_api(access_token: str, path: str) -> dict[str, Any] | None:
+async def call_qf_api(
+    access_token: str,
+    path: str,
+    *,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
+    json_body: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
     cfg = _get_qf_config()
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(
+            resp = await client.request(
+                method,
                 f"{cfg['api_base_url']}{path}",
+                params=params,
+                json=json_body,
                 headers={
                     "x-auth-token": access_token,
                     "x-client-id": cfg["client_id"],
@@ -166,7 +176,7 @@ async def call_qf_api(access_token: str, path: str) -> dict[str, Any] | None:
             resp.raise_for_status()
             return resp.json()
     except httpx.HTTPError as e:
-        logger.error("QF User API call failed: {} {}", e, path)
+        logger.error("QF User API call failed: {} {} {}", method, path, e)
         return None
 
 

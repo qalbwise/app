@@ -348,6 +348,41 @@ export interface paths {
         patch: operations["update_note_bookmarks_notes__note_id__patch"];
         trace?: never;
     };
+    "/qf-bookmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Qf Bookmarks */
+        get: operations["get_qf_bookmarks_qf_bookmarks_get"];
+        put?: never;
+        /** Create Qf Bookmark */
+        post: operations["create_qf_bookmark_qf_bookmarks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/qf-bookmarks/{bookmark_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Qf Bookmark */
+        delete: operations["delete_qf_bookmark_qf_bookmarks__bookmark_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -464,6 +499,45 @@ export interface components {
             auth_url: string;
             /** State */
             state: string;
+        };
+        /** QfBookmarkCreate */
+        QfBookmarkCreate: {
+            /** Ayah Key */
+            ayah_key: string;
+        };
+        /** QfBookmarkListResponse */
+        QfBookmarkListResponse: {
+            /** Bookmarks */
+            bookmarks: components["schemas"]["QfBookmarkResponse"][];
+        };
+        /** QfBookmarkResponse */
+        QfBookmarkResponse: {
+            /** Id */
+            id: string;
+            /** Ayah Key */
+            ayah_key: string;
+            /** Type */
+            type: string;
+            /** Surah Number */
+            surah_number: number;
+            /** Verse Number */
+            verse_number: number;
+            /** Group */
+            group?: string | null;
+            /**
+             * Is In Default Collection
+             * @default true
+             */
+            is_in_default_collection: boolean;
+            /** Is Reading */
+            is_reading?: boolean | null;
+            /** Collections Count */
+            collections_count?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** QfExchangeRequest */
         QfExchangeRequest: {
@@ -1300,6 +1374,88 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["NoteResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_qf_bookmarks_qf_bookmarks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QfBookmarkListResponse"];
+                };
+            };
+        };
+    };
+    create_qf_bookmark_qf_bookmarks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QfBookmarkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QfBookmarkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_qf_bookmark_qf_bookmarks__bookmark_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookmark_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
