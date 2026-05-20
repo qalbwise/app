@@ -14,6 +14,7 @@ interface UseSearchStateResult {
   currentStatus: string;
   isLoading: boolean;
   isDefinitelyFailed: boolean;
+  isNotFound: boolean;
   stepMessage: string;
   step: string | undefined;
   totalResults: number;
@@ -68,8 +69,11 @@ export function useSearchState({
       : (searchData?.results ?? null);
   const verseResults = results ?? [];
 
+  const isNotFound = query.isError && query.error?.message === "NOT_FOUND";
+
   const isDefinitelyFailed =
-    currentStatus === "failed" || (stream.connectionLost && query.isError);
+    (currentStatus === "failed" || (stream.connectionLost && query.isError)) &&
+    !isNotFound;
 
   const isLoading =
     !isDefinitelyFailed &&
@@ -83,8 +87,9 @@ export function useSearchState({
     topic,
     verseResults,
     currentStatus,
-    isLoading,
+    isLoading: isLoading && !isNotFound,
     isDefinitelyFailed,
+    isNotFound,
     stepMessage,
     step: stream.step ?? undefined,
     totalResults: verseResults.length,

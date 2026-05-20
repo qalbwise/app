@@ -39,8 +39,14 @@ function SearchPage() {
   const createBookmark = useCreateBookmark();
   const queryClient = useQueryClient();
 
-  const { topic, verseResults, isLoading, isDefinitelyFailed, stepMessage } =
-    useSearchState({ slug });
+  const {
+    topic,
+    verseResults,
+    isLoading,
+    isDefinitelyFailed,
+    isNotFound,
+    stepMessage,
+  } = useSearchState({ slug });
 
   useVerseDetails(slug, verseResults);
   useOfflineToast({ slug, query: { isSuccess: true } });
@@ -84,7 +90,7 @@ function SearchPage() {
 
   return (
     <>
-      {isLoading ? (
+      {isLoading && (
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -99,28 +105,28 @@ function SearchPage() {
             {stepMessage}
           </p>
         </motion.section>
-      ) : (
-        <section className="flex flex-col gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: duration.normal, ease: easing.out }}
-          >
-            <SearchHeader totalResults={verseResults.length} />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: duration.normal,
-              ease: easing.out,
-              delay: 0.08,
-            }}
-            className="flex justify-center"
-          >
-            <SearchTopicDisplay topic={topic} />
-          </motion.div>
-        </section>
+      )}
+
+      {isNotFound && (
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: duration.normal, ease: easing.out }}
+          className="relative mt-[20svh] text-balance text-center"
+        >
+          <p className="text-2xl">This search was not found</p>
+          <p className="mt-2 text-muted-foreground text-sm">
+            The search you are looking for does not exist or may have been
+            removed.
+          </p>
+          <Button
+            aria-label="Go back to homepage"
+            className="mt-6"
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/">Go Home</Link>}
+          />
+        </motion.section>
       )}
 
       {isDefinitelyFailed && (
@@ -144,6 +150,28 @@ function SearchPage() {
 
       {!isLoading && !isDefinitelyFailed && verseResults.length > 0 && (
         <>
+          <section className="flex flex-col gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: duration.normal, ease: easing.out }}
+            >
+              <SearchHeader totalResults={verseResults.length} />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: duration.normal,
+                ease: easing.out,
+                delay: 0.08,
+              }}
+              className="flex justify-center"
+            >
+              <SearchTopicDisplay topic={topic} />
+            </motion.div>
+          </section>
+
           <SearchResultsList
             visibleResults={visibleResults}
             slug={slug}

@@ -15,18 +15,21 @@ export function useSearchBySlug(slug: string, enabled = true) {
     queryKey: queryKeys.search.bySlug(slug),
     queryFn: async () => {
       const res = await api.search.getBySlug(slug);
-      if (res.error) throw new Error("Failed to fetch search");
+      if (res.error) {
+        if (res.response.status === 404) throw new Error("NOT_FOUND");
+        throw new Error("Failed to fetch search");
+      }
       return res.data;
     },
     enabled,
     refetchInterval: (q) => {
+      if (q.state.error?.message === "NOT_FOUND") return false;
       const status = q.state.data?.status;
       if (status === "complete" || status === "failed") return false;
-      // Stop polling after timeout to prevent infinite spam
       const dataUpdatedAt = q.state.dataUpdatedAt;
       if (dataUpdatedAt && Date.now() - dataUpdatedAt > POLL_TIMEOUT_MS)
         return false;
-      return 3000; // poll every 3s (was 2s)
+      return 3000;
     },
     gcTime: 5 * 60 * 1000,
   });
