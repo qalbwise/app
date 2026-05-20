@@ -27,6 +27,7 @@ import { queryKeys } from "@/lib/api";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useMe } from "@/modules/auth/data/queries";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
+import { QalbwiseLogo } from "../ui/svgs/qalbwise";
 
 function SignOutDialogContent({ onSignOut }: { onSignOut: () => void }) {
   return (
@@ -98,15 +99,9 @@ export function Header() {
       <header className="main-wrap sticky top-0 z-50 border-foreground/5 border-b bg-background/95 backdrop-blur-sm">
         <nav className="flex h-14 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 no-underline">
+            <QalbwiseLogo className="size-7" />
             <span className="font-semibold text-[15px] text-foreground tracking-[-0.2px]">
               Qalbwise
-            </span>
-            <span
-              aria-hidden="true"
-              className="font-normal text-[13px] text-muted-foreground"
-              style={{ fontFamily: "var(--font-arabic)" }}
-            >
-              قلب
             </span>
           </Link>
 
