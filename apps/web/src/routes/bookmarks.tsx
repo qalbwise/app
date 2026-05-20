@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/api";
 import { duration, easing, variants } from "@/lib/motions";
+import { removeSuperscriptTags } from "@/lib/utils";
 import { LoginDrawer } from "@/modules/auth/components/login-drawer";
 import { useAuth } from "@/modules/auth/hooks/use-auth";
 import { useDeleteBookmark } from "@/modules/bookmarks/data/mutations";
@@ -178,7 +179,10 @@ function BookmarksList({
         >
           <div className="flex items-start justify-between">
             <p className="font-medium">
-              {bookmark.surah_name} {bookmark.ayah_key}
+              {bookmark.surah_name}{" "}
+              <span className="text-muted-foreground text-sm">
+                ({bookmark.ayah_key})
+              </span>
             </p>
 
             <AlertDialog>
@@ -217,7 +221,8 @@ function BookmarksList({
 
           {bookmark.arabic_text && (
             <p
-              className="text-center font-arabic text-xl leading-loose"
+              lang="ar"
+              className="text-right font-arabic text-xl leading-loose"
               dir="rtl"
             >
               {bookmark.arabic_text}
@@ -226,7 +231,7 @@ function BookmarksList({
 
           {bookmark.translation && (
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {bookmark.translation}
+              {removeSuperscriptTags(bookmark.translation)}
             </p>
           )}
 
