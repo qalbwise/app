@@ -175,6 +175,8 @@ async def call_qf_api(
                 },
             )
             resp.raise_for_status()
+            if resp.status_code == 204:
+                return {"success": True}
             return resp.json()
     except httpx.HTTPStatusError as e:
         logger.error(
@@ -194,16 +196,26 @@ async def get_valid_qf_access_token(db: AsyncSession, user: User) -> str | None:
     if not user.qf_refresh_token:
         return None
 
+    redis_conn = await get_redis()
+    cache_key = f"{_USER_TOKEN_PREFIX}{user.id}"
+    cached = await redis_conn.get(cache_key)
+    if cached:
+        return cached.decode() if isinstance(cached, bytes) else cached
+
     token_data = await refresh_qf_access_token(user.qf_refresh_token)
     if token_data is None:
         return None
 
     new_access = token_data.get("access_token")
     new_refresh = token_data.get("refresh_token")
+    expires_in = token_data.get("expires_in", 3600)
 
     if new_refresh:
         user.qf_refresh_token = new_refresh
         await db.commit()
+
+    if new_access:
+        await redis_conn.setex(cache_key, expires_in - 60, new_access)
 
     return new_access
 
@@ -258,6 +270,7 @@ async def login_or_create_user(
 
 _CONTENT_TOKEN_KEY = "qf_content_token"
 _CHAPTERS_CACHE_KEY = "qf_chapters"
+_USER_TOKEN_PREFIX = "qf_user_token:"
 
 
 async def get_content_api_token() -> str | None:

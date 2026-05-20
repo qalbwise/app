@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import HTTPException, status
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.bookmarks.serializer import BookmarkResponse
@@ -177,9 +178,11 @@ async def delete_bookmark(
 
     data = await qf_service.call_qf_api(
         access_token,
-        f"/auth/v1/bookmarks/{bookmark_id}",
+        f"/auth/v1/collections/__default__/bookmarks/{bookmark_id}",
         method="DELETE",
     )
+
+    logger.info("QF delete response: {}", data)
 
     if data is None:
         raise HTTPException(

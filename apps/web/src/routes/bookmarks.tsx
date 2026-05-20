@@ -172,79 +172,98 @@ function BookmarksList({
       className="space-y-4"
     >
       {bookmarks.map((bookmark) => (
-        <motion.li
+        <BookmarkCard
           key={bookmark.id}
-          variants={variants.staggerItem}
-          className="flex flex-col gap-4 rounded-lg border bg-card p-4"
-        >
-          <div className="flex items-start justify-between">
-            <p className="font-medium">
-              {bookmark.surah_name}{" "}
-              <span className="text-muted-foreground text-sm">
-                ({bookmark.ayah_key})
-              </span>
-            </p>
-
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={isDeleting}
-                  />
-                }
-              >
-                Delete
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Delete bookmark {bookmark.ayah_key}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This removes the verse from your bookmarks.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    onClick={() => onDelete(bookmark.id)}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-
-          {bookmark.arabic_text && (
-            <p
-              lang="ar"
-              className="text-right font-arabic text-xl leading-loose"
-              dir="rtl"
-            >
-              {bookmark.arabic_text}
-            </p>
-          )}
-
-          {bookmark.translation && (
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {removeSuperscriptTags(bookmark.translation)}
-            </p>
-          )}
-
-          <p className="text-muted-foreground text-xs">
-            Saved on:{" "}
-            {new Date(bookmark.created_at).toLocaleString(undefined, {
-              dateStyle: "medium",
-              timeStyle: "short",
-              hour12: false,
-            })}
-          </p>
-        </motion.li>
+          bookmark={bookmark}
+          isDeleting={isDeleting}
+          onDelete={onDelete}
+        />
       ))}
     </motion.ul>
+  );
+}
+
+function BookmarkCard({
+  bookmark,
+  isDeleting,
+  onDelete,
+}: {
+  bookmark: Bookmark;
+  isDeleting: boolean;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <motion.li
+      variants={variants.staggerItem}
+      className="flex flex-col gap-4 rounded-lg border bg-card p-4"
+    >
+      <div className="flex items-start justify-between">
+        <p className="font-medium">
+          {bookmark.surah_name}{" "}
+          <span className="text-muted-foreground text-sm">
+            ({bookmark.ayah_key})
+          </span>
+        </p>
+
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <AlertDialogTrigger
+            render={
+              <Button variant="destructive" size="sm" disabled={isDeleting} />
+            }
+          >
+            Delete
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Delete bookmark {bookmark.ayah_key}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes the verse from your bookmarks.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() => {
+                  onDelete(bookmark.id);
+                  setOpen(false);
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      {bookmark.arabic_text && (
+        <p
+          lang="ar"
+          className="text-right font-arabic text-xl leading-loose"
+          dir="rtl"
+        >
+          {bookmark.arabic_text}
+        </p>
+      )}
+
+      {bookmark.translation && (
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {removeSuperscriptTags(bookmark.translation)}
+        </p>
+      )}
+
+      <p className="text-muted-foreground text-xs">
+        Saved on:{" "}
+        {new Date(bookmark.created_at).toLocaleString(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short",
+          hour12: false,
+        })}
+      </p>
+    </motion.li>
   );
 }
