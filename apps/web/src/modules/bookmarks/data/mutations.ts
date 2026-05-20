@@ -5,23 +5,19 @@ import { api, queryKeys } from "@/lib/api";
 
 type BookmarkResponse = components["schemas"]["BookmarkResponse"];
 type BookmarkCreate = components["schemas"]["BookmarkCreate"];
-type NoteResponse = components["schemas"]["NoteResponse"];
-type NoteCreate = components["schemas"]["NoteCreate"];
+type BookmarkListResponse = components["schemas"]["BookmarkListResponse"];
 
 export function useCreateBookmark() {
   const queryClient = useQueryClient();
   return useMutation<BookmarkResponse, Error, BookmarkCreate>({
     mutationFn: async (body) => {
-      const res = await api.bookmarks.create({
-        ...body,
-        note: body.note ?? undefined,
-        extra_data: body.extra_data ?? undefined,
-      });
+      const res = await api.bookmarks.create(body);
       if (res.error) throw new Error("Failed to create bookmark");
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+      toast.success("Bookmark saved");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -31,50 +27,39 @@ export function useCreateBookmark() {
 
 export function useDeleteBookmark() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, string>({
+  return useMutation<
+    void,
+    Error,
+    string,
+    { previous: BookmarkListResponse | undefined }
+  >({
     mutationFn: async (id) => {
-      await api.bookmarks.delete(id);
+      const res = await api.bookmarks.delete(id);
+      if (res.error) throw new Error("Failed to delete bookmark");
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.bookmarks.all });
+      const previous = queryClient.getQueryData<BookmarkListResponse>(
+        queryKeys.bookmarks.all
+      );
+      if (previous) {
+        queryClient.setQueryData<BookmarkListResponse>(
+          queryKeys.bookmarks.all,
+          {
+            bookmarks: previous.bookmarks.filter((b) => b.id !== id),
+          }
+        );
+      }
+      return { previous };
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.bookmarks.all, context.previous);
+      }
       toast.error(error.message);
     },
-  });
-}
-
-export function useCreateNote() {
-  const queryClient = useQueryClient();
-  return useMutation<NoteResponse, Error, NoteCreate>({
-    mutationFn: async (body) => {
-      const res = await api.bookmarks.createNote({
-        ...body,
-        verses: body.verses ?? undefined,
-      });
-      if (res.error) throw new Error("Failed to create note");
-      return res.data;
-    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notes.all });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-}
-
-export function useDeleteNote() {
-  const queryClient = useQueryClient();
-  return useMutation<void, Error, string>({
-    mutationFn: async (id) => {
-      await api.bookmarks.deleteNote(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notes.all });
-    },
-    onError: (error) => {
-      toast.error(error.message);
+      toast.success("Bookmark removed");
     },
   });
 }

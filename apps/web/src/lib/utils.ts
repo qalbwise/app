@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function removeSuperscriptTags(text: string): string {
+  return text.replace(/<sup[^>]*>.*?<\/sup>/g, "");
+}
+
 interface StaticVerse {
   text: string;
   reference: string;

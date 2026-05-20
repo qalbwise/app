@@ -101,12 +101,7 @@ export function VerseCard({
     }
 
     try {
-      await createBookmark.mutateAsync({
-        ayah_key: verse.ayah_key,
-        surah_name: verse.surah_name,
-        arabic_text: verse.arabic_text,
-        translation: verse.translation,
-      });
+      await createBookmark.mutateAsync({ ayah_key: verse.ayah_key });
       setSaved(true);
     } catch {
       /* silently ignore duplicate / network errors for now */
@@ -206,7 +201,7 @@ export function VerseCard({
                   ? "Saving…"
                   : isCheckingBookmark
                     ? "Checking…"
-                    : "Save Verse"}
+                    : "Bookmark"}
               <BookOpenCheck className="size-4" />
             </Button>
             <ReadingSettingsSidebar />

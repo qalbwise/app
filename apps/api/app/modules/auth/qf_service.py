@@ -11,6 +11,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis import get_redis
 from app.core.settings import get_settings
 from app.models.user import User
 
@@ -152,21 +153,42 @@ async def refresh_qf_access_token(
         return None
 
 
-async def call_qf_api(access_token: str, path: str) -> dict[str, Any] | None:
+async def call_qf_api(
+    access_token: str,
+    path: str,
+    *,
+    method: str = "GET",
+    params: dict[str, Any] | None = None,
+    json_body: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
     cfg = _get_qf_config()
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(
+            resp = await client.request(
+                method,
                 f"{cfg['api_base_url']}{path}",
+                params=params,
+                json=json_body,
                 headers={
                     "x-auth-token": access_token,
                     "x-client-id": cfg["client_id"],
                 },
             )
             resp.raise_for_status()
+            if resp.status_code == 204:
+                return {"success": True}
             return resp.json()
+    except httpx.HTTPStatusError as e:
+        logger.error(
+            "QF User API call failed: {} {} {} - {}",
+            method,
+            path,
+            e.response.status_code,
+            e.response.text,
+        )
+        return None
     except httpx.HTTPError as e:
-        logger.error("QF User API call failed: {} {}", e, path)
+        logger.error("QF User API call failed: {} {} {}", method, path, e)
         return None
 
 
@@ -174,16 +196,26 @@ async def get_valid_qf_access_token(db: AsyncSession, user: User) -> str | None:
     if not user.qf_refresh_token:
         return None
 
+    redis_conn = await get_redis()
+    cache_key = f"{_USER_TOKEN_PREFIX}{user.id}"
+    cached = await redis_conn.get(cache_key)
+    if cached:
+        return cached.decode() if isinstance(cached, bytes) else cached
+
     token_data = await refresh_qf_access_token(user.qf_refresh_token)
     if token_data is None:
         return None
 
     new_access = token_data.get("access_token")
     new_refresh = token_data.get("refresh_token")
+    expires_in = token_data.get("expires_in", 3600)
 
     if new_refresh:
         user.qf_refresh_token = new_refresh
         await db.commit()
+
+    if new_access:
+        await redis_conn.setex(cache_key, expires_in - 60, new_access)
 
     return new_access
 
@@ -234,3 +266,120 @@ async def login_or_create_user(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+_CONTENT_TOKEN_KEY = "qf_content_token"
+_CHAPTERS_CACHE_KEY = "qf_chapters"
+_USER_TOKEN_PREFIX = "qf_user_token:"
+
+
+async def get_content_api_token() -> str | None:
+    redis_conn = await get_redis()
+    cached = await redis_conn.get(_CONTENT_TOKEN_KEY)
+    if cached:
+        return cached.decode() if isinstance(cached, bytes) else cached
+
+    cfg = _get_qf_config()
+    if not cfg["client_secret"]:
+        return None
+
+    data = {
+        "grant_type": "client_credentials",
+        "scope": "content",
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{cfg['auth_base_url']}/oauth2/token",
+                data=data,
+                auth=(cfg["client_id"], cfg["client_secret"]),
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            resp.raise_for_status()
+            result = resp.json()
+            access_token = result.get("access_token")
+            expires_in = result.get("expires_in", 3600)
+            if access_token:
+                await redis_conn.setex(
+                    _CONTENT_TOKEN_KEY, expires_in - 60, access_token
+                )
+            return access_token
+    except httpx.HTTPError as e:
+        logger.error("QF content API token request failed: {}", e)
+        return None
+
+
+async def fetch_chapters(language: str = "en") -> dict[int, str] | None:
+    redis_conn = await get_redis()
+    cached = await redis_conn.get(_CHAPTERS_CACHE_KEY)
+    if cached:
+        raw = cached.decode() if isinstance(cached, bytes) else cached
+        return json.loads(raw)
+
+    token = await get_content_api_token()
+    if not token:
+        return None
+
+    cfg = _get_qf_config()
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{cfg['api_base_url']}/content/api/v4/chapters",
+                params={"language": language},
+                headers={
+                    "x-auth-token": token,
+                    "x-client-id": cfg["client_id"],
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        chapters = {ch["id"]: ch["name_simple"] for ch in data.get("chapters", [])}
+        await redis_conn.setex(_CHAPTERS_CACHE_KEY, 86400, json.dumps(chapters))
+        return chapters
+    except httpx.HTTPError as e:
+        logger.error("QF chapters fetch failed: {}", e)
+        return None
+
+
+async def fetch_verses_by_keys(
+    verse_keys: list[str],
+    mushaf_id: int = 4,
+) -> dict[str, dict[str, Any]]:
+    result = {}
+    try:
+        async with httpx.AsyncClient() as client:
+            for key in verse_keys:
+                url = f"https://api.quran.com/api/v4/verses/by_key/{key}"
+                resp = await client.get(
+                    url,
+                    params={
+                        "words": "false",
+                        "translations": "131,20",
+                        "fields": "text_uthmani",
+                    },
+                )
+                if resp.status_code != 200:
+                    logger.warning(
+                        "Quran.com API verse fetch failed for {}: {}",
+                        key,
+                        resp.status_code,
+                    )
+                    continue
+
+                data = resp.json()
+                v = data.get("verse", {})
+                translations = v.get("translations", [])
+                translation_text = ""
+                if translations and isinstance(translations, list):
+                    translation_text = translations[0].get("text", "")
+
+                result[key] = {
+                    "arabic_text": v.get("text_uthmani", ""),
+                    "translation": translation_text,
+                }
+    except httpx.HTTPError as e:
+        logger.error("Quran.com API verse fetch failed: {}", e)
+
+    return result
