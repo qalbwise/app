@@ -1,26 +1,53 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- 1) Document basics -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 2) Primary SEO -->
+    <title>Qalbwise</title>
     <meta
       name="description"
       content="Discover what the Quran says about anything on your mind."
     />
-    <title>Qalbwise</title>
-    <!-- Favicon & PWA icons: static files in apps/web/public -->
+
+    <!-- 3) Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Qalbwise" />
+    <meta
+      property="og:description"
+      content="Discover what the Quran says about anything on your mind."
+    />
+    <meta property="og:image" content="%VITE_APP_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Qalbwise preview image" />
+
+    <!-- 4) Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Qalbwise" />
+    <meta
+      name="twitter:description"
+      content="Discover what the Quran says about anything on your mind."
+    />
+    <meta name="twitter:image" content="%VITE_APP_URL%/og-image.png" />
+
+    <!-- 5) Icons -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- 6) Web app / PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#f9f8e6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fdfcfc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Qalbwise" />
-    <meta name="msapplication-TileColor" content="#f9f8e6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#fdfcfc" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
   </head>
   <body>
