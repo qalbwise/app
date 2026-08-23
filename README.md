@@ -2,6 +2,15 @@
 
 > Qalbwise lets you type anything on your mind and instantly discover what the Quran says about it — accurately, contextually, and personally.
 
+## Features
+
+- **Topic-first search** — describe what's on your mind (grief, anxiety, gratitude, fear of failure) and get the most thematically relevant verses, no need to know the exact surah or keyword
+- **Rich verse results** — each result shows Arabic text with diacritics, an English translation, and tafsir from multiple scholars
+- **"Why this verse" explanations** — an AI-generated connection between the verse's revealed context and your query
+- **Bookmarks** — save verses to revisit later, synced with your Quran Foundation Favorites collection
+- **Reading preferences** — customize your reading experience, including the color theme, font size, and font type
+- **Secure sign-in** — Google OAuth and Quran Foundation OAuth2 (Authorization Code + PKCE)
+
 ## Tech Stack
 
 **Frontend** (`apps/web`)
