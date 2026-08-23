@@ -98,8 +98,13 @@ function LoginDrawerContent({
   const hasError = login.isError;
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
-      <DrawerContent>
+    <Drawer
+      open={open}
+      autoFocus
+      onOpenChange={handleOpenChange}
+      direction="bottom"
+    >
+      <DrawerContent autoFocus>
         <DrawerHeader className="mx-auto max-w-md text-pretty">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{subtitle}</DrawerDescription>

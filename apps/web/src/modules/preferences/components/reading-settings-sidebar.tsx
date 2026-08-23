@@ -54,7 +54,7 @@ export function ReadingSettingsSidebar() {
   };
 
   return (
-    <Drawer open={open} onOpenChange={setOpen} direction="right">
+    <Drawer open={open} autoFocus onOpenChange={setOpen} direction="right">
       <DrawerTrigger asChild>
         <Button variant="outline" size="lg">
           Settings
