@@ -269,6 +269,9 @@ export const createApiWithModules = (options) => {
 ## Commands
 
 ```bash
+# Agent skills (install if the agents/ directory is missing)
+npx skills experimental_install
+
 # Development
 moon run web:dev              # Frontend at http://localhost:3000
 moon run api:dev              # Backend at http://localhost:8000
@@ -341,4 +344,13 @@ OPENAI_API_KEY=
 1. When a Pydantic schema changes, the FIRST thing to do is run `moon run core:generate` before touching any frontend code
 2. When adding a complex function or class, always add a docstring explaining the intent
 3. When in doubt about a library's API, check its installed source in `.venv/lib` or `node_modules` rather than guessing
-4. When you need to search docs, use `context7` MCP tools
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues, operated via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Multi-context layout: a root `CONTEXT-MAP.md` points at per-context `CONTEXT.md` files, with system-wide ADRs in `docs/adr/`. See `docs/agents/domain.md`.
