@@ -1,5 +1,7 @@
 # Qalbwise
 
+<img width="2848" height="1708" alt="image" src="https://github.com/user-attachments/assets/97940c41-9262-4930-b413-8dbe19df429f" />
+
 > Qalbwise lets you type anything on your mind and instantly discover what the Quran says about it — accurately, contextually, and personally.
 
 ## Features
