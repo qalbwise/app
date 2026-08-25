@@ -43,3 +43,21 @@ _Avoid_: account, member, profile
 **Preferences**:
 Server-persisted reading choices: `serif` (Latin/UI serif stack) and `arabic_font` (`hafs_quran` or `indopak`). Arabic font *size* is local rendering state, not a preference.
 _Avoid_: settings, configuration, font size
+
+### Deployment
+
+**Image**:
+A versioned container artifact pushed to GHCR (`ghcr.io/qalbwise/app/api:main`, `ghcr.io/qalbwise/app/web:main`) and pulled by the VM. The api Image is single — compose's `command:` selects whether a container runs uvicorn or celery.
+_Avoid_: build, container (when referring to the published artifact)
+
+**VM**:
+The production host. It holds only `docker-compose.yml` and a gitignored `.env`; it has no source checkout and never builds images.
+_Avoid_: server, host (when referring to the deploy target)
+
+**Build-time env**:
+Values baked into an Image at build time (web `VITE_*` vars). Changing them requires a rebuild + push. Distinct from runtime env, which the VM's `.env` provides.
+_Avoid_: environment variables (ambiguous), config
+
+**Runtime env**:
+Values the VM's gitignored `.env` file provides to containers at start (secrets, `DATABASE_URL`). Never baked into an Image.
+_Avoid_: environment variables (ambiguous), config
