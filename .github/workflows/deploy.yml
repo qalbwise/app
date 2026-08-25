@@ -17,35 +17,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          fetch-depth: 0
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check directory changes
-        id: check_changes
-        run: |
-          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
-          echo "changed_dirs<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Build & push api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/api
+          push: true
+          tags: |
+            ghcr.io/qalbwise/app/api:main
+            ghcr.io/qalbwise/app/api:sha-${{ github.sha }}
 
-          WEB_CHANGED=false
-          API_CHANGED=false
+      - name: Build & push web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/qalbwise/app/web:main
+            ghcr.io/qalbwise/app/web:sha-${{ github.sha }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
-          if echo "$CHANGED" | grep -q "^apps/web/"; then
-            WEB_CHANGED=true
-          fi
-          if echo "$CHANGED" | grep -qE "^apps/api/"; then
-            API_CHANGED=true
-          fi
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
 
-          echo "web_changed=$WEB_CHANGED" >> $GITHUB_OUTPUT
-          echo "api_changed=$API_CHANGED" >> $GITHUB_OUTPUT
-
+    steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -53,34 +67,12 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          # Pass booleans as safe env vars — no shell injection risk
-          envs: WEB_CHANGED,API_CHANGED
           script: |
             set -euo pipefail
 
             cd /home/deploy/apps/qalbwise
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
-
-            if [ "$WEB_CHANGED" = "true" ] && [ "$API_CHANGED" = "true" ]; then
-              echo "Both apps changed — rebuilding all"
-              docker compose up -d --build --no-deps api worker web
-            elif [ "$WEB_CHANGED" = "true" ]; then
-              echo "Only web changed"
-              docker compose up -d --build --no-deps web
-            elif [ "$API_CHANGED" = "true" ]; then
-              echo "Only api changed"
-              docker compose up -d --build --no-deps api worker
-              echo "Restart web so it picks up any API contract changes"
-              docker compose restart web
-            else
-              echo "No app-specific changes — rebuilding all"
-              docker compose up -d --build
-            fi
+            docker compose pull
+            docker compose up -d
 
             echo "Clean up dangling images to free disk space"
             docker image prune -f
-        env:
-          WEB_CHANGED: ${{ steps.check_changes.outputs.web_changed }}
-          API_CHANGED: ${{ steps.check_changes.outputs.api_changed }}
